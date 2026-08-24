@@ -1,0 +1,49 @@
+/**
+ * Button — shared styles, front end and editor canvas.
+ *
+ * Deliberately low specificity: one class, no !important, no ID. These
+ * are defaults that core's block supports must be able to override —
+ * core writes responsive and state rules at specificity 0,1,0 with
+ * !important, so anything stronger here would defeat them.
+ */
+
+.wp-block-blockkit-button {
+	display: inline-block;
+	box-sizing: border-box;
+	max-width: 100%;
+
+	// Overridden by the `spacing` support.
+	padding: 0.65em 1.5em;
+
+	// Overridden by the `color` support.
+	background-color: #2e6bd1;
+	color: #fff;
+
+	// Overridden by the `__experimentalBorder` support.
+	border: 0;
+	border-radius: 4px;
+
+	// Overridden by the `typography` support.
+	font-family: inherit;
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.2;
+
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+	word-break: break-word;
+
+	&:hover,
+	&:focus {
+		color: #fff;
+		text-decoration: none;
+	}
+
+	// The outline variation trades the fill for a border.
+	&.is-style-outline {
+		background-color: transparent;
+		color: currentColor;
+		border: 2px solid currentColor;
+	}
+}

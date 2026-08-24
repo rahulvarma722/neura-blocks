@@ -1,0 +1,13 @@
+/**
+ * Button — editor-only styles.
+ *
+ * The editor renders a <span> where the front end renders <a>/<button>,
+ * so the shared rules in style.scss already apply. Only editing
+ * affordances belong here.
+ */
+
+.wp-block-blockkit-button {
+	[data-rich-text-placeholder] {
+		opacity: 0.6;
+	}
+}

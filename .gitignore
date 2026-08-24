@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Compiled output. Run `npm install && npm run build` after cloning —
+# blocks are registered from build/, so the plugin does nothing without it.
+build/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Logs
+npm-debug.log*
+yarn-error.log*

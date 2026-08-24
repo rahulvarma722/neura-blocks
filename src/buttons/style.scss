@@ -1,0 +1,15 @@
+/**
+ * Buttons — shared styles, front end and editor canvas.
+ *
+ * Layout is handled by core's flex layout support, which emits its own
+ * `display:flex` and `gap` rules against a generated container class.
+ * Only the things layout does not cover belong here.
+ */
+
+.wp-block-blockkit-buttons {
+	// Buttons wrap rather than overflow on narrow viewports.
+	flex-wrap: wrap;
+
+	// Remove the list-ish default margin a theme may apply to the box.
+	box-sizing: border-box;
+}

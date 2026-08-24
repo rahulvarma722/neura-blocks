@@ -1,0 +1,16 @@
+{
+	"name": "blockkit",
+	"version": "1.0.0",
+	"description": "A Gutenberg block collection built on the WordPress 7.1 block API.",
+	"private": true,
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"lint:js": "wp-scripts lint-js",
+		"lint:css": "wp-scripts lint-style",
+		"format": "wp-scripts format"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^30.0.0"
+	}
+}
