@@ -9,6 +9,7 @@
 import {
 	useBlockProps,
 	useInnerBlocksProps,
+	InnerBlocks,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
@@ -32,13 +33,17 @@ export default function Edit( { clientId } ) {
 	const innerBlocksProps = useInnerBlocksProps( blockProps, {
 		template: TEMPLATE,
 		/*
-		 * Show the full inserter while empty, then the compact appender
-		 * once there is at least one button — matching how core's
-		 * container blocks behave.
+		 * While empty, fall through to the default appender so the block
+		 * is never a dead container. Once there is at least one button,
+		 * switch to the compact "+" so the row stays tight — this is how
+		 * core's Buttons block behaves.
+		 *
+		 * Never pass `false` here: it removes the appender entirely, and
+		 * an empty Buttons block then has no way to gain a child at all.
 		 */
 		renderAppender: hasChildren
-			? undefined
-			: false,
+			? InnerBlocks.ButtonBlockAppender
+			: undefined,
 	} );
 
 	return <div { ...innerBlocksProps } />;
