@@ -71,6 +71,33 @@ export const STYLE_NAMESPACE = 'blockkit';
 export const WIDTH_KEY = 'width';
 
 /**
+ * Icon size — a SECOND per-viewport property, stored beside `width`.
+ *
+ * It exists to demonstrate the case `width` cannot: styling a DESCENDANT.
+ * `width` applies to the block root, which is the one element inline styles and
+ * `get_block_wrapper_attributes()` can reach. The icon is a child, so its size
+ * cannot be set that way — see the CSS-variable indirection in style.scss and
+ * the method comparison in docs/RESPONSIVE-STYLES-EXPERIMENT.md.
+ *
+ * @type {string}
+ */
+export const ICON_SIZE_KEY = 'iconSize';
+
+/**
+ * CSS custom properties the stylesheet reads.
+ *
+ * The wrapper carries the variable; the descendant consumes it. That single
+ * indirection is what makes a child element stylable from the one place the
+ * platform lets us write to.
+ *
+ * @type {Object<string, string>}
+ */
+export const CSS_VARS = {
+	width: '--bk-button-width',
+	iconSize: '--bk-button-icon-size',
+};
+
+/**
  * Core's device names, as returned by `select( 'core/editor' ).getDeviceType()`.
  */
 export const DESKTOP = 'Desktop';

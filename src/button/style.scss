@@ -47,3 +47,40 @@
 		border: 2px solid currentColor;
 	}
 }
+
+/**
+ * Button icon.
+ *
+ * THE POINT OF THIS RULE: the icon is a DESCENDANT, and a descendant cannot be
+ * sized by the mechanisms that reach a block. Inline styles and
+ * `get_block_wrapper_attributes()` write to the block ROOT only, and core's own
+ * per-viewport CSS targets the root unless the block declares feature selectors
+ * in block.json.
+ *
+ * So the value is written to the root as a custom property and CONSUMED here.
+ * One indirection, and the icon becomes stylable — per viewport included, since
+ * a media query only has to reassign the variable on the root.
+ *
+ * The fallback keeps the icon visible before any value is set.
+ */
+.wp-block-blockkit-button {
+	// Only becomes a flex container when it actually has an icon, so a plain
+	// text button keeps its natural inline-block behaviour.
+	&:has(.wp-block-blockkit-button__icon) {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5em;
+	}
+
+	&__icon {
+		flex: none;
+		width: var(--bk-button-icon-size, 1em);
+		height: var(--bk-button-icon-size, 1em);
+	}
+
+	// `row-reverse` rather than `order`, so the DOM keeps text-then-icon and the
+	// accessible name is unaffected by the visual position.
+	&.has-icon-left:has(.wp-block-blockkit-button__icon) {
+		flex-direction: row-reverse;
+	}
+}

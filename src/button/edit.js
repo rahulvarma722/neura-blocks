@@ -18,14 +18,19 @@ import {
 import {
 	PanelBody,
 	TextControl,
+	SelectControl,
 	ToolbarButton,
 	Popover,
+	__experimentalToggleGroupControl as ToggleGroupControl,
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import { useState, useMemo } from '@wordpress/element';
 
+import { ButtonIcon, ICON_OPTIONS } from './icon';
 import ResponsiveWidthControl from './responsive-width';
 import { useStyleState } from './responsive-width/use-style-state';
 import { getResolvedValue } from './responsive-width/style-value';
+import { ICON_SIZE_KEY, CSS_VARS } from './responsive-width/constants';
 
 const NEW_TAB_TARGET = '_blank';
 const NOFOLLOW_REL = 'noreferrer noopener';
@@ -36,7 +41,8 @@ export default function Edit( {
 	isSelected,
 	clientId,
 } ) {
-	const { text, url, linkTarget, rel, title, style } = attributes;
+	const { text, url, linkTarget, rel, title, style, icon, iconPosition } =
+		attributes;
 
 	const [ isEditingLink, setIsEditingLink ] = useState( false );
 
@@ -57,16 +63,44 @@ export default function Edit( {
 	const previewWidth = getResolvedValue( style, device );
 
 	/*
+	 * The icon size resolves exactly like the width — same layer, same
+	 * fallback — but lands on the root as a CUSTOM PROPERTY rather than as a
+	 * real declaration, because the element it styles is a child.
+	 *
+	 * This is the whole descendant technique: the platform lets us write to the
+	 * block root, so the root carries a variable and the stylesheet spends it on
+	 * `.wp-block-blockkit-button__icon`. No selector plumbing, and it behaves
+	 * identically in the canvas and on the front end because both read the same
+	 * rule from style.scss.
+	 */
+	const previewIconSize = getResolvedValue( style, device, ICON_SIZE_KEY );
+
+	/*
 	 * Memoised deliberately. `useBlockProps()` feeds whatever it is given into
 	 * `useMergeRefs()`, so handing it a fresh object literal on every render
 	 * churns the block root's ref and the props RichText spreads onto its
 	 * contentEditable — which is enough to disturb typing. A stable object
 	 * means the identity only changes when the previewed width actually does.
 	 */
-	const extraBlockProps = useMemo(
-		() => ( previewWidth ? { style: { width: previewWidth } } : {} ),
-		[ previewWidth ]
-	);
+	const extraBlockProps = useMemo( () => {
+		const inline = {};
+
+		if ( previewWidth ) {
+			inline.width = previewWidth;
+		}
+
+		if ( previewIconSize ) {
+			inline[ CSS_VARS.iconSize ] = previewIconSize;
+		}
+
+		return {
+			...( Object.keys( inline ).length ? { style: inline } : {} ),
+			// Mirrors render.php, so the icon sits on the same side in both.
+			...( icon && 'left' === iconPosition
+				? { className: 'has-icon-left' }
+				: {} ),
+		};
+	}, [ previewWidth, previewIconSize, icon, iconPosition ] );
 
 	// The block root. render.php puts the same classes on its <a>.
 	const blockProps = useBlockProps( extraBlockProps );
@@ -111,6 +145,37 @@ export default function Edit( {
 
 			<InspectorControls>
 				<PanelBody title={ __( 'Settings', 'blockkit' ) }>
+					<SelectControl
+						__nextHasNoMarginBottom
+						__next40pxDefaultSize
+						label={ __( 'Icon', 'blockkit' ) }
+						value={ icon }
+						options={ ICON_OPTIONS }
+						onChange={ ( value ) => setAttributes( { icon: value } ) }
+					/>
+
+					{ !! icon && (
+						<ToggleGroupControl
+							__nextHasNoMarginBottom
+							__next40pxDefaultSize
+							label={ __( 'Icon position', 'blockkit' ) }
+							value={ iconPosition }
+							onChange={ ( value ) =>
+								setAttributes( { iconPosition: value } )
+							}
+							isBlock
+						>
+							<ToggleGroupControlOption
+								value="left"
+								label={ __( 'Left', 'blockkit' ) }
+							/>
+							<ToggleGroupControlOption
+								value="right"
+								label={ __( 'Right', 'blockkit' ) }
+							/>
+						</ToggleGroupControl>
+					) }
+
 					<TextControl
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize
@@ -136,15 +201,23 @@ export default function Edit( {
 			  * A span in the editor rather than an anchor, so a click
 			  * selects the block instead of following the link.
 			  */ }
-			<RichText
-				{ ...blockProps }
-				tagName="span"
-				value={ text }
-				onChange={ ( value ) => setAttributes( { text: value } ) }
-				placeholder={ __( 'Add text…', 'blockkit' ) }
-				allowedFormats={ [] }
-				identifier="text"
-			/>
+			{ /*
+			  * RichText can no longer BE the block root: the root now holds two
+			  * children, the text and the icon. So blockProps moves to a
+			  * wrapping span and RichText becomes an ordinary child — which is
+			  * also what render.php does.
+			  */ }
+			<span { ...blockProps }>
+				<RichText
+					tagName="span"
+					value={ text }
+					onChange={ ( value ) => setAttributes( { text: value } ) }
+					placeholder={ __( 'Add text…', 'blockkit' ) }
+					allowedFormats={ [] }
+					identifier="text"
+				/>
+				<ButtonIcon icon={ icon } />
+			</span>
 
 			{ isSelected && isEditingLink && (
 				<Popover

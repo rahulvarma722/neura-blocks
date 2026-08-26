@@ -7,11 +7,13 @@
 	"category": "blockkit",
 	"icon": "button",
 	"description": "Prompt visitors to take action with a button-style link.",
-	"keywords": [ "link" ],
+	"keywords": [
+		"link"
+	],
 	"textdomain": "blockkit",
-
-	"parent": [ "blockkit/buttons" ],
-
+	"parent": [
+		"blockkit/buttons"
+	],
 	"attributes": {
 		"text": {
 			"type": "string",
@@ -35,11 +37,25 @@
 		},
 		"tagName": {
 			"type": "string",
-			"enum": [ "a", "button" ],
+			"enum": [
+				"a",
+				"button"
+			],
 			"default": "a"
+		},
+		"icon": {
+			"type": "string",
+			"default": ""
+		},
+		"iconPosition": {
+			"type": "string",
+			"enum": [
+				"left",
+				"right"
+			],
+			"default": "right"
 		}
 	},
-
 	"supports": {
 		"html": false,
 		"anchor": true,
@@ -61,7 +77,10 @@
 			}
 		},
 		"spacing": {
-			"padding": [ "horizontal", "vertical" ],
+			"padding": [
+				"horizontal",
+				"vertical"
+			],
 			"__experimentalDefaultControls": {
 				"padding": true
 			}
@@ -89,12 +108,17 @@
 			}
 		}
 	},
-
 	"styles": [
-		{ "name": "fill", "label": "Fill", "isDefault": true },
-		{ "name": "outline", "label": "Outline" }
+		{
+			"name": "fill",
+			"label": "Fill",
+			"isDefault": true
+		},
+		{
+			"name": "outline",
+			"label": "Outline"
+		}
 	],
-
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",
 	"editorStyle": "file:./index.css",

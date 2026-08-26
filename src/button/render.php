@@ -72,6 +72,32 @@ if ( '' !== $title ) {
 	$extra_attributes['title'] = $title;
 }
 
+/*
+ * The PHP twin of src/button/icon.js. Kept in step by hand: the editor renders
+ * from JS and the front end from here, so a key added in one has to be added in
+ * the other or the icon silently disappears on save.
+ */
+$icon_paths = array(
+	'arrow'    => 'M4 10h9.2l-3.6-3.6L11 5l6 5-6 5-1.4-1.4L13.2 10H4z',
+	'chevron'  => 'M7.5 4.5L13 10l-5.5 5.5L6 14l4-4-4-4z',
+	'download' => 'M9 3h2v7h3l-4 5-4-5h3zM4 16h12v2H4z',
+	'external' => 'M11 3h6v6h-2V6.4l-6.3 6.3-1.4-1.4L13.6 5H11zM4 6h4v2H6v6h6v-2h2v4H4z',
+);
+
+$icon_key      = isset( $attributes['icon'] ) ? (string) $attributes['icon'] : '';
+$icon_position = isset( $attributes['iconPosition'] ) && 'left' === $attributes['iconPosition'] ? 'left' : 'right';
+$icon_markup   = '';
+
+if ( '' !== $icon_key && isset( $icon_paths[ $icon_key ] ) ) {
+	// aria-hidden: the icon is decorative, the button text is the accessible
+	// name. No width/height attribute — the size comes from CSS so it can be
+	// per-viewport.
+	$icon_markup = sprintf(
+		'<svg class="wp-block-blockkit-button__icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true" focusable="false"><path d="%s"/></svg>',
+		esc_attr( $icon_paths[ $icon_key ] )
+	);
+}
+
 $rendered_attributes = '';
 foreach ( $extra_attributes as $name => $value ) {
 	$rendered_attributes .= sprintf( ' %s="%s"', esc_attr( $name ), esc_attr( $value ) );
@@ -96,27 +122,64 @@ $style_attribute  = isset( $attributes['style'] ) && is_array( $attributes['styl
 $responsive_class = '';
 $responsive_css   = '';
 
-$width_signature = wp_json_encode(
+/*
+ * Two properties, two very different destinations.
+ *
+ * `width` is emitted as a real declaration on the block root. `iconSize` is
+ * emitted as a CUSTOM PROPERTY on that same root, because the element it sizes
+ * is a CHILD and nothing here can select a child: `get_block_wrapper_attributes()`
+ * writes to the root, and so does core's own per-viewport CSS unless the block
+ * declares feature selectors in block.json.
+ *
+ * style.scss then spends the variable on `.wp-block-blockkit-button__icon`. The
+ * media queries stay on the root, so the icon becomes per-viewport without a
+ * single descendant selector being generated here.
+ */
+$style_properties = array(
+	// state key => CSS property emitted.
+	'width'    => 'width',
+	'iconSize' => '--bk-button-icon-size',
+);
+
+$stored_values = array();
+
+foreach ( array_keys( $style_properties ) as $property_key ) {
+	foreach ( array( null, '@tablet', '@mobile' ) as $state_key ) {
+		$stored_values[] = BlockKit_Responsive_Styles::get_state_value(
+			$style_attribute,
+			$state_key,
+			'blockkit',
+			$property_key
+		);
+	}
+}
+
+$width_signature = wp_json_encode( $stored_values );
+
+if ( '' !== implode( '', $stored_values ) ) {
+	$responsive_class = 'bk-btn-' . substr( md5( (string) $width_signature ), 0, 8 );
+
+	foreach ( $style_properties as $property_key => $css_property ) {
+		$responsive_css .= BlockKit_Responsive_Styles::build_css(
+			$style_attribute,
+			'.' . $responsive_class,
+			'blockkit',
+			$property_key,
+			$css_property
+		);
+	}
+}
+
+$wrapper_classes = array_filter(
 	array(
-		BlockKit_Responsive_Styles::get_state_value( $style_attribute, null, 'blockkit', 'width' ),
-		BlockKit_Responsive_Styles::get_state_value( $style_attribute, '@tablet', 'blockkit', 'width' ),
-		BlockKit_Responsive_Styles::get_state_value( $style_attribute, '@mobile', 'blockkit', 'width' ),
+		$responsive_class,
+		// Mirrors the editor, so the icon sits on the same side in both.
+		'' !== $icon_markup && 'left' === $icon_position ? 'has-icon-left' : '',
 	)
 );
 
-if ( '["","",""]' !== $width_signature ) {
-	$responsive_class = 'bk-btn-w-' . substr( md5( (string) $width_signature ), 0, 8 );
-	$responsive_css   = BlockKit_Responsive_Styles::build_css(
-		$style_attribute,
-		'.' . $responsive_class,
-		'blockkit',
-		'width',
-		'width'
-	);
-}
-
 $wrapper_attributes = get_block_wrapper_attributes(
-	'' !== $responsive_class ? array( 'class' => $responsive_class ) : array()
+	$wrapper_classes ? array( 'class' => implode( ' ', $wrapper_classes ) ) : array()
 );
 
 /*
@@ -143,9 +206,10 @@ if ( '' !== $responsive_css && false === strpos( $responsive_css, '</' ) ) {
 }
 
 printf(
-	'<%1$s %2$s%3$s>%4$s</%1$s>',
+	'<%1$s %2$s%3$s><span class="wp-block-blockkit-button__text">%4$s</span>%5$s</%1$s>',
 	esc_attr( $tag_name ),
 	$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by get_block_wrapper_attributes().
 	$rendered_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Each value escaped with esc_attr()/esc_url() above.
-	wp_kses_post( $text )
+	wp_kses_post( $text ),
+	$icon_markup // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built above from a fixed path map, with esc_attr() on the value.
 );

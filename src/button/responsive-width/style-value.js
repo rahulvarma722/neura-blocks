@@ -21,12 +21,14 @@ import { STYLE_NAMESPACE, WIDTH_KEY, VIEWPORT_STATE_BY_DEVICE } from './constant
  *
  * @param {?Object} style    The block's `style` attribute.
  * @param {?string} stateKey `'@tablet'`, `'@mobile'`, or null for the base.
+ * @param {string}  key      Property under the namespace. Defaults to width so
+ *                           the original single-property callers are unchanged.
  * @return {string|undefined} The stored value, or undefined when unset.
  */
-export function getStateValue( style, stateKey ) {
+export function getStateValue( style, stateKey, key = WIDTH_KEY ) {
 	const layer = stateKey ? style?.[ stateKey ] : style;
 
-	return layer?.[ STYLE_NAMESPACE ]?.[ WIDTH_KEY ];
+	return layer?.[ STYLE_NAMESPACE ]?.[ key ];
 }
 
 /**
@@ -42,16 +44,17 @@ export function getStateValue( style, stateKey ) {
  *
  * @param {?Object} style  The block's `style` attribute.
  * @param {string}  device Core device name — 'Desktop' | 'Tablet' | 'Mobile'.
+ * @param {string}  key    Property under the namespace.
  * @return {string|undefined} The effective value, or undefined.
  */
-export function getResolvedValue( style, device ) {
+export function getResolvedValue( style, device, key = WIDTH_KEY ) {
 	const stateKey = VIEWPORT_STATE_BY_DEVICE[ device ] ?? null;
 
 	if ( ! stateKey ) {
-		return getStateValue( style, null );
+		return getStateValue( style, null, key );
 	}
 
-	return getStateValue( style, stateKey ) ?? getStateValue( style, null );
+	return getStateValue( style, stateKey, key ) ?? getStateValue( style, null, key );
 }
 
 /**
@@ -99,15 +102,16 @@ function prune( object ) {
  * @param {?Object}          style    The block's current `style` attribute.
  * @param {?string}          stateKey `'@tablet'`, `'@mobile'`, or null.
  * @param {string|undefined} value    The new value, or undefined to clear.
+ * @param {string}           key      Property under the namespace.
  * @return {Object|undefined} The new `style`, or undefined when empty.
  */
-export function setStateValue( style, stateKey, value ) {
+export function setStateValue( style, stateKey, value, key = WIDTH_KEY ) {
 	const next = { ...( style || {} ) };
 
 	if ( ! stateKey ) {
 		next[ STYLE_NAMESPACE ] = {
 			...( next[ STYLE_NAMESPACE ] || {} ),
-			[ WIDTH_KEY ]: value,
+			[ key ]: value,
 		};
 
 		return prune( next );
@@ -117,7 +121,7 @@ export function setStateValue( style, stateKey, value ) {
 		...( next[ stateKey ] || {} ),
 		[ STYLE_NAMESPACE ]: {
 			...( next[ stateKey ]?.[ STYLE_NAMESPACE ] || {} ),
-			[ WIDTH_KEY ]: value,
+			[ key ]: value,
 		},
 	};
 

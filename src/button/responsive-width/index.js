@@ -31,6 +31,7 @@ import {
 	WIDTH_UNITS,
 	DESKTOP,
 	SHOW_DIAGNOSTICS,
+	ICON_SIZE_KEY,
 } from './constants';
 import { getStateValue, setStateValue } from './style-value';
 
@@ -67,6 +68,14 @@ export default function ResponsiveWidthControl( {
 		} );
 	};
 
+	const iconSize = getStateValue( style, stateKey, ICON_SIZE_KEY );
+
+	const onIconSizeChange = ( next ) => {
+		setAttributes( {
+			style: setStateValue( style, stateKey, next || undefined, ICON_SIZE_KEY ),
+		} );
+	};
+
 	const label = stateKey
 		? sprintf(
 				/* translators: %s: device name, e.g. Tablet. */
@@ -74,6 +83,14 @@ export default function ResponsiveWidthControl( {
 				device
 		  )
 		: __( 'Custom Width', 'blockkit' );
+
+	const iconLabel = stateKey
+		? sprintf(
+				/* translators: %s: device name, e.g. Tablet. */
+				__( 'Icon Size (%s)', 'blockkit' ),
+				device
+		  )
+		: __( 'Icon Size', 'blockkit' );
 
 	return (
 		<InspectorControls
@@ -91,7 +108,14 @@ export default function ResponsiveWidthControl( {
 				// `BlockStyleStateProvider` (`hooks/style.js:885`), so it
 				// would read the DEFAULT state and wipe the base value. Doing
 				// the scoping ourselves is the fix.
-				style: setStateValue( attributes?.style, stateKey, undefined ),
+				// Both properties, or "Reset all" clears Width and silently
+				// leaves the icon size behind.
+				style: setStateValue(
+					setStateValue( attributes?.style, stateKey, undefined ),
+					stateKey,
+					undefined,
+					ICON_SIZE_KEY
+				),
 			} ) }
 		>
 			<ToolsPanelItem
@@ -137,6 +161,38 @@ export default function ResponsiveWidthControl( {
 					</Notice>
 				) }
 
+			</ToolsPanelItem>
+
+			{ /*
+			  * Icon size — the DESCENDANT case.
+			  *
+			  * Identical plumbing to Width: same layer, same state key, same
+			  * reset scoping. The only difference is where the value ends up —
+			  * Width lands on the block root as a real `width`, this lands on
+			  * the root as a custom property that style.scss hands to the icon.
+			  * That indirection is the entire technique for styling a child.
+			  */ }
+			<ToolsPanelItem
+				hasValue={ () => undefined !== iconSize }
+				label={ iconLabel }
+				onDeselect={ () => onIconSizeChange( undefined ) }
+				resetAllFilter={ () => ( {
+					style: setStateValue( style, stateKey, undefined, ICON_SIZE_KEY ),
+				} ) }
+				isShownByDefault
+				panelId={ clientId }
+			>
+				<UnitControl
+					__next40pxDefaultSize
+					label={ iconLabel }
+					labelPosition="top"
+					value={ iconSize }
+					onChange={ onIconSizeChange }
+					units={ units }
+					min={ 0 }
+					placeholder={ __( '1em', 'blockkit' ) }
+				/>
+
 				{ SHOW_DIAGNOSTICS && (
 					<pre
 						style={ {
@@ -155,9 +211,12 @@ export default function ResponsiveWidthControl( {
 							`stylesProbe  ${ diagnostics.inspectorShowsNormalView }`,
 							`editing      ${ diagnostics.stateKey }`,
 							'—',
-							`base         ${ getStateValue( style, null ) ?? '—' }`,
-							`@tablet      ${ getStateValue( style, '@tablet' ) ?? '—' }`,
-							`@mobile      ${ getStateValue( style, '@mobile' ) ?? '—' }`,
+							`width base   ${ getStateValue( style, null ) ?? '—' }`,
+							`width tablet ${ getStateValue( style, '@tablet' ) ?? '—' }`,
+							`width mobile ${ getStateValue( style, '@mobile' ) ?? '—' }`,
+							`icon  base   ${ getStateValue( style, null, ICON_SIZE_KEY ) ?? '—' }`,
+							`icon  tablet ${ getStateValue( style, '@tablet', ICON_SIZE_KEY ) ?? '—' }`,
+							`icon  mobile ${ getStateValue( style, '@mobile', ICON_SIZE_KEY ) ?? '—' }`,
 						].join( '\n' ) }
 					</pre>
 				) }
