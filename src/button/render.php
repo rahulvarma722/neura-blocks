@@ -77,10 +77,75 @@ foreach ( $extra_attributes as $name => $value ) {
 	$rendered_attributes .= sprintf( ' %s="%s"', esc_attr( $name ), esc_attr( $value ) );
 }
 
+/*
+ * Per-viewport width, from `style.blockkit.width` and its `@tablet` / `@mobile`
+ * states.
+ *
+ * Core writes CSS only for style paths it owns, so this namespaced value
+ * survives save and parse but produces nothing by itself. The media queries
+ * come from core (`WP_Theme_JSON::get_viewport_media_queries()`) so the bands
+ * match every core control on this same block exactly — see
+ * includes/class-blockkit-responsive-styles.php.
+ *
+ * A per-instance class scopes the rules. Two buttons on one page hold
+ * different values, so the selector cannot be the block's shared class; and the
+ * class is derived from the values themselves, so identical buttons collapse
+ * onto one rule instead of emitting a near-duplicate per instance.
+ */
+$style_attribute  = isset( $attributes['style'] ) && is_array( $attributes['style'] ) ? $attributes['style'] : array();
+$responsive_class = '';
+$responsive_css   = '';
+
+$width_signature = wp_json_encode(
+	array(
+		BlockKit_Responsive_Styles::get_state_value( $style_attribute, null, 'blockkit', 'width' ),
+		BlockKit_Responsive_Styles::get_state_value( $style_attribute, '@tablet', 'blockkit', 'width' ),
+		BlockKit_Responsive_Styles::get_state_value( $style_attribute, '@mobile', 'blockkit', 'width' ),
+	)
+);
+
+if ( '["","",""]' !== $width_signature ) {
+	$responsive_class = 'bk-btn-w-' . substr( md5( (string) $width_signature ), 0, 8 );
+	$responsive_css   = BlockKit_Responsive_Styles::build_css(
+		$style_attribute,
+		'.' . $responsive_class,
+		'blockkit',
+		'width',
+		'width'
+	);
+}
+
+$wrapper_attributes = get_block_wrapper_attributes(
+	'' !== $responsive_class ? array( 'class' => $responsive_class ) : array()
+);
+
+/*
+ * The <style> tag precedes the element rather than being enqueued, so the rule
+ * is present before first paint even when the block renders late (a widget, a
+ * template part, a REST-rendered preview).
+ *
+ * NOT wp_strip_all_tags(). Core's media queries use CSS range syntax —
+ * `@media (480px < width <= 782px)` — and strip_tags() reads that `<` as the
+ * start of a tag and deletes everything after it, silently dropping every
+ * per-viewport rule. Measured: the string above survives only as
+ * `.bk{width:200px;}@media (480px < width`.
+ *
+ * Escaping is the wrong tool here anyway: esc_attr() would mangle the same
+ * `<`, and no escaping makes `expression(…)` safe inside a declaration. So
+ * every input is allow-listed instead — values by is_safe_length(), the
+ * selector generated from an md5, the media query from core itself — and the
+ * only thing left to guard is a literal `</` that could close the element
+ * early. That cannot arise from any of those three sources; the check is here
+ * so that stays true if a future caller passes something else.
+ */
+if ( '' !== $responsive_css && false === strpos( $responsive_css, '</' ) ) {
+	printf( '<style>%s</style>', $responsive_css ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values allow-listed by BlockKit_Responsive_Styles::is_safe_length(); media queries from WP_Theme_JSON; selector is an md5-derived class.
+}
+
 printf(
 	'<%1$s %2$s%3$s>%4$s</%1$s>',
 	esc_attr( $tag_name ),
-	get_block_wrapper_attributes(), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by get_block_wrapper_attributes().
+	$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by get_block_wrapper_attributes().
 	$rendered_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Each value escaped with esc_attr()/esc_url() above.
 	wp_kses_post( $text )
 );

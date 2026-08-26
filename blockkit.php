@@ -59,6 +59,7 @@ if ( ! BlockKit_Requirements::are_met() ) {
 }
 
 require_once BLOCKKIT_PATH . 'includes/class-blockkit-settings.php';
+require_once BLOCKKIT_PATH . 'includes/class-blockkit-responsive-styles.php';
 require_once BLOCKKIT_PATH . 'includes/class-blockkit-blocks.php';
 require_once BLOCKKIT_PATH . 'includes/class-blockkit.php';
 

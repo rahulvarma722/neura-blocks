@@ -3,7 +3,7 @@
 	"apiVersion": 3,
 	"name": "blockkit/button",
 	"version": "1.0.0",
-	"title": "Button",
+	"title": "Kit Button",
 	"category": "blockkit",
 	"icon": "button",
 	"description": "Prompt visitors to take action with a button-style link.",

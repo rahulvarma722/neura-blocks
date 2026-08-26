@@ -21,18 +21,55 @@ import {
 	ToolbarButton,
 	Popover,
 } from '@wordpress/components';
-import { useState } from '@wordpress/element';
+import { useState, useMemo } from '@wordpress/element';
+
+import ResponsiveWidthControl from './responsive-width';
+import { useStyleState } from './responsive-width/use-style-state';
+import { getResolvedValue } from './responsive-width/style-value';
 
 const NEW_TAB_TARGET = '_blank';
 const NOFOLLOW_REL = 'noreferrer noopener';
 
-export default function Edit( { attributes, setAttributes, isSelected } ) {
-	const { text, url, linkTarget, rel, title } = attributes;
+export default function Edit( {
+	attributes,
+	setAttributes,
+	isSelected,
+	clientId,
+} ) {
+	const { text, url, linkTarget, rel, title, style } = attributes;
 
 	const [ isEditingLink, setIsEditingLink ] = useState( false );
 
+	// Which viewport state the inspector is editing, and the probe that makes
+	// the answer knowable at all. See responsive-width/use-style-state.js.
+	const { device, stateKey, diagnostics, Probes } = useStyleState();
+
+	/*
+	 * Preview the width for the device being previewed, not for the state
+	 * being edited. Those differ: with Responsive styles off on Tablet the
+	 * canvas is narrow (so the front end would apply any tablet override) while
+	 * the control is editing the base. Resolving by DEVICE keeps the canvas
+	 * honest about what a visitor at that width would see.
+	 *
+	 * Inline rather than a media query because the editor canvas is already
+	 * sized to the device; render.php emits the real media queries.
+	 */
+	const previewWidth = getResolvedValue( style, device );
+
+	/*
+	 * Memoised deliberately. `useBlockProps()` feeds whatever it is given into
+	 * `useMergeRefs()`, so handing it a fresh object literal on every render
+	 * churns the block root's ref and the props RichText spreads onto its
+	 * contentEditable — which is enough to disturb typing. A stable object
+	 * means the identity only changes when the previewed width actually does.
+	 */
+	const extraBlockProps = useMemo(
+		() => ( previewWidth ? { style: { width: previewWidth } } : {} ),
+		[ previewWidth ]
+	);
+
 	// The block root. render.php puts the same classes on its <a>.
-	const blockProps = useBlockProps();
+	const blockProps = useBlockProps( extraBlockProps );
 
 	const unlink = () => {
 		setAttributes( { url: '', linkTarget: '', rel: '' } );
@@ -60,6 +97,17 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 					/>
 				) }
 			</BlockControls>
+
+			<Probes />
+
+			<ResponsiveWidthControl
+				clientId={ clientId }
+				style={ style }
+				setAttributes={ setAttributes }
+				device={ device }
+				stateKey={ stateKey }
+				diagnostics={ diagnostics }
+			/>
 
 			<InspectorControls>
 				<PanelBody title={ __( 'Settings', 'blockkit' ) }>
