@@ -47,7 +47,47 @@ class BlockKit_Blocks {
 				continue;
 			}
 
-			register_block_type( $block_dir );
+			$block_type = register_block_type( $block_dir );
+
+			if ( $block_type instanceof WP_Block_Type ) {
+				self::set_script_translations( $block_type );
+			}
+		}
+	}
+
+	/**
+	 * Makes a block's editor strings translatable.
+	 *
+	 * `register_block_type()` handles the strings inside block.json — title,
+	 * description, keywords, style labels — on its own. It does NOT handle the
+	 * `__()` calls inside the compiled editor script, which is where most of
+	 * the UI text actually lives: control labels, icon names, help text. Those
+	 * need `wp_set_script_translations()` or they stay in English no matter
+	 * what translation set is installed.
+	 *
+	 * The handle is read back off the registered type rather than rebuilt as
+	 * `blockkit-button-editor-script`, because that naming is core's private
+	 * business (`generate_block_asset_handle()`) and blocks are discovered by
+	 * scanning, so nothing here knows the block names up front anyway.
+	 *
+	 * @param WP_Block_Type $block_type The registered block type.
+	 * @return void
+	 */
+	private static function set_script_translations( $block_type ) {
+		$handles = array_merge(
+			(array) $block_type->editor_script_handles,
+			(array) $block_type->script_handles
+		);
+
+		foreach ( array_unique( array_filter( $handles ) ) as $handle ) {
+			/*
+			 * No third argument. Omitting the path makes core look in
+			 * WP_LANG_DIR/plugins, which is exactly where translate.wordpress.org
+			 * delivers the JSON files for a hosted plugin. Pointing it at a
+			 * bundled languages/ directory instead would mean shipping an empty
+			 * folder and missing the translations that actually exist.
+			 */
+			wp_set_script_translations( $handle, BLOCKKIT_SLUG );
 		}
 	}
 

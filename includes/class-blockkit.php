@@ -23,23 +23,19 @@ class BlockKit {
 	 */
 	public static function init() {
 		BlockKit_Blocks::init();
-
-		add_action( 'init', array( __CLASS__, 'load_textdomain' ) );
 	}
 
-	/**
-	 * Loads translations.
+	/*
+	 * No load_plugin_textdomain() call, deliberately.
 	 *
-	 * The text domain must match the plugin's folder slug for
-	 * translate.wordpress.org to deliver translations.
+	 * Since WordPress 4.6 core loads translations for a .org-hosted plugin
+	 * just-in-time, keyed on the plugin slug, the first time a translation
+	 * function runs. Calling it by hand is redundant and Plugin Check flags it
+	 * (`DiscouragedFunctions.load_plugin_textdomainFound`). The text domain
+	 * still has to match the folder slug for that to work — see
+	 * BLOCKKIT_SLUG in blockkit.php.
 	 *
-	 * @return void
+	 * JavaScript strings are a separate mechanism and DO need wiring up:
+	 * BlockKit_Blocks::set_script_translations().
 	 */
-	public static function load_textdomain() {
-		load_plugin_textdomain(
-			BLOCKKIT_SLUG,
-			false,
-			dirname( plugin_basename( BLOCKKIT_FILE ) ) . '/languages'
-		);
-	}
 }

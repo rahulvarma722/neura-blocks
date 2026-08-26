@@ -1,16 +1,16 @@
 <?php
 /**
  * Plugin Name:       BlockKit
- * Plugin URI:        https://example.com/blockkit
+ * Plugin URI:        https://github.com/rahulvarma722/blockkit
  * Description:       A Gutenberg block collection built on the WordPress 7.1 block API.
  * Version:           1.0.0
- * Requires at least: 6.6
+ * Requires at least: 7.1
+ * Tested up to:      7.1
  * Requires PHP:      8.1
  * Author:            Brainstorm Force
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       blockkit
- * Domain Path:       /languages
  *
  * @package BlockKit
  */
@@ -47,9 +47,16 @@ define( 'BLOCKKIT_URL', plugin_dir_url( __FILE__ ) );
  *
  * Checked on load rather than only on activation, so that a site which
  * downgrades PHP or WordPress gets a notice instead of a fatal error.
+ *
+ * The WordPress floor is 7.1 because per-viewport style states are a 7.1
+ * feature and the button's width/icon-size controls are built directly on
+ * them: they write core's `@tablet` / `@mobile` layers and detect which state
+ * the editor is in by probing core's own slots. On 6.x those slots do not
+ * exist, so the controls would still render and still store values — into
+ * layers the editor cannot read back. Failing loudly beats that.
  */
 const BLOCKKIT_MIN_PHP = '8.1';
-const BLOCKKIT_MIN_WP  = '6.6';
+const BLOCKKIT_MIN_WP  = '7.1';
 
 require_once BLOCKKIT_PATH . 'includes/class-blockkit-requirements.php';
 

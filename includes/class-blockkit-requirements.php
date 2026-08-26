@@ -60,18 +60,25 @@ class BlockKit_Requirements {
 			return;
 		}
 
-		printf(
-			'<div class="notice notice-error"><p><strong>%s</strong></p><ul style="list-style:disc;margin-left:20px">%s</ul></div>',
-			esc_html__( 'BlockKit could not be loaded.', 'blockkit' ),
-			implode(
-				'',
-				array_map(
-					static function ( $failure ) {
-						return '<li>' . esc_html( $failure ) . '</li>';
-					},
-					self::get_failures()
-				)
-			)
-		);
+		/*
+		 * Built with a foreach and echoed piecemeal rather than assembled with
+		 * array_map()/implode() and passed to printf().
+		 *
+		 * Both escape identically, but PHPCS cannot follow a value out of a
+		 * callback and back, so the array_map() form raises
+		 * `WordPress.Security.EscapeOutput.OutputNotEscaped` — an ERROR in
+		 * Plugin Check, on code that was already safe. Rather than silence a
+		 * security sniff with a phpcs:ignore, the escaping is written where the
+		 * sniff can see it. A reviewer reads it the same way.
+		 */
+		echo '<div class="notice notice-error"><p><strong>';
+		esc_html_e( 'BlockKit could not be loaded.', 'blockkit' );
+		echo '</strong></p><ul style="list-style:disc;margin-left:20px">';
+
+		foreach ( self::get_failures() as $failure ) {
+			echo '<li>' . esc_html( $failure ) . '</li>';
+		}
+
+		echo '</ul></div>';
 	}
 }

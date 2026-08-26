@@ -86,14 +86,15 @@ export const ICON_SIZE_KEY = 'iconSize';
 /**
  * CSS custom properties the stylesheet reads.
  *
- * The wrapper carries the variable; the descendant consumes it. That single
- * indirection is what makes a child element stylable from the one place the
- * platform lets us write to.
+ * Only descendant-targeting properties belong here. The wrapper carries the
+ * variable and the descendant consumes it, and that single indirection is what
+ * makes a child element stylable from the one place the platform lets us write
+ * to. `width` is deliberately absent: it lands on the block root, so it is
+ * emitted as a real declaration and needs no variable.
  *
  * @type {Object<string, string>}
  */
 export const CSS_VARS = {
-	width: '--bk-button-width',
 	iconSize: '--bk-button-icon-size',
 };
 
@@ -140,10 +141,13 @@ export const WIDTH_UNITS = [
 /**
  * Whether to print the live detection state into the inspector.
  *
- * On for the experiment: it shows the device, both probe readings, the resolved
- * state and the stored values, so the mechanism can be watched rather than
- * guessed at. Set to false and rebuild for a clean UI.
+ * OFF for release. When on it renders a <pre> block into the Styles tab showing
+ * the device, both probe readings, the resolved state and the stored values, so
+ * the mechanism can be watched rather than guessed at — invaluable while
+ * working on `use-style-state.js`, and a debug artifact anywhere near a user.
+ *
+ * Flip to true and rebuild to get it back.
  *
  * @type {boolean}
  */
-export const SHOW_DIAGNOSTICS = true;
+export const SHOW_DIAGNOSTICS = false;
