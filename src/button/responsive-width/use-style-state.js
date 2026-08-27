@@ -55,8 +55,6 @@
  * inspector on a narrow device with Responsive styles off, which reads as
  * "state active" — and is invisible, because the control is not on screen and
  * the canvas preview resolves by device rather than by state.
- *
- * @package BlockKit
  */
 
 import { useEffect, useState, useCallback, useMemo } from '@wordpress/element';
@@ -109,7 +107,8 @@ export function useStyleState() {
 		setInspectorShowsNormalView( value );
 	}, [] );
 
-	const isNarrowDevice = null !== ( VIEWPORT_STATE_BY_DEVICE[ device ] ?? null );
+	const isNarrowDevice =
+		null !== ( VIEWPORT_STATE_BY_DEVICE[ device ] ?? null );
 
 	const isEditingViewportState =
 		toolbarShowsStyleState ||

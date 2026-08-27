@@ -10,8 +10,6 @@
  * Icons are deliberately plain SVG with `currentColor` and no width/height
  * attribute: the size comes from CSS so it can be per-viewport, and the colour
  * follows the button's text colour so core's `color` support keeps working.
- *
- * @package BlockKit
  */
 
 import { __ } from '@wordpress/i18n';

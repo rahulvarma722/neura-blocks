@@ -13,8 +13,6 @@
  *
  *   3. Which inspector group a fill declares decides whether it survives the
  *      responsive view at all. Flip `EXPERIMENT_GROUP` to see it.
- *
- * @package BlockKit
  */
 
 import { __, sprintf } from '@wordpress/i18n';
@@ -72,7 +70,12 @@ export default function ResponsiveWidthControl( {
 
 	const onIconSizeChange = ( next ) => {
 		setAttributes( {
-			style: setStateValue( style, stateKey, next || undefined, ICON_SIZE_KEY ),
+			style: setStateValue(
+				style,
+				stateKey,
+				next || undefined,
+				ICON_SIZE_KEY
+			),
 		} );
 	};
 
@@ -160,24 +163,28 @@ export default function ResponsiveWidthControl( {
 						) }
 					</Notice>
 				) }
-
 			</ToolsPanelItem>
 
 			{ /*
-			  * Icon size — the DESCENDANT case.
-			  *
-			  * Identical plumbing to Width: same layer, same state key, same
-			  * reset scoping. The only difference is where the value ends up —
-			  * Width lands on the block root as a real `width`, this lands on
-			  * the root as a custom property that style.scss hands to the icon.
-			  * That indirection is the entire technique for styling a child.
-			  */ }
+			 * Icon size — the DESCENDANT case.
+			 *
+			 * Identical plumbing to Width: same layer, same state key, same
+			 * reset scoping. The only difference is where the value ends up —
+			 * Width lands on the block root as a real `width`, this lands on
+			 * the root as a custom property that style.scss hands to the icon.
+			 * That indirection is the entire technique for styling a child.
+			 */ }
 			<ToolsPanelItem
 				hasValue={ () => undefined !== iconSize }
 				label={ iconLabel }
 				onDeselect={ () => onIconSizeChange( undefined ) }
 				resetAllFilter={ () => ( {
-					style: setStateValue( style, stateKey, undefined, ICON_SIZE_KEY ),
+					style: setStateValue(
+						style,
+						stateKey,
+						undefined,
+						ICON_SIZE_KEY
+					),
 				} ) }
 				isShownByDefault
 				panelId={ clientId }
@@ -211,12 +218,33 @@ export default function ResponsiveWidthControl( {
 							`stylesProbe  ${ diagnostics.inspectorShowsNormalView }`,
 							`editing      ${ diagnostics.stateKey }`,
 							'—',
-							`width base   ${ getStateValue( style, null ) ?? '—' }`,
-							`width tablet ${ getStateValue( style, '@tablet' ) ?? '—' }`,
-							`width mobile ${ getStateValue( style, '@mobile' ) ?? '—' }`,
-							`icon  base   ${ getStateValue( style, null, ICON_SIZE_KEY ) ?? '—' }`,
-							`icon  tablet ${ getStateValue( style, '@tablet', ICON_SIZE_KEY ) ?? '—' }`,
-							`icon  mobile ${ getStateValue( style, '@mobile', ICON_SIZE_KEY ) ?? '—' }`,
+							`width base   ${
+								getStateValue( style, null ) ?? '—'
+							}`,
+							`width tablet ${
+								getStateValue( style, '@tablet' ) ?? '—'
+							}`,
+							`width mobile ${
+								getStateValue( style, '@mobile' ) ?? '—'
+							}`,
+							`icon  base   ${
+								getStateValue( style, null, ICON_SIZE_KEY ) ??
+								'—'
+							}`,
+							`icon  tablet ${
+								getStateValue(
+									style,
+									'@tablet',
+									ICON_SIZE_KEY
+								) ?? '—'
+							}`,
+							`icon  mobile ${
+								getStateValue(
+									style,
+									'@mobile',
+									ICON_SIZE_KEY
+								) ?? '—'
+							}`,
 						].join( '\n' ) }
 					</pre>
 				) }

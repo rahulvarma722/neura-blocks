@@ -43,27 +43,26 @@
 	// The outline variation trades the fill for a border.
 	&.is-style-outline {
 		background-color: transparent;
-		color: currentColor;
-		border: 2px solid currentColor;
+		color: currentcolor;
+		border: 2px solid currentcolor;
 	}
-}
 
-/**
- * Button icon.
- *
- * THE POINT OF THIS RULE: the icon is a DESCENDANT, and a descendant cannot be
- * sized by the mechanisms that reach a block. Inline styles and
- * `get_block_wrapper_attributes()` write to the block ROOT only, and core's own
- * per-viewport CSS targets the root unless the block declares feature selectors
- * in block.json.
- *
- * So the value is written to the root as a custom property and CONSUMED here.
- * One indirection, and the icon becomes stylable — per viewport included, since
- * a media query only has to reassign the variable on the root.
- *
- * The fallback keeps the icon visible before any value is set.
- */
-.wp-block-blockkit-button {
+	/*
+	 * THE ICON. Kept inside this same block rather than re-opening the selector
+	 * below, so there is one place that describes what this class does.
+	 *
+	 * The icon is a DESCENDANT, and a descendant cannot be sized by the
+	 * mechanisms that reach a block: inline styles and
+	 * `get_block_wrapper_attributes()` write to the block ROOT only, and core's
+	 * own per-viewport CSS targets the root unless the block declares feature
+	 * selectors in block.json.
+	 *
+	 * So the value is written to the root as a custom property and CONSUMED
+	 * here. One indirection, and the icon becomes stylable — per viewport
+	 * included, since a media query only has to reassign the variable on the
+	 * root. The fallback keeps the icon visible before any value is set.
+	 */
+
 	// Only becomes a flex container when it actually has an icon, so a plain
 	// text button keeps its natural inline-block behaviour.
 	&:has(.wp-block-blockkit-button__icon) {

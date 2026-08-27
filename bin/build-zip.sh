@@ -166,6 +166,16 @@ else
 	warn "vendor/bin/phpcs absent — run 'composer install' to enable the standards gate"
 fi
 
+# JS and CSS standards. Same reasoning as PHPCS: skipped rather than failed
+# when node_modules is absent, so the script works on a clean checkout.
+if [[ -x node_modules/.bin/wp-scripts ]]; then
+	node_modules/.bin/wp-scripts lint-js >/dev/null 2>&1 || die "ESLint reported violations. Run 'npm run lint:js -- --fix'."
+	node_modules/.bin/wp-scripts lint-style >/dev/null 2>&1 || die "Stylelint reported violations. Run 'npm run lint:css -- --fix'."
+	ok "ESLint and Stylelint clean"
+else
+	warn "node_modules absent — skipped the JS/CSS standards gate"
+fi
+
 # PHP syntax, if a CLI is around.
 if command -v php >/dev/null 2>&1; then
 	while IFS= read -r php; do
@@ -200,7 +210,7 @@ for glob in "${PRUNE_GLOBS[@]}"; do
 done
 
 # Belt and braces: these must never be in the tree, whatever the allow-list says.
-for forbidden in node_modules vendor .git .github .gitignore package-lock.json composer.json composer.lock phpcs.xml.dist phpcs.xml docs bin RENAMING.md dist; do
+for forbidden in node_modules vendor .git .github .gitignore .eslintrc.js .eslintrc .stylelintrc package-lock.json composer.json composer.lock phpcs.xml.dist phpcs.xml docs bin RENAMING.md dist; do
 	if [[ -e "$ROOT/$forbidden" ]]; then
 		rm -rf "$ROOT/$forbidden"
 		warn "removed unexpected $forbidden from the staged tree"

@@ -151,7 +151,9 @@ export default function Edit( {
 						label={ __( 'Icon', 'blockkit' ) }
 						value={ icon }
 						options={ ICON_OPTIONS }
-						onChange={ ( value ) => setAttributes( { icon: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { icon: value } )
+						}
 					/>
 
 					{ !! icon && (
@@ -181,14 +183,18 @@ export default function Edit( {
 						__next40pxDefaultSize
 						label={ __( 'Link rel', 'blockkit' ) }
 						value={ rel }
-						onChange={ ( value ) => setAttributes( { rel: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { rel: value } )
+						}
 					/>
 					<TextControl
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize
 						label={ __( 'Title attribute', 'blockkit' ) }
 						value={ title }
-						onChange={ ( value ) => setAttributes( { title: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { title: value } )
+						}
 						help={ __(
 							'Describes the link destination for assistive technology.',
 							'blockkit'
@@ -198,15 +204,15 @@ export default function Edit( {
 			</InspectorControls>
 
 			{ /*
-			  * A span in the editor rather than an anchor, so a click
-			  * selects the block instead of following the link.
-			  */ }
+			 * A span in the editor rather than an anchor, so a click
+			 * selects the block instead of following the link.
+			 */ }
 			{ /*
-			  * RichText can no longer BE the block root: the root now holds two
-			  * children, the text and the icon. So blockProps moves to a
-			  * wrapping span and RichText becomes an ordinary child — which is
-			  * also what render.php does.
-			  */ }
+			 * RichText can no longer BE the block root: the root now holds two
+			 * children, the text and the icon. So blockProps moves to a
+			 * wrapping span and RichText becomes an ordinary child — which is
+			 * also what render.php does.
+			 */ }
 			<span { ...blockProps }>
 				<RichText
 					tagName="span"

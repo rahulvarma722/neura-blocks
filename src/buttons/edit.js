@@ -24,8 +24,7 @@ const TEMPLATE = [ [ 'blockkit/button' ] ];
 
 export default function Edit( { clientId } ) {
 	const hasChildren = useSelect(
-		( select ) =>
-			select( blockEditorStore ).getBlockCount( clientId ) > 0,
+		( select ) => select( blockEditorStore ).getBlockCount( clientId ) > 0,
 		[ clientId ]
 	);
 

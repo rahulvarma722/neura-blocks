@@ -1,7 +1,5 @@
 /**
  * Responsive Width — experiment constants.
- *
- * @package BlockKit
  */
 
 /**

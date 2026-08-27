@@ -4,11 +4,13 @@
  * All four functions take and return plain objects and never mutate their
  * input, so they are equally usable from the control, from a reset filter and
  * from a test.
- *
- * @package BlockKit
  */
 
-import { STYLE_NAMESPACE, WIDTH_KEY, VIEWPORT_STATE_BY_DEVICE } from './constants';
+import {
+	STYLE_NAMESPACE,
+	WIDTH_KEY,
+	VIEWPORT_STATE_BY_DEVICE,
+} from './constants';
 
 /**
  * The value stored for one exact state — no fallback.
@@ -54,7 +56,10 @@ export function getResolvedValue( style, device, key = WIDTH_KEY ) {
 		return getStateValue( style, null, key );
 	}
 
-	return getStateValue( style, stateKey, key ) ?? getStateValue( style, null, key );
+	return (
+		getStateValue( style, stateKey, key ) ??
+		getStateValue( style, null, key )
+	);
 }
 
 /**
