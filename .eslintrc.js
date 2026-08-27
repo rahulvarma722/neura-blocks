@@ -48,4 +48,17 @@ module.exports = {
 			},
 		],
 	},
+
+	overrides: [
+		{
+			/*
+			 * Jest globals — describe/it/expect — exist only in test files.
+			 *
+			 * Scoped to tests/ rather than set globally, so a stray `describe`
+			 * in src/ is still the error it should be.
+			 */
+			files: [ 'tests/**/*.js' ],
+			env: { jest: true },
+		},
+	],
 };

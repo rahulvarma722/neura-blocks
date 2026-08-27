@@ -43,5 +43,11 @@ jobs:
       - name: Stylelint
         run: npm run lint:css
 
+      - name: PHPUnit (unit)
+        run: composer test
+
+      - name: Jest (unit)
+        run: npm run test:js
+
       - name: Build
         run: npm run build

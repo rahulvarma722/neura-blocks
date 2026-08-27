@@ -10,12 +10,15 @@
 		"squizlabs/php_codesniffer": "^3.10",
 		"wp-coding-standards/wpcs": "^3.1",
 		"phpcompatibility/phpcompatibility-wp": "^2.1",
-		"dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"phpunit/phpunit": "^10.5"
 	},
 	"scripts": {
 		"lint": "phpcs",
 		"lint:summary": "phpcs --report=summary",
-		"format": "phpcbf"
+		"format": "phpcbf",
+		"test": "phpunit",
+		"test:integration": "./bin/test-integration.sh"
 	},
 	"config": {
 		"allow-plugins": {

@@ -24,6 +24,22 @@
 defined( 'ABSPATH' ) || exit;
 
 /*
+ * A file-level `use`, in a file with no `namespace` declaration.
+ *
+ * That combination looks wrong and is not. `use` is LEXICAL and per-file: it
+ * creates an alias for the file it appears in, independent of the scope the
+ * file is required from. Core requires this template from inside a closure in
+ * wp-includes/blocks.php, which is global scope — but the alias below still
+ * applies here, so `Block_Render::` resolves without repeating
+ * `\BlockKit\Block_Render` at nine call sites.
+ *
+ * `Responsive_Styles` is NOT aliased on purpose: it is referenced only from
+ * inside Block_Render now, and importing a name this file no longer uses would
+ * be a lie about its dependencies.
+ */
+use BlockKit\Block_Render;
+
+/*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
  *
  * These variables are NOT global, despite what the sniff reports.
@@ -50,7 +66,7 @@ defined( 'ABSPATH' ) || exit;
  * every line rather than to any one of them.
  */
 
-$text = isset( $attributes['text'] ) ? $attributes['text'] : '';
+$text = Block_Render::text( $attributes, 'text' );
 
 // An empty button is invisible on the front end but still occupies a
 // flex slot, so render nothing at all.
@@ -66,12 +82,14 @@ if ( '' === trim( wp_strip_all_tags( $text ) ) ) {
  * is long-lived, portable between sites, and reachable by anything that can
  * write a post. Escaping alone would make these values safe to PRINT while
  * still letting nonsense through — `target="totally-arbitrary"` is harmless to
- * a parser and meaningless to a browser. So each one is narrowed to the set of
- * values that actually mean something here, and the escaping is then left to
+ * a parser and meaningless to a browser.
+ *
+ * The narrowing itself lives in BlockKit\Block_Render, so every block sanitises
+ * the same way and a fix lands in one place. Escaping is then left to
  * get_block_wrapper_attributes(), which esc_attr()s every value it is given
  * (wp-includes/class-wp-block-supports.php:265).
  */
-$url = isset( $attributes['url'] ) ? trim( (string) $attributes['url'] ) : '';
+$safe_url = Block_Render::url( Block_Render::text( $attributes, 'url' ) );
 
 /*
  * `target` has exactly four meaningful values. An allow-list rather than
@@ -80,54 +98,36 @@ $url = isset( $attributes['url'] ) ? trim( (string) $attributes['url'] ) : '';
  * window named after it and keeps reusing that window, which is neither what
  * the editor asked for nor something the user can see in the UI.
  */
-$allowed_targets = array( '_blank', '_self', '_parent', '_top' );
-$link_target     = isset( $attributes['linkTarget'] ) ? (string) $attributes['linkTarget'] : '';
-$link_target     = in_array( $link_target, $allowed_targets, true ) ? $link_target : '';
-
-/*
- * `rel` is a space-separated token list drawn from a FIXED vocabulary, so it
- * gets a real allow-list rather than a character filter.
- *
- * Stripping disallowed characters is not enough: `noopener"><script>` reduces
- * to `noopenerscriptalert1script`, which is safe to print but is a garbage
- * token that means nothing to a browser and tells a reader nothing about what
- * was intended. Matching whole tokens against the HTML link-type registry
- * keeps every value that has an effect and discards the rest entirely.
- */
-$allowed_rel = array(
-	'alternate',
-	'author',
-	'bookmark',
-	'external',
-	'help',
-	'license',
-	'me',
-	'next',
-	'nofollow',
-	'noopener',
-	'noreferrer',
-	'opener',
-	'prev',
-	'privacy-policy',
-	'search',
-	'sponsored',
-	'tag',
-	'terms-of-service',
-	'ugc',
+$link_target = Block_Render::one_of(
+	Block_Render::text( $attributes, 'linkTarget' ),
+	array( '_blank', '_self', '_parent', '_top' )
 );
 
-$rel = isset( $attributes['rel'] ) ? strtolower( trim( (string) $attributes['rel'] ) ) : '';
-$rel = '' === $rel
-	? ''
-	: implode(
-		' ',
-		array_unique(
-			array_intersect(
-				(array) preg_split( '/\s+/', $rel, -1, PREG_SPLIT_NO_EMPTY ),
-				$allowed_rel
-			)
-		)
-	);
+// `rel` is a token list from a fixed vocabulary — the HTML link-type registry.
+$rel = Block_Render::tokens(
+	Block_Render::text( $attributes, 'rel' ),
+	array(
+		'alternate',
+		'author',
+		'bookmark',
+		'external',
+		'help',
+		'license',
+		'me',
+		'next',
+		'nofollow',
+		'noopener',
+		'noreferrer',
+		'opener',
+		'prev',
+		'privacy-policy',
+		'search',
+		'sponsored',
+		'tag',
+		'terms-of-service',
+		'ugc',
+	)
+);
 
 /*
  * A plain-text tooltip: strip tags and control characters, keep the text.
@@ -139,24 +139,15 @@ $rel = '' === $rel
  * function-scoped, but a name that only stays safe because of where the file
  * happens to be required is not worth keeping.
  */
-$link_title = isset( $attributes['title'] ) ? sanitize_text_field( (string) $attributes['title'] ) : '';
-
-$tag_name = isset( $attributes['tagName'] ) && 'button' === $attributes['tagName'] ? 'button' : 'a';
+$link_title = sanitize_text_field( Block_Render::text( $attributes, 'title' ) );
 
 /*
- * Escape FIRST, then decide the tag from the result.
- *
- * esc_url() does not just escape: it drops the value entirely when the scheme
- * is not allow-listed, so `javascript:alert(1)` comes back as ''. Testing the
- * RAW value for emptiness therefore passes a hostile URL straight through the
- * `a` branch and emits `<a href="">` — an anchor with no destination, which is
- * exactly the case the branch below exists to avoid. Testing the escaped value
- * closes that gap, and a stripped URL is treated the same as no URL at all.
+ * Without a usable URL there is nothing to link to, so render a button element
+ * rather than an anchor with no href — which is not keyboard focusable. Note
+ * this branches on the ESCAPED url: see Block_Render::url() for why.
  */
-$safe_url = '' === $url ? '' : esc_url( $url );
+$tag_name = Block_Render::one_of( Block_Render::text( $attributes, 'tagName' ), array( 'a', 'button' ), 'a' );
 
-// Without a usable URL there is nothing to link to, so render a button element
-// rather than an anchor with no href — which is not keyboard focusable.
 if ( '' === $safe_url ) {
 	$tag_name = 'button';
 }
@@ -202,8 +193,8 @@ $icon_paths = array(
 	'external' => 'M11 3h6v6h-2V6.4l-6.3 6.3-1.4-1.4L13.6 5H11zM4 6h4v2H6v6h6v-2h2v4H4z',
 );
 
-$icon_key      = isset( $attributes['icon'] ) ? (string) $attributes['icon'] : '';
-$icon_position = isset( $attributes['iconPosition'] ) && 'left' === $attributes['iconPosition'] ? 'left' : 'right';
+$icon_key      = Block_Render::text( $attributes, 'icon' );
+$icon_position = Block_Render::one_of( Block_Render::text( $attributes, 'iconPosition' ), array( 'left', 'right' ), 'right' );
 $icon_markup   = '';
 
 if ( '' !== $icon_key && isset( $icon_paths[ $icon_key ] ) ) {
@@ -238,36 +229,20 @@ if ( '' !== $icon_key && isset( $icon_paths[ $icon_key ] ) ) {
 }
 
 /*
- * Per-viewport width, from `style.blockkit.width` and its `@tablet` / `@mobile`
- * states.
+ * Per-viewport width and icon size, from `style.blockkit.*` and its `@tablet` /
+ * `@mobile` states.
  *
- * `\BlockKit\Responsive_Styles` is written fully qualified, leading separator
- * included. This file is not loaded from anywhere in the plugin's namespace —
- * core requires it from inside a closure in wp-includes/blocks.php, which is
- * global scope — so an unqualified name would resolve to a class that does not
- * exist and fatal at render time.
- *
- * Core writes CSS only for style paths it owns, so this namespaced value
- * survives save and parse but produces nothing by itself. The media queries
- * come from core (`WP_Theme_JSON::get_viewport_media_queries()`) so the bands
+ * Core writes CSS only for style paths it owns, so these namespaced values
+ * survive save and parse but produce nothing by themselves. The media queries
+ * come from core (`\WP_Theme_JSON::get_viewport_media_queries()`) so the bands
  * match every core control on this same block exactly — see
  * includes/class-responsive-styles.php.
  *
- * A per-instance class scopes the rules. Two buttons on one page hold
- * different values, so the selector cannot be the block's shared class; and the
- * class is derived from the values themselves, so identical buttons collapse
- * onto one rule instead of emitting a near-duplicate per instance.
- */
-$style_attribute  = isset( $attributes['style'] ) && is_array( $attributes['style'] ) ? $attributes['style'] : array();
-$responsive_class = '';
-$responsive_css   = '';
-
-/*
  * Two properties, two very different destinations.
  *
  * `width` is emitted as a real declaration on the block root. `iconSize` is
  * emitted as a CUSTOM PROPERTY on that same root, because the element it sizes
- * is a CHILD and nothing here can select a child: `get_block_wrapper_attributes()`
+ * is a CHILD and nothing here can select a child: get_block_wrapper_attributes()
  * writes to the root, and so does core's own per-viewport CSS unless the block
  * declares feature selectors in block.json.
  *
@@ -275,56 +250,20 @@ $responsive_css   = '';
  * media queries stay on the root, so the icon becomes per-viewport without a
  * single descendant selector being generated here.
  */
-$style_properties = array(
-	// state key => CSS property emitted.
-	'width'    => 'width',
-	'iconSize' => '--bk-button-icon-size',
+$responsive = Block_Render::responsive(
+	isset( $attributes['style'] ) ? $attributes['style'] : array(),
+	'blockkit',
+	array(
+		// style key => CSS property emitted.
+		'width'    => 'width',
+		'iconSize' => '--bk-button-icon-size',
+	),
+	'bk-btn-'
 );
-
-$stored_values = array();
-
-foreach ( array_keys( $style_properties ) as $property_key ) {
-	foreach ( array( null, '@tablet', '@mobile' ) as $state_key ) {
-		$stored_values[] = \BlockKit\Responsive_Styles::get_state_value(
-			$style_attribute,
-			$state_key,
-			'blockkit',
-			$property_key
-		);
-	}
-}
-
-$width_signature = wp_json_encode( $stored_values );
-
-if ( '' !== implode( '', $stored_values ) ) {
-	$responsive_class = 'bk-btn-' . substr( md5( (string) $width_signature ), 0, 8 );
-
-	foreach ( $style_properties as $property_key => $css_property ) {
-		$responsive_css .= \BlockKit\Responsive_Styles::build_css(
-			$style_attribute,
-			'.' . $responsive_class,
-			'blockkit',
-			$property_key,
-			$css_property
-		);
-	}
-
-	/*
-	 * The class is derived from the STORED values, but the CSS is built only
-	 * from values that pass is_safe_length(). Those two sets differ whenever a
-	 * value is present but unusable, and the block then carried a scoping class
-	 * with no rule anywhere to match it. Harmless to render, but it is dead
-	 * markup that invites the question "what styles this?" — so drop the class
-	 * when nothing was emitted for it.
-	 */
-	if ( '' === $responsive_css ) {
-		$responsive_class = '';
-	}
-}
 
 $wrapper_classes = array_filter(
 	array(
-		$responsive_class,
+		$responsive['class'],
 		// Mirrors the editor, so the icon sits on the same side in both.
 		'' !== $icon_markup && 'left' === $icon_position ? 'has-icon-left' : '',
 	)
@@ -352,57 +291,12 @@ $wrapper_attributes = get_block_wrapper_attributes(
 	)
 );
 
-/*
- * The <style> tag precedes the element rather than being enqueued, so the rule
- * is present before first paint even when the block renders late (a widget, a
- * template part, a REST-rendered preview).
- *
- * NOT wp_strip_all_tags(). Core's media queries use CSS range syntax —
- * `@media (480px < width <= 782px)` — and strip_tags() reads that `<` as the
- * start of a tag and deletes everything after it, silently dropping every
- * per-viewport rule. Measured: the string above survives only as
- * `.bk{width:200px;}@media (480px < width`.
- *
- * Escaping is the wrong tool here anyway: esc_attr() would mangle the same
- * `<`, and no escaping makes `expression(…)` safe inside a declaration. So
- * every input is allow-listed instead — values by is_safe_length(), the
- * selector generated from an md5, the media query from core itself — and the
- * only thing left to guard is a literal `</` that could close the element
- * early. That cannot arise from any of those three sources; the check is here
- * so that stays true if a future caller passes something else.
- */
-if ( '' !== $responsive_css && false === strpos( $responsive_css, '</' ) ) {
-	printf( '<style>%s</style>', $responsive_css ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values allow-listed by \BlockKit\Responsive_Styles::is_safe_length(); media queries from WP_Theme_JSON; selector is an md5-derived class.
-}
-
-/*
- * The label is filtered with wp_kses() against an explicit inline-formatting
- * list rather than wp_kses_post().
- *
- * wp_kses_post() is the right filter for POST CONTENT — it permits everything
- * a post body may legitimately contain, which includes <img>, <iframe> and
- * <a>. None of those belong in a button label, and a nested <a> inside this
- * element would be invalid HTML that browsers recover from unpredictably.
- * edit.js sets `allowedFormats={ [] }`, so the editor cannot produce any
- * markup here at all; this list is what survives if that is ever relaxed to
- * basic formatting, and nothing wider can slip through in the meantime.
- */
-$allowed_label_html = array(
-	'strong' => array(),
-	'b'      => array(),
-	'em'     => array(),
-	'i'      => array(),
-	's'      => array(),
-	'sub'    => array(),
-	'sup'    => array(),
-	'code'   => array(),
-	'br'     => array(),
-);
+echo Block_Render::style_tag( $responsive['css'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Block_Render::style_tag() allow-lists its inputs and guards `</`; see the note there for why escaping is the wrong tool for CSS.
 
 printf(
 	'<%1$s %2$s><span class="wp-block-blockkit-button__text">%3$s</span>%4$s</%1$s>',
 	esc_attr( $tag_name ),
 	$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); the string is attribute markup, so escaping it again would corrupt it.
-	wp_kses( $text, $allowed_label_html ),
+	wp_kses( $text, Block_Render::LABEL_HTML ),
 	$icon_markup // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Literal SVG template; the only interpolated value is esc_attr()'d above and comes from a fixed four-entry map. See the note there for why wp_kses() cannot be used.
 );

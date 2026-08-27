@@ -37,6 +37,19 @@ defined( 'ABSPATH' ) || exit;
  * That is the WordPress file-naming convention, so the layout stays legible to
  * anyone who has read another WordPress plugin, and sub-namespaces map onto
  * sub-directories without any extra registration.
+ *
+ * INTERFACES AND TRAITS get their own prefixes, which WordPress convention also
+ * specifies:
+ *
+ *   BlockKit\Module               -> includes/interface-module.php
+ *   BlockKit\Renders_Blocks       -> includes/trait-renders-blocks.php
+ *
+ * PHP gives an autoloader no way to know which of the three it has been asked
+ * for — `class_exists()`, `interface_exists()` and `trait_exists()` all route
+ * here identically. So each prefix is tried in turn. That costs up to two extra
+ * file_exists() calls on a miss, which is nothing next to the alternative of
+ * encoding the kind into the type name (`Module_Interface`, `I_Module`) and
+ * having every reference carry the noise forever.
  */
 final class Autoloader {
 
@@ -76,21 +89,33 @@ final class Autoloader {
 		$path     = self::path_for( $relative );
 
 		/*
-		 * file_exists() rather than letting require fail. A missing file is a
-		 * programming error, but a fatal from inside an autoloader is nearly
-		 * unreadable — it reports the require, not the class_exists() call or
-		 * the `new` that triggered it.
+		 * path_for() only returns a path that exists, so a miss lands here as
+		 * false and we simply do nothing — letting the next autoloader in the
+		 * SPL stack try. Requiring a missing file instead would fatal from
+		 * inside an autoloader, which reports the require rather than the
+		 * class_exists() or `new` that triggered it, and is nearly unreadable.
 		 */
-		if ( $path && file_exists( $path ) ) {
+		if ( $path ) {
 			require_once $path;
 		}
 	}
 
 	/**
-	 * Builds the file path for a namespace-relative class name.
+	 * File-name prefixes tried, in order.
 	 *
-	 * @param string $relative Class name with the plugin namespace removed.
-	 * @return string|false Absolute path, or false if the name is not one we map.
+	 * Classes first because they are the overwhelming majority, so the common
+	 * case resolves on the first file_exists().
+	 *
+	 * @var string[]
+	 */
+	const PREFIXES = array( 'class-', 'interface-', 'trait-' );
+
+	/**
+	 * Builds the file path for a namespace-relative type name.
+	 *
+	 * @param string $relative Type name with the plugin namespace removed.
+	 * @return string|false Absolute path of the first prefix that exists, or
+	 *                      false when the name is not one we map.
 	 */
 	private static function path_for( $relative ) {
 		// Reject anything that is not a plain class path. Belt and braces: the
@@ -101,7 +126,7 @@ final class Autoloader {
 		}
 
 		$segments = explode( '\\', $relative );
-		$class    = array_pop( $segments );
+		$type     = array_pop( $segments );
 
 		$directory = BLOCKKIT_PATH . 'includes/';
 
@@ -109,7 +134,17 @@ final class Autoloader {
 			$directory .= self::to_filename( $segment ) . '/';
 		}
 
-		return $directory . 'class-' . self::to_filename( $class ) . '.php';
+		$filename = self::to_filename( $type );
+
+		foreach ( self::PREFIXES as $prefix ) {
+			$path = $directory . $prefix . $filename . '.php';
+
+			if ( file_exists( $path ) ) {
+				return $path;
+			}
+		}
+
+		return false;
 	}
 
 	/**

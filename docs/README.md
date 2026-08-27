@@ -12,6 +12,7 @@ own.
 | [Architecture](ARCHITECTURE.md) | Namespace, autoloader, bootstrap order, class map, file layout |
 | [Blocks](BLOCKS.md) | Registration by directory scan, `block.json`, the save/render split, parent–child |
 | [Styles](STYLES.md) | SCSS layout, class naming, the per-viewport mechanism, the CSS-variable indirection |
+| [Testing](TESTING.md) | The three suites, what each is for, and how to add to them |
 | [Build and release](BUILD-AND-RELEASE.md) | `npm run build:zip`, the release gate, linting, GitHub + WordPress.org |
 | [Renaming](RENAMING.md) | Changing the plugin's name, and what becomes permanent after the first release |
 | [Responsive styles experiment](RESPONSIVE-STYLES-EXPERIMENT.md) | The R&D log behind the per-viewport work: what was tried, what core allows, two bugs found |

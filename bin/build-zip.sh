@@ -179,6 +179,22 @@ else
 	warn "vendor/bin/phpcs absent — run 'composer install' to enable the standards gate"
 fi
 
+# Tests. The unit suites need no WordPress and take under a second between
+# them, so there is no reason for a release not to run them. The integration
+# suite needs a live WordPress and is therefore opt-in via `--check` / CI, not a
+# hard gate here — a release should not be blocked by wp-cli being absent.
+if [[ -x vendor/bin/phpunit ]]; then
+	vendor/bin/phpunit --no-progress >/dev/null 2>&1 || die "PHPUnit failures. Run 'composer test'."
+	ok "PHPUnit unit suite passing"
+else
+	warn "vendor/bin/phpunit absent — run 'composer install' to enable the unit suite"
+fi
+
+if [[ -x node_modules/.bin/wp-scripts ]]; then
+	node_modules/.bin/wp-scripts test-unit-js >/dev/null 2>&1 || die "Jest failures. Run 'npm run test:js'."
+	ok "Jest unit suite passing"
+fi
+
 # JS and CSS standards. Same reasoning as PHPCS: skipped rather than failed
 # when node_modules is absent, so the script works on a clean checkout.
 if [[ -x node_modules/.bin/wp-scripts ]]; then
@@ -223,7 +239,7 @@ for glob in "${PRUNE_GLOBS[@]}"; do
 done
 
 # Belt and braces: these must never be in the tree, whatever the allow-list says.
-for forbidden in node_modules vendor .git .github .gitignore .eslintrc.js .eslintrc .stylelintrc package-lock.json composer.json composer.lock phpcs.xml.dist phpcs.xml docs bin dist; do
+for forbidden in node_modules vendor .git .github .gitignore .eslintrc.js .eslintrc .stylelintrc package-lock.json composer.json composer.lock phpcs.xml.dist phpcs.xml phpunit.xml.dist phpunit.xml .phpunit.cache tests docs bin dist; do
 	if [[ -e "$ROOT/$forbidden" ]]; then
 		rm -rf "$ROOT/$forbidden"
 		warn "removed unexpected $forbidden from the staged tree"

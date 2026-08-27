@@ -11,7 +11,11 @@
 		"format": "wp-scripts format",
 		"build:zip": "npm run build && ./bin/build-zip.sh",
 		"lint:php": "vendor/bin/phpcs",
-		"format:php": "vendor/bin/phpcbf"
+		"format:php": "vendor/bin/phpcbf",
+		"test:js": "wp-scripts test-unit-js",
+		"test:php": "vendor/bin/phpunit",
+		"test:integration": "./bin/test-integration.sh",
+		"test": "npm run test:php && npm run test:js"
 	},
 	"devDependencies": {
 		"@wordpress/scripts": "^30.0.0"

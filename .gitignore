@@ -20,3 +20,6 @@ yarn-error.log*
 
 # Release output
 dist/
+
+# Test caches
+.phpunit.cache/

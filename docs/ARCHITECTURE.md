@@ -5,10 +5,12 @@
 ```
 blockkit.php                          plugin header, constants, boot
 includes/
-  class-autoloader.php                BlockKit\*  ->  includes/class-*.php
+  class-autoloader.php                BlockKit\*  ->  includes/{class,interface,trait}-*.php
+  interface-module.php                the contract every feature implements
   class-requirements.php              PHP / WordPress floor
-  class-plugin.php                    subsystem wiring
-  class-blocks.php                    block registration + JS translations
+  class-plugin.php                    module registry
+  class-blocks.php                    block registration + JS translations  [Module]
+  class-block-render.php              shared render-template helpers
   class-responsive-styles.php         per-viewport values -> CSS
 src/
   button/                             authored source for blockkit/button
@@ -27,11 +29,19 @@ loaded on demand.
 
 ```php
 BlockKit\Autoloader          includes/class-autoloader.php
+BlockKit\Module              includes/interface-module.php      <- interface-
 BlockKit\Requirements        includes/class-requirements.php
 BlockKit\Plugin              includes/class-plugin.php
 BlockKit\Blocks              includes/class-blocks.php
+BlockKit\Block_Render        includes/class-block-render.php
 BlockKit\Responsive_Styles   includes/class-responsive-styles.php
 ```
+
+Three prefixes are tried in order — `class-`, `interface-`, `trait-` — because
+PHP gives an autoloader no way to know which kind it was asked for:
+`class_exists()`, `interface_exists()` and `trait_exists()` all route here
+identically. Two extra `file_exists()` calls on a miss is cheaper than encoding
+the kind into every type name (`Module_Interface`, `I_Module`) forever.
 
 The mapping strips the namespace, lowercases the rest, turns `_` into `-`, and
 prefixes `class-`. Sub-namespaces become sub-directories, so
@@ -82,9 +92,10 @@ loading it.
                      ├─ fails -> admin_notices, then RETURN. Nothing else loads.
                      └─ passes -> continue
 5.  Boot           BlockKit\Plugin::init()
-                     └─ BlockKit\Blocks::init()
-                          ├─ add_action( 'init', register )
-                          └─ add_filter( 'block_categories_all', … )
+                     ├─ filter `blockkit_modules` (the extension point)
+                     └─ for each module: new, then ->register()
+                          └─ Blocks: add_action( 'init', … )
+                                     add_filter( 'block_categories_all', … )
 ```
 
 Requirements are checked **on load**, not only on activation, so a site that
@@ -119,9 +130,49 @@ value out of a callback, so the `array_map()` form raised an
 `EscapeOutput.OutputNotEscaped` **error** on already-safe code. Writing the
 escaping where the sniff can see it beats silencing a security sniff.
 
-### `Plugin`
-A list of what is enabled, not a place where behaviour accumulates. Each
-subsystem owns its own hooks and exposes its own `init()`.
+### `Plugin` — the module registry
+A list of what is enabled, not a place where behaviour accumulates. It
+instantiates each entry in `MODULES`, checks it implements `Module`, and calls
+`register()`.
+
+The list passes through a `blockkit_modules` filter first, and that is the
+extension point the plugin is built around. A growing plugin acquires features
+faster than it acquires places to put them, and the usual failure is a bootstrap
+that becomes a wall of conditionals — `if ( $pro ) … if ( get_option( … ) ) …`.
+Filtering the list means a feature can be gated by anything: a licence, a
+setting, an environment, a test. The filter runs before any module is
+constructed, so a disabled module costs nothing.
+
+Entries can come from third parties through that filter, so `instantiate()` is
+defensive: `class_exists()` triggers the autoloader, the interface check keeps
+the contract honest, and a bad entry is skipped rather than fatal.
+
+Instances are kept and reachable via `Plugin::module()`, so a test or a
+collaborating module can get at one.
+
+### `Module` (interface)
+One method, `register()`, which adds hooks and must not do work directly — a
+module that queries or renders there runs on every request including
+admin-ajax and cron.
+
+Why an interface rather than a convention: without a contract, a typo'd method
+name fails at runtime, on a hook, possibly only on the front end. With one, PHP
+refuses to load the module and the failure is at the mistake.
+
+Why instances rather than static `init()`: the static form was fine while
+nothing had dependencies. It stops being fine the moment a module needs a
+collaborator or a test needs to substitute one — a static method cannot be
+given a fake, and static state does not reset between test cases.
+
+### `Block_Render`
+The parts every render template repeats: attribute reads, allow-lists, token
+filtering, per-instance responsive CSS, the `<style>` guard, and the
+`LABEL_HTML` allow-list. Extracted when `button/render.php` hit 408 lines with
+23 escaping call sites, roughly half of which were not about buttons at all.
+
+All static, and correct as such: these are pure functions with no state and
+nothing to inject. The `Module` note above is about where instances *do* earn
+their keep.
 
 No `load_plugin_textdomain()` call: core has loaded translations for
 .org-hosted plugins just-in-time since 4.6, and Plugin Check flags the manual
