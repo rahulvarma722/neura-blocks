@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<ruleset name="BlockKit">
+	<description>WordPress coding standards for BlockKit, tuned to what this plugin actually is.</description>
+
+	<!--
+		WHAT IS SCANNED.
+
+		src/ and includes/ and the main file. NOT build/ — wp-scripts copies
+		render.php and block.json across verbatim at build time, so scanning it
+		reports every finding twice and the second copy is not editable.
+	-->
+	<file>blockkit.php</file>
+	<file>includes</file>
+	<file>src</file>
+
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/build/*</exclude-pattern>
+	<exclude-pattern>*/dist/*</exclude-pattern>
+
+	<!-- Only PHP. src/ is mostly JS/SCSS, which wp-scripts lints. -->
+	<arg name="extensions" value="php"/>
+
+	<arg name="basepath" value="."/>
+	<arg name="colors"/>
+	<arg name="parallel" value="8"/>
+	<arg value="sp"/>
+
+	<!--
+		THE STANDARD.
+
+		WordPress-Extra rather than plain WordPress: it adds the
+		best-practice sniffs on top of Core, without WordPress-Docs' full
+		file-comment requirements, which this codebase already exceeds by hand.
+	-->
+	<rule ref="WordPress-Extra"/>
+	<rule ref="WordPress-Docs"/>
+
+	<!--
+		Prefix enforcement. Everything in the global namespace must start with
+		one of these, which is what makes a rename a mechanical operation
+		(see RENAMING.md).
+	-->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="blockkit"/>
+				<element value="BLOCKKIT"/>
+				<element value="BlockKit"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Text domain must match the slug or translate.wordpress.org delivers nothing. -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="blockkit"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!--
+		Deprecation and compatibility gates, set from the plugin headers so
+		they cannot drift from what the readme promises.
+	-->
+	<config name="minimum_wp_version" value="7.1"/>
+	<config name="testVersion" value="8.1-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!--
+		render.php templates are NOT global scope.
+
+		register_block_type_from_metadata() wraps them in a static closure and
+		requires them from inside it (wp-includes/blocks.php:629-631), so every
+		variable is function-scoped. PHPCS sees a file whose top level assigns
+		variables and cannot know that. The files carry the same explanation
+		inline; this makes it a project rule so a new block does not have to
+		rediscover it.
+	-->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound">
+		<exclude-pattern>*/render.php</exclude-pattern>
+	</rule>
+
+	<!--
+		Yoda conditions are enforced by WordPress-Extra and this codebase
+		follows them, so the sniff stays on. Listed here only to record that it
+		was a decision rather than an oversight.
+	-->
+</ruleset>

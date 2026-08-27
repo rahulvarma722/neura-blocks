@@ -10,7 +10,8 @@
 		"lint:css": "wp-scripts lint-style",
 		"format": "wp-scripts format",
 		"build:zip": "npm run build && ./bin/build-zip.sh",
-		"build:zip:src": "npm run build && ./bin/build-zip.sh --keep-src"
+		"lint:php": "vendor/bin/phpcs",
+		"format:php": "vendor/bin/phpcbf"
 	},
 	"devDependencies": {
 		"@wordpress/scripts": "^30.0.0"

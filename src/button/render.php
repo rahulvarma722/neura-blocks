@@ -129,8 +129,17 @@ $rel = '' === $rel
 		)
 	);
 
-// A plain-text tooltip: strip tags and control characters, keep the text.
-$title = isset( $attributes['title'] ) ? sanitize_text_field( (string) $attributes['title'] ) : '';
+/*
+ * A plain-text tooltip: strip tags and control characters, keep the text.
+ *
+ * Named $link_title, not $title. `$title` is a real WordPress global — admin
+ * pages and the template loader both use it — and assigning to it is a hard
+ * error under WordPress.WP.GlobalVariablesOverride. Nothing is actually
+ * clobbered here, because this file runs inside a closure and the assignment is
+ * function-scoped, but a name that only stays safe because of where the file
+ * happens to be required is not worth keeping.
+ */
+$link_title = isset( $attributes['title'] ) ? sanitize_text_field( (string) $attributes['title'] ) : '';
 
 $tag_name = isset( $attributes['tagName'] ) && 'button' === $attributes['tagName'] ? 'button' : 'a';
 
@@ -177,8 +186,8 @@ if ( 'a' === $tag_name ) {
 	$extra_attributes['type'] = 'button';
 }
 
-if ( '' !== $title ) {
-	$extra_attributes['title'] = $title;
+if ( '' !== $link_title ) {
+	$extra_attributes['title'] = $link_title;
 }
 
 /*
@@ -198,10 +207,11 @@ $icon_position = isset( $attributes['iconPosition'] ) && 'left' === $attributes[
 $icon_markup   = '';
 
 if ( '' !== $icon_key && isset( $icon_paths[ $icon_key ] ) ) {
-	// aria-hidden: the icon is decorative, the button text is the accessible
-	// name. No width/height attribute — the size comes from CSS so it can be
-	// per-viewport.
 	/*
+	 * aria-hidden: the icon is decorative, the button text is the accessible
+	 * name. No width/height attribute — the size comes from CSS so it can be
+	 * per-viewport.
+	 *
 	 * esc_attr() on the path, and the SVG itself is a literal — NOT wp_kses().
 	 *
 	 * wp_kses() cannot express inline SVG. It lowercases every attribute name

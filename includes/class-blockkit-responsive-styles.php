@@ -90,20 +90,20 @@ class BlockKit_Responsive_Styles {
 	 *
 	 * @param array   $style     The block's `style` attribute.
 	 * @param ?string $state_key `'@tablet'`, `'@mobile'`, or null for the base.
-	 * @param string  $namespace Namespace key inside the layer.
+	 * @param string  $namespace_key Namespace key inside the layer.
 	 * @param string  $property  Property key inside the namespace.
 	 * @return string Value, or '' when unset.
 	 */
-	public static function get_state_value( $style, $state_key, $namespace, $property ) {
+	public static function get_state_value( $style, $state_key, $namespace_key, $property ) {
 		$layer = null === $state_key
 			? $style
 			: ( isset( $style[ $state_key ] ) ? $style[ $state_key ] : null );
 
-		if ( ! is_array( $layer ) || ! isset( $layer[ $namespace ][ $property ] ) ) {
+		if ( ! is_array( $layer ) || ! isset( $layer[ $namespace_key ][ $property ] ) ) {
 			return '';
 		}
 
-		$value = $layer[ $namespace ][ $property ];
+		$value = $layer[ $namespace_key ][ $property ];
 
 		return is_scalar( $value ) ? trim( (string) $value ) : '';
 	}
@@ -128,12 +128,12 @@ class BlockKit_Responsive_Styles {
 	 *
 	 * @param array  $style     The block's `style` attribute.
 	 * @param string $selector  CSS selector to scope every rule to.
-	 * @param string $namespace Namespace key inside each layer.
+	 * @param string $namespace_key Namespace key inside each layer.
 	 * @param string $property  Key inside the namespace.
 	 * @param string $css_prop  The CSS property to emit.
 	 * @return string CSS, or '' when there is nothing to emit.
 	 */
-	public static function build_css( $style, $selector, $namespace, $property, $css_prop ) {
+	public static function build_css( $style, $selector, $namespace_key, $property, $css_prop ) {
 		if ( ! is_array( $style ) ) {
 			return '';
 		}
@@ -143,7 +143,7 @@ class BlockKit_Responsive_Styles {
 		// Base layer first: it carries no media query and therefore applies at
 		// every width, which is what makes Desktop the base rather than a
 		// third band.
-		$base = self::get_state_value( $style, null, $namespace, $property );
+		$base = self::get_state_value( $style, null, $namespace_key, $property );
 
 		if ( '' !== $base && self::is_safe_length( $base ) ) {
 			$rules .= sprintf( '%s{%s:%s;}', $selector, $css_prop, $base );
@@ -156,7 +156,7 @@ class BlockKit_Responsive_Styles {
 		 * it keeps the output diffable against core's.
 		 */
 		foreach ( self::get_media_queries() as $state_key => $media_query ) {
-			$value = self::get_state_value( $style, $state_key, $namespace, $property );
+			$value = self::get_state_value( $style, $state_key, $namespace_key, $property );
 
 			if ( '' === $value || ! self::is_safe_length( $value ) ) {
 				continue;

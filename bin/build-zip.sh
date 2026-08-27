@@ -156,6 +156,16 @@ while IFS= read -r php; do
 done < <( find "$MAIN_FILE" includes build -name '*.php' ! -name '*.asset.php' 2>/dev/null )
 ok "every shipped PHP file has an ABSPATH guard (*.asset.php exempt)"
 
+# PHPCS. The real standards gate — php -l below only catches parse errors.
+# Skipped rather than failed when the toolchain is absent, so the script still
+# works on a clean checkout before `composer install`.
+if [[ -x vendor/bin/phpcs ]]; then
+	vendor/bin/phpcs --report=summary -q || die "PHPCS reported violations. Run 'composer format' then fix what remains."
+	ok "PHPCS clean (WordPress-Extra, WordPress-Docs, PHPCompatibilityWP)"
+else
+	warn "vendor/bin/phpcs absent — run 'composer install' to enable the standards gate"
+fi
+
 # PHP syntax, if a CLI is around.
 if command -v php >/dev/null 2>&1; then
 	while IFS= read -r php; do
@@ -190,7 +200,7 @@ for glob in "${PRUNE_GLOBS[@]}"; do
 done
 
 # Belt and braces: these must never be in the tree, whatever the allow-list says.
-for forbidden in node_modules .git .github .gitignore package-lock.json docs bin RENAMING.md dist; do
+for forbidden in node_modules vendor .git .github .gitignore package-lock.json composer.json composer.lock phpcs.xml.dist phpcs.xml docs bin RENAMING.md dist; do
 	if [[ -e "$ROOT/$forbidden" ]]; then
 		rm -rf "$ROOT/$forbidden"
 		warn "removed unexpected $forbidden from the staged tree"

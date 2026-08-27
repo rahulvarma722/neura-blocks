@@ -30,12 +30,12 @@ class BlockKit_Settings {
 	/**
 	 * Reads an option.
 	 *
-	 * @param string $key     Unprefixed key.
-	 * @param mixed  $default Value returned when the option is absent.
+	 * @param string $key           Unprefixed key.
+	 * @param mixed  $default_value Value returned when the option is absent.
 	 * @return mixed
 	 */
-	public static function get( $key, $default = false ) {
-		return get_option( self::key( $key ), $default );
+	public static function get( $key, $default_value = false ) {
+		return get_option( self::key( $key ), $default_value );
 	}
 
 	/**
