@@ -62,7 +62,7 @@ src/button/responsive-width/
     index.js            the control + diagnostics readout
 src/button/edit.js      wiring + canvas preview
 src/button/render.php   front-end output
-includes/class-blockkit-responsive-styles.php   CSS generation
+includes/class-responsive-styles.php   CSS generation
 ```
 
 Width was chosen because "full width on mobile, auto on desktop" is the canonical
@@ -400,7 +400,7 @@ Step 4→5 is the alignment behaviour; step 7 is the Spectra bug in isolation.
 | `src/button/responsive-width/index.js` | the control, reset scoping, diagnostics readout |
 | `src/button/edit.js` | hook wiring, canvas preview, probe rendering |
 | `src/button/render.php` | scoped `<style>` + wrapper class |
-| `includes/class-blockkit-responsive-styles.php` | media queries from core, value allow-list, CSS builder |
+| `includes/class-responsive-styles.php` | media queries from core, value allow-list, CSS builder |
 | `src/buttons/index.js` | `save: () => <InnerBlocks.Content />` — see §8.1 |
 
 **WordPress core — what this plugin depends on**

@@ -5,6 +5,8 @@
  * @package BlockKit
  */
 
+namespace BlockKit;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -14,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  * this class stays a list of what is enabled rather than a place where
  * behaviour accumulates.
  */
-class BlockKit {
+class Plugin {
 
 	/**
 	 * Boots the plugin.
@@ -22,7 +24,7 @@ class BlockKit {
 	 * @return void
 	 */
 	public static function init() {
-		BlockKit_Blocks::init();
+		Blocks::init();
 	}
 
 	/*
@@ -36,6 +38,6 @@ class BlockKit {
 	 * BLOCKKIT_SLUG in blockkit.php.
 	 *
 	 * JavaScript strings are a separate mechanism and DO need wiring up:
-	 * BlockKit_Blocks::set_script_translations().
+	 * Blocks::set_script_translations().
 	 */
 }

@@ -23,12 +23,14 @@
  * @package BlockKit
  */
 
+namespace BlockKit;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Emits scoped CSS for namespaced per-viewport style values.
  */
-class BlockKit_Responsive_Styles {
+class Responsive_Styles {
 
 	/**
 	 * Breakpoints used when core cannot supply them.

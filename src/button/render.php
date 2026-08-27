@@ -241,11 +241,17 @@ if ( '' !== $icon_key && isset( $icon_paths[ $icon_key ] ) ) {
  * Per-viewport width, from `style.blockkit.width` and its `@tablet` / `@mobile`
  * states.
  *
+ * `\BlockKit\Responsive_Styles` is written fully qualified, leading separator
+ * included. This file is not loaded from anywhere in the plugin's namespace —
+ * core requires it from inside a closure in wp-includes/blocks.php, which is
+ * global scope — so an unqualified name would resolve to a class that does not
+ * exist and fatal at render time.
+ *
  * Core writes CSS only for style paths it owns, so this namespaced value
  * survives save and parse but produces nothing by itself. The media queries
  * come from core (`WP_Theme_JSON::get_viewport_media_queries()`) so the bands
  * match every core control on this same block exactly — see
- * includes/class-blockkit-responsive-styles.php.
+ * includes/class-responsive-styles.php.
  *
  * A per-instance class scopes the rules. Two buttons on one page hold
  * different values, so the selector cannot be the block's shared class; and the
@@ -279,7 +285,7 @@ $stored_values = array();
 
 foreach ( array_keys( $style_properties ) as $property_key ) {
 	foreach ( array( null, '@tablet', '@mobile' ) as $state_key ) {
-		$stored_values[] = BlockKit_Responsive_Styles::get_state_value(
+		$stored_values[] = \BlockKit\Responsive_Styles::get_state_value(
 			$style_attribute,
 			$state_key,
 			'blockkit',
@@ -294,7 +300,7 @@ if ( '' !== implode( '', $stored_values ) ) {
 	$responsive_class = 'bk-btn-' . substr( md5( (string) $width_signature ), 0, 8 );
 
 	foreach ( $style_properties as $property_key => $css_property ) {
-		$responsive_css .= BlockKit_Responsive_Styles::build_css(
+		$responsive_css .= \BlockKit\Responsive_Styles::build_css(
 			$style_attribute,
 			'.' . $responsive_class,
 			'blockkit',
@@ -366,7 +372,7 @@ $wrapper_attributes = get_block_wrapper_attributes(
  * so that stays true if a future caller passes something else.
  */
 if ( '' !== $responsive_css && false === strpos( $responsive_css, '</' ) ) {
-	printf( '<style>%s</style>', $responsive_css ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values allow-listed by BlockKit_Responsive_Styles::is_safe_length(); media queries from WP_Theme_JSON; selector is an md5-derived class.
+	printf( '<style>%s</style>', $responsive_css ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values allow-listed by \BlockKit\Responsive_Styles::is_safe_length(); media queries from WP_Theme_JSON; selector is an md5-derived class.
 }
 
 /*

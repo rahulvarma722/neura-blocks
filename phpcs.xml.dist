@@ -39,7 +39,7 @@
 	<!--
 		Prefix enforcement. Everything in the global namespace must start with
 		one of these, which is what makes a rename a mechanical operation
-		(see RENAMING.md).
+		(see docs/RENAMING.md).
 	-->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>

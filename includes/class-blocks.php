@@ -5,6 +5,8 @@
  * @package BlockKit
  */
 
+namespace BlockKit;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -14,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  * an array, so adding a block means adding a folder under src/ — no PHP
  * change, and nothing to keep in sync.
  */
-class BlockKit_Blocks {
+class Blocks {
 
 	/**
 	 * Hooks registration.
@@ -49,7 +51,7 @@ class BlockKit_Blocks {
 
 			$block_type = register_block_type( $block_dir );
 
-			if ( $block_type instanceof WP_Block_Type ) {
+			if ( $block_type instanceof \WP_Block_Type ) {
 				self::set_script_translations( $block_type );
 			}
 		}
@@ -70,7 +72,7 @@ class BlockKit_Blocks {
 	 * business (`generate_block_asset_handle()`) and blocks are discovered by
 	 * scanning, so nothing here knows the block names up front anyway.
 	 *
-	 * @param WP_Block_Type $block_type The registered block type.
+	 * @param \WP_Block_Type $block_type The registered block type.
 	 * @return void
 	 */
 	private static function set_script_translations( $block_type ) {

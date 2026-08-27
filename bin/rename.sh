@@ -71,7 +71,7 @@ NEW_CONST="$(echo "$NEW_SLUG" | tr '[:lower:]-' '[:upper:]_')"
 NEW_CLASS="$NEW_DISPLAY"
 
 # The display name doubles as the PHP CLASS PREFIX — `BlockKit` is both the
-# `Plugin Name:` header and the `BlockKit_Blocks` in class names, and sed cannot
+# `Plugin Name:` header and the `BlockKit` namespace and class prefix, and sed cannot
 # tell those two roles apart from the same literal. So it has to be a valid PHP
 # identifier. Without this check, `Brick & Yard` produced `class Brick & Yard {`
 # and a plugin that no longer parses, while the rename reported success.

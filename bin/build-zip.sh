@@ -3,11 +3,12 @@
 # Builds a WordPress.org-ready ZIP.
 #
 #   ./bin/build-zip.sh              # build dist/blockkit-<version>.zip
+#   ./bin/build-zip.sh --check      # ...then run Plugin Check on the ARTIFACT
 #
 # WHY THIS SCRIPT EXISTS. Two facts about this repo fight each other:
 #
 #   1. `build/` is in .gitignore, but blocks are registered by scanning
-#      build/ (includes/class-blockkit-blocks.php). A ZIP made from a git
+#      build/ (includes/class-blocks.php). A ZIP made from a git
 #      archive therefore installs cleanly and registers ZERO blocks.
 #   2. node_modules/ is ~550 MB and sits in the plugin root. The .org
 #      upload form caps at 10 MB.
@@ -24,7 +25,7 @@
 
 # Output goes to dist/, which is gitignored and excluded from the payload.
 # Note that running Plugin Check against the WORKING TREE will flag dist/,
-# bin/, .gitignore and RENAMING.md — that is expected and says nothing about
+# bin/, docs/ and .gitignore — that is expected and says nothing about
 # the artifact. Scan the extracted ZIP if you want a meaningful result.
 
 set -euo pipefail
@@ -34,6 +35,9 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 SLUG="blockkit"
 MAIN_FILE="${SLUG}.php"
 DIST="dist"
+RUN_CHECK=0
+
+[[ "${1:-}" == "--check" ]] && RUN_CHECK=1
 
 die() { printf '\033[31merror:\033[0m %s\n' "$1" >&2; exit 1; }
 ok()  { printf '\033[32m  ok\033[0m  %s\n' "$1"; }
@@ -219,7 +223,7 @@ for glob in "${PRUNE_GLOBS[@]}"; do
 done
 
 # Belt and braces: these must never be in the tree, whatever the allow-list says.
-for forbidden in node_modules vendor .git .github .gitignore .eslintrc.js .eslintrc .stylelintrc package-lock.json composer.json composer.lock phpcs.xml.dist phpcs.xml docs bin RENAMING.md dist; do
+for forbidden in node_modules vendor .git .github .gitignore .eslintrc.js .eslintrc .stylelintrc package-lock.json composer.json composer.lock phpcs.xml.dist phpcs.xml docs bin dist; do
 	if [[ -e "$ROOT/$forbidden" ]]; then
 		rm -rf "$ROOT/$forbidden"
 		warn "removed unexpected $forbidden from the staged tree"
@@ -295,9 +299,24 @@ ok "all required plugin headers present in the staged main file"
 # ---------------------------------------------------------------------
 printf '\n\033[1mPackaging\033[0m\n'
 
+# CLEAR dist/ COMPLETELY, not just this version's filename.
+#
+# `rm -f "$ZIP"` alone was not enough. It replaced the current version but left
+# every previous one sitting there, so dist/ accumulated builds and it stopped
+# being obvious which file was the one you just made — the exact situation where
+# somebody uploads blockkit-0.0.1.zip to .org an hour after bumping to 0.0.2.
+#
+# Removals are listed rather than done quietly, so the delete-then-create is
+# visible in the output.
 mkdir -p "$DIST"
+
+for stale in "$DIST"/*.zip; do
+	[[ -e "$stale" ]] || continue
+	rm -f "$stale"
+	ok "removed $stale"
+done
+
 ZIP="$( pwd )/$DIST/${SLUG}-${HEADER_VERSION}.zip"
-rm -f "$ZIP"
 
 ( cd "$STAGE" && zip -rq "$ZIP" "$SLUG" -x '*.DS_Store' )
 
@@ -314,6 +333,55 @@ printf '\n\033[1mContents\033[0m\n'
 unzip -Z1 "$ZIP" | sed 's/^/  /'
 
 printf '\n\033[1;32mBuilt\033[0m %s\n' "$DIST/${SLUG}-${HEADER_VERSION}.zip"
+
+# ---------------------------------------------------------------------
+# Optional: Plugin Check against the ARTIFACT.
+#
+# Pointing Plugin Check at the working tree is misleading — the repo
+# legitimately holds bin/, dist/, .github/, .eslintrc.js, phpcs.xml.dist,
+# .gitignore and docs/, none of which ship, so a scan of it reports a
+# fistful of errors that say nothing about the submission. Worse, it trains you
+# to skim past them, which is how a real finding gets missed.
+#
+# This installs the extracted ZIP alongside, scans THAT, and cleans up.
+# ---------------------------------------------------------------------
+if (( RUN_CHECK )); then
+	printf '\n\033[1mPlugin Check (release artifact)\033[0m\n'
+
+	WP="${WP_CLI:-wp}"
+
+	if ! command -v "$WP" >/dev/null 2>&1; then
+		warn "wp-cli not found; skipped. Set WP_CLI=/path/to/wp, or 'brew install wp-cli'."
+	else
+		CHECK_SLUG="${SLUG}-relcheck"
+		CHECK_DIR="$( cd .. && pwd )/${CHECK_SLUG}"
+		EXTRACT="$( mktemp -d )"
+
+		rm -rf "$CHECK_DIR"
+		unzip -q "$ZIP" -d "$EXTRACT"
+		cp -R "${EXTRACT}/${SLUG}" "$CHECK_DIR"
+
+		# Plugin Check derives the expected text domain from the DIRECTORY name,
+		# so a copy scanned as anything but "blockkit" reports a mismatch on
+		# every translated string. Those two codes are filtered; nothing else is.
+		CHECK_OUT="$( "$WP" plugin check "$CHECK_SLUG" \
+			--categories=general,plugin_repo,security,performance,accessibility \
+			--format=csv --fields=file,line,type,code,message 2>&1 \
+			| grep -vE 'TextDomainMismatch|textdomain_mismatch' || true )"
+
+		rm -rf "$CHECK_DIR" "$EXTRACT"
+
+		CHECK_HITS="$( printf '%s\n' "$CHECK_OUT" | grep -cE ',(ERROR|WARNING),' || true )"
+
+		if [[ "${CHECK_HITS:-0}" -eq 0 ]]; then
+			ok "no findings in the artifact (text-domain mismatches filtered: dir is ${CHECK_SLUG})"
+		else
+			printf '%s\n' "$CHECK_OUT" >&2
+			die "$CHECK_HITS Plugin Check finding(s) in the artifact, listed above."
+		fi
+	fi
+fi
+
 printf '\nNext:\n'
 printf '  1. Install this ZIP on a clean site and confirm both blocks appear.\n'
 printf '  2. Upload at https://wordpress.org/plugins/developers/add/\n'

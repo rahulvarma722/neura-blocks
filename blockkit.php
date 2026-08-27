@@ -23,7 +23,7 @@ defined( 'ABSPATH' ) || exit;
  * ---------------------------------------------------------------------
  * Nothing else in the codebase should contain the literal string
  * "blockkit" except each block's `block.json`, where the name has to be a
- * static string — see bin/rename.sh and RENAMING.md.
+ * static string — see bin/rename.sh and docs/RENAMING.md.
  *
  * BLOCKKIT_SLUG    Folder name, text domain, script handles, block
  *                  category. Changeable before release; after release the
@@ -64,15 +64,33 @@ define( 'BLOCKKIT_PATH', plugin_dir_path( __FILE__ ) );
 const BLOCKKIT_MIN_PHP = '8.1';
 const BLOCKKIT_MIN_WP  = '7.1';
 
-require_once BLOCKKIT_PATH . 'includes/class-blockkit-requirements.php';
+/*
+ * ---------------------------------------------------------------------
+ * Boot
+ * ---------------------------------------------------------------------
+ * This file stays in the GLOBAL namespace, because a plugin's main file is
+ * also its header block and WordPress reads that by parsing the file rather
+ * than loading it. Everything else lives under the `BlockKit` namespace, so
+ * the references below are fully qualified.
+ *
+ * The autoloader is the only require. Adding a class means adding a file —
+ * there is no list here to keep in step, which is the whole point.
+ */
+require_once BLOCKKIT_PATH . 'includes/class-autoloader.php';
 
-if ( ! BlockKit_Requirements::are_met() ) {
-	add_action( 'admin_notices', array( 'BlockKit_Requirements', 'render_notice' ) );
+BlockKit\Autoloader::register();
+
+/*
+ * Requirements are checked before anything else is touched.
+ *
+ * Note the class is referenced as a STRING in the callback. That is
+ * deliberate: `array( ClassName::class, 'method' )` would be tidier, but the
+ * point of this branch is that the environment cannot run the plugin, and a
+ * string defers class loading until the notice actually renders.
+ */
+if ( ! BlockKit\Requirements::are_met() ) {
+	add_action( 'admin_notices', array( 'BlockKit\\Requirements', 'render_notice' ) );
 	return;
 }
 
-require_once BLOCKKIT_PATH . 'includes/class-blockkit-responsive-styles.php';
-require_once BLOCKKIT_PATH . 'includes/class-blockkit-blocks.php';
-require_once BLOCKKIT_PATH . 'includes/class-blockkit.php';
-
-BlockKit::init();
+BlockKit\Plugin::init();

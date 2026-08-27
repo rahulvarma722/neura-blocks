@@ -5,12 +5,14 @@
  * @package BlockKit
  */
 
+namespace BlockKit;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Verifies the site meets the plugin's minimum PHP and WordPress versions.
  */
-class BlockKit_Requirements {
+class Requirements {
 
 	/**
 	 * Whether the current environment satisfies the minimums.
