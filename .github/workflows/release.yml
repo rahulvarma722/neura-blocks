@@ -1,0 +1,96 @@
+name: Release
+
+# WHY A RELEASE AND NOT A COMMITTED ZIP.
+#
+# A ZIP in the repo would be a binary that git cannot ever forget: every
+# version adds its full size to the history permanently, `git clone` pays for
+# all of them, and a diff of the change is meaningless. Release assets live
+# outside the object store, are versioned, and give a stable download URL.
+#
+# It also keeps `dist/` gitignored, which matters beyond tidiness: Plugin Check
+# reports a compressed file inside a plugin directory as an ERROR, and the
+# WordPress.org Developer FAQ states outright that ZIPs may not be included in
+# a plugin.
+#
+# NOTE ON GUIDELINE 8: publishing a downloadable ZIP here is fine, and normal.
+# What is prohibited is a plugin that UPDATES ITSELF from anywhere other than
+# WordPress.org. Do not add a GitHub-based update checker.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  # Manual runs, for a dry run before tagging or to rebuild a botched asset.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and release (e.g. v1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # The plugin's declared minimum, so the build validates the floor it
+          # promises rather than whatever the runner happens to ship.
+          php-version: '8.1'
+          tools: composer
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install PHP tooling
+        run: composer install --no-interaction --no-progress
+
+      - name: Install JS tooling
+        run: npm ci
+
+      - name: Resolve version and tag
+        id: version
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          PLUGIN_VERSION=$( grep -m1 '^\s*\*\s*Version:' blockkit.php | sed -E 's/.*Version:[[:space:]]*//' | tr -d '[:space:]' )
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$PLUGIN_VERSION" >> "$GITHUB_OUTPUT"
+
+          # Guideline 15 exists because users are only offered an update when the
+          # version increases. A tag that disagrees with the header would ship an
+          # asset nobody is told about, so it fails here instead.
+          if [ "${TAG#v}" != "$PLUGIN_VERSION" ]; then
+            echo "::error::tag $TAG does not match the Version: header ($PLUGIN_VERSION)."
+            exit 1
+          fi
+
+      - name: Build the release ZIP
+        # This runs every gate: PHPCS, ESLint, Stylelint, the readme checks and
+        # the staged-tree assertions. A violation fails the release rather than
+        # producing a downloadable artifact nobody vetted.
+        run: ./bin/build-zip.sh
+
+      - name: Add a stable-named copy
+        # The versioned name is the archive; the stable name is what a
+        # /releases/latest/download/ link can point at forever.
+        run: cp "dist/blockkit-${{ steps.version.outputs.version }}.zip" dist/blockkit.zip
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: BlockKit ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: |
+            dist/blockkit-${{ steps.version.outputs.version }}.zip
+            dist/blockkit.zip

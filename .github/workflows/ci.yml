@@ -1,0 +1,47 @@
+name: CI
+
+# Runs the same gates as the release, on every push and pull request.
+#
+# Without this, the linters only run when you tag — which is exactly when a
+# failure is most expensive, because the version is already decided and the
+# tag has to be deleted and re-cut. Catching it on the push that caused it is
+# the whole point.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: composer install --no-interaction --no-progress
+      - run: npm ci
+
+      - name: PHPCS
+        run: composer lint
+
+      - name: ESLint
+        run: npm run lint:js
+
+      - name: Stylelint
+        run: npm run lint:css
+
+      - name: Build
+        run: npm run build

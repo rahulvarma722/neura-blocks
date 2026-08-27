@@ -1,10 +1,9 @@
 === BlockKit ===
-Contributors:      REPLACE_WITH_WPORG_USERNAME
 Tags:              blocks, button, responsive, icons, breakpoints
 Requires at least: 7.1
 Tested up to:      7.1
 Requires PHP:      8.1
-Stable tag:        1.0.0
+Stable tag:        0.0.1
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -128,7 +127,7 @@ No. Both blocks render server-side in PHP and ship no front-end script.
 
 == Changelog ==
 
-= 1.0.0 =
+= 0.0.1 =
 * Initial release.
 * Kit Buttons container block with flex layout, block gap, padding and wide/full alignment.
 * Kit Button block with link controls, four icons, and left/right icon position.
@@ -136,5 +135,5 @@ No. Both blocks render server-side in PHP and ship no front-end script.
 
 == Upgrade Notice ==
 
-= 1.0.0 =
+= 0.0.1 =
 Initial release.

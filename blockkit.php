@@ -3,7 +3,7 @@
  * Plugin Name:       BlockKit
  * Plugin URI:        https://github.com/rahulvarma722/blockkit
  * Description:       A Gutenberg block collection built on the WordPress 7.1 block API.
- * Version:           1.0.0
+ * Version:           0.0.1
  * Requires at least: 7.1
  * Tested up to:      7.1
  * Requires PHP:      8.1
@@ -44,7 +44,7 @@ defined( 'ABSPATH' ) || exit;
  *   site saves a post using one of these blocks. Changing it without
  *   shipping block `deprecated` definitions breaks existing content.
  */
-define( 'BLOCKKIT_VERSION', '1.0.0' );
+define( 'BLOCKKIT_VERSION', '0.0.1' );
 define( 'BLOCKKIT_SLUG', 'blockkit' );
 define( 'BLOCKKIT_PATH', plugin_dir_path( __FILE__ ) );
 

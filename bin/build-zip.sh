@@ -87,11 +87,21 @@ if grep -qE 'REPLACE_WITH|example\.com|TODO|FIXME|XXX' readme.txt "$MAIN_FILE"; 
 fi
 ok "no placeholder text in readme.txt or $MAIN_FILE"
 
-# Required readme headers.
-for field in "Contributors" "Tags" "Requires at least" "Tested up to" "Requires PHP" "Stable tag" "License" "License URI"; do
+# Required readme headers. `Contributors` is deliberately NOT in this list: it
+# is optional on WordPress.org, and blocking on it would mean either holding the
+# build hostage or inventing a username — which becomes a permanent public
+# attribution on the directory page. Warned about below instead.
+for field in "Tags" "Requires at least" "Tested up to" "Requires PHP" "Stable tag" "License" "License URI"; do
 	grep -q "^${field}:" readme.txt || die "readme.txt is missing the '${field}:' header."
 done
 ok "all required readme.txt headers present"
+
+if grep -q "^Contributors:" readme.txt; then
+	ok "Contributors set"
+else
+	warn "readme.txt has no 'Contributors:' header — the directory page will credit nobody."
+	warn "     Add 'Contributors:      <your-wordpress.org-username>' as line 2 before submitting."
+fi
 
 # Short description: the line after the header block, capped at 150 chars by
 # .org. Over the cap it is silently truncated on the directory page, which is
