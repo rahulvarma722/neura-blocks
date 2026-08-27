@@ -42,6 +42,7 @@ Plain PHPUnit 10, no WordPress, no Docker, 23 tests in about 7ms.
 
 | File | Covers |
 |---|---|
+| `BlockContractTest.php` | **invariants that span files** — see below |
 | `AutoloaderTest.php` | class / interface resolution, declined names, path traversal |
 | `BlockRenderTest.php` | attribute reads, allow-lists, token filtering, `responsive()`, `style_tag()` |
 | `ResponsiveStylesTest.php` | layer reads, the length allow-list, negatives, CSS output |
@@ -49,6 +50,33 @@ Plain PHPUnit 10, no WordPress, no Docker, 23 tests in about 7ms.
 Fast enough to run on every save. If a test needs a WordPress function that is
 not stubbed, that is a signal it belongs in integration — not a signal to add
 another stub.
+
+### Contracts that span files
+
+`BlockContractTest.php` is a different kind of test and worth calling out.
+
+A block is declared across `block.json`, `index.js` and `render.php`, and some
+rules binding them are invariants **no single file can check**:
+
+| Invariant | What goes wrong without it |
+|---|---|
+| `source` on an attribute requires a `save()` that writes markup | Core parses the value out of markup that never gets written. Content stored nowhere, block renders empty |
+| A block with inner blocks must not `save: () => null` | Core writes a self-closing comment and **discards every child** at save time |
+| A declared `render` template must exist | Block registers and renders nothing |
+| `name` / `category` / `textdomain` must match the plugin | Blocks land in Uncategorized; translations never load |
+| `block.json` `version` must match the plugin version | Browsers stay on a stale asset bundle |
+
+The first two **both shipped as real bugs**, and both were documented as traps
+in [BLOCKS.md](BLOCKS.md) *first*. That did not help, because a comment cannot
+fail a build. The checks now live at the same scope as the invariants: they read
+the files together and assert the relationship.
+
+Blocks are discovered by scanning `src/`, so a new block is covered the moment
+it exists — there is no list to forget.
+
+**Each guard was verified by reintroducing its bug**, which is the only way to
+know a guard works. Worth doing whenever you add one; a check that cannot fail
+is decoration.
 
 ## JS unit — `tests/js/`
 

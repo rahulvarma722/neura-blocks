@@ -24,8 +24,23 @@
 
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'BLOCKKIT_PATH', dirname( __DIR__, 2 ) . '/' );
-define( 'BLOCKKIT_SLUG', 'blockkit' );
-define( 'BLOCKKIT_VERSION', '0.0.1' );
+
+/*
+ * Slug and version are READ FROM THE SOURCE, not restated here.
+ *
+ * They were hardcoded, which made this file a third place the version lives —
+ * and the one nobody would remember to update, since the release gate only
+ * compares the plugin header, the constant and readme.txt. A stale value here
+ * would have made BlockContractTest assert the wrong version and pass.
+ */
+$blockkit_main = glob( BLOCKKIT_PATH . '*.php' );
+$blockkit_main = $blockkit_main ? (string) file_get_contents( $blockkit_main[0] ) : '';
+
+preg_match( "/define\\(\\s*'([A-Z_]+)_SLUG',\\s*'([a-z0-9-]+)'/", $blockkit_main, $blockkit_slug );
+preg_match( '/^\\s*\\*\\s*Version:\\s*(.+)$/m', $blockkit_main, $blockkit_version );
+
+define( 'BLOCKKIT_SLUG', isset( $blockkit_slug[2] ) ? $blockkit_slug[2] : 'blockkit' );
+define( 'BLOCKKIT_VERSION', isset( $blockkit_version[1] ) ? trim( $blockkit_version[1] ) : '0.0.0' );
 
 if ( ! function_exists( 'wp_json_encode' ) ) {
 	/**
