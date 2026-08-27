@@ -164,6 +164,73 @@ $out = do_blocks( '<!-- wp:blockkit/text {"tagName":"p","styleAs":"display","con
 bk_check( 'and the reverse — p styled as display', false !== strpos( $out, '<p' ) && false !== strpos( $out, 'has-style-display' ) );
 
 // ---------------------------------------------------------------------
+echo "\nKit Text — content survives a save/load round trip\n";
+// ---------------------------------------------------------------------
+/*
+ * THE TEST THAT WAS MISSING.
+ *
+ * Every other check here hand-writes the block delimiter, which quietly
+ * guarantees the attribute is present. That is not what the editor does, so it
+ * could not catch the bug it was hiding: `content` was declared with
+ * `"source": "rich-text"`, which tells core to parse the value back out of the
+ * SAVED MARKUP — and with `save: () => null` there is no markup, so the text
+ * was written nowhere and the block rendered empty on the front end.
+ *
+ * serialize_blocks() is the PHP mirror of the JS serializer, so going
+ * attributes -> serialize -> parse -> render exercises the real path.
+ */
+$round_trip = serialize_blocks(
+	array(
+		array(
+			'blockName'    => 'blockkit/text',
+			'attrs'        => array(
+				'content' => 'Round trip text',
+				'tagName' => 'h3',
+				'styleAs' => 'eyebrow',
+			),
+			'innerBlocks'  => array(),
+			'innerHTML'    => '',
+			'innerContent' => array(),
+		),
+	)
+);
+
+bk_check(
+	'content is serialised into the block delimiter',
+	false !== strpos( $round_trip, 'Round trip text' )
+);
+
+$out = do_blocks( $round_trip );
+
+bk_check( 'content survives serialise -> parse -> render', false !== strpos( $out, 'Round trip text' ) );
+bk_check( 'tag survives the round trip', false !== strpos( $out, '<h3' ) );
+bk_check( 'styleAs survives the round trip', false !== strpos( $out, 'has-style-eyebrow' ) );
+
+/*
+ * And the same thing through a real post and the_content, because that is the
+ * path a visitor actually hits.
+ */
+$probe_id = wp_insert_post(
+	array(
+		'post_title'   => 'BlockKit integration probe',
+		'post_status'  => 'publish',
+		'post_type'    => 'post',
+		'post_content' => $round_trip,
+	)
+);
+
+if ( $probe_id && ! is_wp_error( $probe_id ) ) {
+	$probe_post = get_post( $probe_id );
+	$front_end  = apply_filters( 'the_content', $probe_post->post_content );
+
+	bk_check( 'content is visible through the_content on a real post', false !== strpos( $front_end, 'Round trip text' ) );
+
+	wp_delete_post( $probe_id, true );
+} else {
+	bk_check( 'could create a probe post', false );
+}
+
+// ---------------------------------------------------------------------
 echo "\nKit Text — the tag name is an element position, so it is the attack surface\n";
 // ---------------------------------------------------------------------
 $dangerous = array( 'script', 'iframe', 'img', 'a', 'style', 'form', 'object', 'embed', 'svg', 'SCRIPT' );

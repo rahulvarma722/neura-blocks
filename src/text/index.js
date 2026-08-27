@@ -16,10 +16,23 @@ registerBlockType( metadata.name, {
 	/**
 	 * Dynamic block: the front-end markup comes from render.php.
 	 *
-	 * `content` is declared with `source: "rich-text"` and no selector, so core
-	 * stores it as a block ATTRIBUTE in the comment delimiter rather than as
-	 * markup in post content. That is what makes returning null safe here —
-	 * unlike a container block, there are no inner blocks to lose.
+	 * THIS IS ONLY SAFE BECAUSE `content` HAS NO `source`.
+	 *
+	 * block.json declares content as a plain `string` attribute, so core
+	 * stores it inside the block comment delimiter:
+	 *
+	 *     <!-- wp:blockkit/text {"content":"Hello","tagName":"h2"} /-->
+	 *
+	 * Declaring `"source": "rich-text"` instead — which is what core/heading
+	 * and core/paragraph do — tells core to parse the value back out of the
+	 * SAVED MARKUP. Combined with `save: () => null` there is no markup to
+	 * parse from, so the content is written nowhere, reads back as empty, and
+	 * the block renders nothing on the front end. It is the same trap as a
+	 * container block returning null and discarding its inner blocks, and it
+	 * fails just as silently: the editor looks fine until you reload.
+	 *
+	 * If this block ever gains a real save() that outputs the text, `source`
+	 * should come back with it. The two decisions belong together.
 	 *
 	 * @return {null} Nothing.
 	 */

@@ -52,6 +52,37 @@ add_filter( 'blockkit_text_tags', … );          // the vocabulary
 add_filter( 'blockkit_enabled_text_tags', … );  // what the editor offers
 ```
 
+### `content` has no `source` — and that is load-bearing
+
+```json
+"content": { "type": "string", "default": "", "role": "content" }
+```
+
+Core stores it inside the block comment delimiter:
+
+```html
+<!-- wp:blockkit/text {"content":"Hello","tagName":"h2"} /-->
+```
+
+Declaring `"source": "rich-text"` instead — which is what `core/heading` and
+`core/paragraph` do — tells core to parse the value back out of the **saved
+markup**. Those blocks have a real `save()` that writes that markup. This one
+returns `null`, so there would be nothing to parse from: the text is written
+nowhere, reads back empty, and the block renders nothing on the front end.
+
+**This shipped as a bug and reached the front end.** It is the same trap as a
+container returning `null` and discarding its inner blocks, and it fails just as
+silently — the editor looks correct until you reload.
+
+Every other integration check hand-wrote the block delimiter, which quietly
+guaranteed the attribute was present. That is not what the editor does, so those
+checks could not catch it. There is now a round-trip test that goes
+attributes → `serialize_blocks()` → parse → render, plus one through a real post
+and `the_content`.
+
+If this block ever gains a real `save()`, `source` should come back with it. The
+two decisions belong together.
+
 ### Heading-outline guardrail
 
 `use-outline-check.js` warns in the inspector when a heading **skips a level**

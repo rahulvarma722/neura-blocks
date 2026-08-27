@@ -11,8 +11,8 @@
 	"textdomain": "blockkit",
 	"attributes": {
 		"content": {
-			"type": "rich-text",
-			"source": "rich-text",
+			"type": "string",
+			"default": "",
 			"role": "content"
 		},
 		"tagName": {
