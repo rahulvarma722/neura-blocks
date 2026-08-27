@@ -116,11 +116,28 @@ class BlockKit_Responsive_Styles {
 	 * `<number><unit>` is used rather than escaping, because escaping cannot
 	 * make `expression(…)` or an unbalanced `)` safe inside a declaration.
 	 *
-	 * @param string $value Candidate value.
+	 * NEGATIVES ARE REJECTED BY DEFAULT. Both properties this currently serves
+	 * — `width` and the icon-size custom property, which feeds `width`/`height`
+	 * — are non-negative in CSS, so `-50px` is not a value a browser will honour
+	 * and emitting it only produces a declaration that is silently discarded.
+	 * Rejecting it here means the block drops the rule instead, which is the
+	 * same outcome with none of the dead CSS.
+	 *
+	 * The flag exists because that is a property of the CALLER, not of this
+	 * function: reused for `margin` or `text-indent`, where negatives are
+	 * meaningful, it should be passed true.
+	 *
+	 * @param string $value          Candidate value.
+	 * @param bool   $allow_negative Whether a leading `-` is acceptable.
 	 * @return bool Whether it is safe to emit.
 	 */
-	public static function is_safe_length( $value ) {
-		return 1 === preg_match( '/^-?(?:\d+\.?\d*|\.\d+)(?:px|%|em|rem|vw|vh)$/', $value );
+	public static function is_safe_length( $value, $allow_negative = false ) {
+		$sign = $allow_negative ? '-?' : '';
+
+		return 1 === preg_match(
+			'/^' . $sign . '(?:\d+\.?\d*|\.\d+)(?:px|%|em|rem|vw|vh)$/',
+			(string) $value
+		);
 	}
 
 	/**

@@ -118,20 +118,19 @@ ok "build/ present with $BLOCK_COUNT block(s)"
 
 # Stale build. Shipping yesterday's bundle is silent and maddening.
 #
-# Compared newest-file to newest-file, NOT against the build/ directory: a
-# directory's mtime only tracks its own entries, so `find src -newer build`
-# reports a false positive the moment a nested src file changes. webpack also
-# skips rewriting assets whose content is unchanged ("compared for emit"), so
-# individual build files legitimately keep older mtimes than their sources —
-# only the newest pair is meaningful.
-if [[ -d src ]]; then
-	NEWEST_SRC=$( find src -type f -exec ls -t {} + 2>/dev/null | head -1 )
-	if [[ -n "$NEWEST_SRC" ]] && ! find build -type f -newer "$NEWEST_SRC" -print -quit 2>/dev/null | grep -q .; then
-		die "src/ has changed since the last build ($NEWEST_SRC). Run 'npm run build' first."
-	fi
-	ok "build/ is current with src/"
+# BUILT, not checked. Two mtime-based attempts at detecting staleness were both
+# wrong, for the same underlying reason: webpack does not rewrite an asset whose
+# content is unchanged ("compared for emit"), so a source file touched without
+# changing its output leaves build/ legitimately older than src/ forever. No
+# comparison of timestamps can tell that apart from a genuinely stale build.
+#
+# Running the build removes the question. It takes well under a second, it is
+# idempotent, and afterwards build/ is current by construction.
+if [[ -x node_modules/.bin/wp-scripts ]]; then
+	node_modules/.bin/wp-scripts build >/dev/null 2>&1 || die "the build failed; run 'npm run build' to see why."
+	ok "build/ regenerated from src/"
 else
-	warn "src/ absent — skipped the staleness check"
+	warn "node_modules absent — could not rebuild; build/ is being shipped as found"
 fi
 
 # Debug artifacts that must not reach a user.
