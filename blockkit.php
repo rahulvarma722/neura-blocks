@@ -7,7 +7,8 @@
  * Requires at least: 7.1
  * Tested up to:      7.1
  * Requires PHP:      8.1
- * Author:            Brainstorm Force
+ * Author:            Aman Dubey
+ * Author URI:        https://amandubey.com/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       blockkit

@@ -7,40 +7,53 @@ Stable tag:        0.0.1
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-Button blocks with genuinely per-viewport styling — set a different width and icon size for desktop, tablet and mobile.
+Blocks that extend WordPress 7.1 rather than reinvent it — separate visual style from semantic markup, and reach the CSS core leaves out.
 
 == Description ==
 
-WordPress core already ships a Buttons block. BlockKit's exists for one thing
-core's cannot do: set a *different* value per viewport. A core button's width is
-one value at every screen size. A BlockKit button's width and icon size can be
-200px on desktop, 150px on tablet and 100% on mobile, stored as three separate
-values on the same block.
-
-It does that with WordPress 7.1's per-viewport style states. A width or icon size set while previewing Tablet or
-Mobile is stored for that viewport only, using the same breakpoints and the same
-mutually exclusive media-query bands as core's own controls — so a BlockKit
-control and a core control on the same block never disagree about where a
-breakpoint sits.
+BlockKit adds blocks that build on WordPress 7.1's block API instead of
+duplicating it. Core's typography, colour, spacing and border controls — and
+core's per-viewport style states — are declared as supports and inherited, not
+reimplemented. What BlockKit adds is the part core leaves out.
 
 = Blocks =
 
+* **Kit Text** — one text block whose HTML tag and visual style are *independent*. Choose `h2` for your document outline and style it like a caption, or the reverse. Plus balanced text wrapping, a readability measure, and line clamping.
 * **Kit Buttons** — a flex container for one or more buttons, with block gap, padding and wide/full alignment.
-* **Kit Button** — a button-style link with an optional icon, and per-viewport Custom Width and Icon Size.
+* **Kit Button** — a button-style link with an optional icon, and per-viewport width and icon size.
 
-= What makes the responsive part different =
+= Why a separate text block =
 
-Most plugins invent their own attributes for this — `widthTablet`, `widthMobile`
-— and then ship their own breakpoints, which drift out of step with the theme
-and with core. BlockKit stores its values inside core's own `style` attribute
-under a namespaced key, in core's viewport-state shape:
+Core couples a heading's level to its appearance. Pick `h2` and you get h2's
+size; pick the size you want and you change the heading level with it. That
+forces a choice between a correct document outline and the design you actually
+want, and the outline usually loses.
 
-`style.blockkit.width` for the base layer, `style.@tablet.blockkit.width` and
-`style.@mobile.blockkit.width` for the overrides.
+Kit Text splits the two. The tag is a semantic decision — for screen readers,
+for search engines, for the document outline. The visual style is a design
+decision. Neither constrains the other, and the editor warns you when a heading
+level is skipped or a second `h1` appears on the page.
 
-The media queries come from `WP_Theme_JSON::get_viewport_media_queries()`, which
-reads `settings.viewport` from theme.json. Change your breakpoints in theme.json
-and BlockKit follows them, because it never had its own.
+It also fills in typographic controls core has no UI for at all:
+
+* `text-wrap: balance` and `pretty` — headings that break evenly instead of leaving one orphaned word
+* **Measure** — a maximum line length in `ch`, the readability unit
+* **Line clamp** — truncate to a set number of lines with an ellipsis
+
+= On responsive values =
+
+WordPress 7.1 emits per-viewport CSS for its own style paths, so BlockKit does
+not need to reinvent that and does not try to. Where BlockKit adds a property
+core has no support for, it stores the value inside core's own `style` attribute
+under a namespaced key, in core's viewport-state shape, and generates the CSS
+using core's media queries:
+
+`style.blockkit.textWrap` for the base layer, `style.@tablet.blockkit.textWrap`
+and `style.@mobile.blockkit.textWrap` for the overrides.
+
+The breakpoints come from `WP_Theme_JSON::get_viewport_media_queries()`, which
+reads `settings.viewport` from theme.json. Change your breakpoints there and
+BlockKit follows, because it never had its own.
 
 Desktop is the base layer rather than a third band, matching core: it carries no
 media query and applies at every width, so Mobile falls back to the base value

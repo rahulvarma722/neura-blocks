@@ -1,0 +1,126 @@
+/**
+ * Kit Text — shared styles, front end and editor canvas.
+ *
+ * THE VISUAL PRESETS ARE THE POINT OF THIS FILE.
+ *
+ * Each `has-style-*` class resolves its size through the ACTIVE THEME's
+ * font-size presets first, falling back to a `clamp()` only when the
+ * theme has no such preset. So:
+ *
+ *   - A theme with a real type scale drives the look, its overrides win.
+ *   - A theme without one still renders a sensible fluid scale.
+ *   - Nothing is inlined, so a theme can override any preset in one place.
+ *
+ * Deliberately low specificity — one class, no !important, no IDs — because
+ * core's block supports must be able to override these. Core writes its
+ * responsive and state rules at specificity 0,1,0 with !important, so anything
+ * stronger here would defeat a user setting a font size in the inspector.
+ */
+
+/*
+ * Fallback sizes, hoisted so each font-size declaration stays on one readable
+ * line. These apply ONLY when the active theme declares no matching font-size
+ * preset in theme.json — see the note above.
+ */
+$fallback-display: clamp(2.75rem, 6vw, 4.5rem);
+$fallback-h1: clamp(2.25rem, 4.5vw, 3.25rem);
+$fallback-h2: clamp(1.75rem, 3.5vw, 2.5rem);
+$fallback-h3: clamp(1.5rem, 2.5vw, 1.875rem);
+
+.wp-block-blockkit-text {
+	// Long words and URLs must not escape the container. Not exposed as a
+	// control: there is no reasonable reason to want overflow here, and core
+	// has no support for it either.
+	overflow-wrap: break-word;
+
+	/*
+	 * Presets, largest to smallest.
+	 *
+	 * The `var( --wp--preset--font-size--x, fallback )` pattern is what makes
+	 * these theme-aware. WordPress emits a custom property for every font-size
+	 * preset in theme.json, so if the theme declares `x-large` we use it; if
+	 * not, the clamp() applies.
+	 */
+	&.has-style-display {
+		font-size: var(--wp--preset--font-size--xxx-large, $fallback-display);
+		line-height: 1.05;
+		letter-spacing: -0.02em;
+		// Display type nearly always reads better balanced than ragged.
+		text-wrap: balance;
+	}
+
+	&.has-style-h1 {
+		font-size: var(--wp--preset--font-size--xx-large, $fallback-h1);
+		line-height: 1.1;
+		letter-spacing: -0.015em;
+		text-wrap: balance;
+	}
+
+	&.has-style-h2 {
+		font-size: var(--wp--preset--font-size--x-large, $fallback-h2);
+		line-height: 1.15;
+		letter-spacing: -0.01em;
+		text-wrap: balance;
+	}
+
+	&.has-style-h3 {
+		font-size: var(--wp--preset--font-size--large, $fallback-h3);
+		line-height: 1.2;
+		text-wrap: balance;
+	}
+
+	&.has-style-h4 {
+		font-size: var(--wp--preset--font-size--medium, 1.375rem);
+		line-height: 1.25;
+		text-wrap: balance;
+	}
+
+	&.has-style-h5 {
+		font-size: var(--wp--preset--font-size--medium, 1.125rem);
+		line-height: 1.3;
+	}
+
+	&.has-style-h6 {
+		font-size: var(--wp--preset--font-size--small, 1rem);
+		line-height: 1.35;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	&.has-style-lead {
+		font-size: var(--wp--preset--font-size--large, 1.25rem);
+		line-height: 1.6;
+	}
+
+	&.has-style-body {
+		font-size: var(--wp--preset--font-size--medium, 1rem);
+		line-height: 1.6;
+	}
+
+	&.has-style-caption {
+		font-size: var(--wp--preset--font-size--small, 0.875rem);
+		line-height: 1.5;
+		opacity: 0.75;
+	}
+
+	/*
+	 * An eyebrow — the small uppercase label above a heading. There is no core
+	 * equivalent, and it is the preset most often faked with a tiny h6.
+	 */
+	&.has-style-eyebrow {
+		font-size: var(--wp--preset--font-size--small, 0.8125rem);
+		line-height: 1.4;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	/*
+	 * Headings styled AS something else must not keep the browser's default
+	 * margins for their tag, or an h2 styled as a caption still sits in h2's
+	 * whitespace. Core's spacing support overrides this when the user sets it.
+	 */
+	&[class*="has-style-"] {
+		margin-block: 0;
+	}
+}

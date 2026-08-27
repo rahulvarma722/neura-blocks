@@ -1,8 +1,14 @@
 {
-	"name": "brainstormforce/blockkit",
+	"name": "amandubey/blockkit",
 	"description": "A Gutenberg block collection built on the WordPress 7.1 block API.",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
+	"authors": [
+		{
+			"name": "Aman Dubey",
+			"homepage": "https://amandubey.com/"
+		}
+	],
 	"require": {
 		"php": ">=8.1"
 	},

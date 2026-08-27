@@ -38,8 +38,10 @@ module.exports = {
 					// Icon position (Left / Right) segmented control.
 					'__experimentalToggleGroupControl',
 					'__experimentalToggleGroupControlOption',
-					// Custom Width / Icon Size rows inside core's ToolsPanel, so
-					// they get core's reset-all and per-item reset behaviour.
+					// Custom Width / Icon Size / Markup rows inside core's
+					// ToolsPanel, so they get core's reset-all and per-item
+					// reset behaviour.
+					'__experimentalToolsPanel',
 					'__experimentalToolsPanelItem',
 					// Length + unit input matching core's dimension controls.
 					'__experimentalUnitControl',

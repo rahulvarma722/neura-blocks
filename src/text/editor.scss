@@ -1,0 +1,13 @@
+/**
+ * Kit Text — editor-only styles.
+ *
+ * The shared rules in style.scss already apply in the canvas. Only editing
+ * affordances belong here.
+ */
+
+.wp-block-blockkit-text {
+
+	[data-rich-text-placeholder] {
+		opacity: 0.6;
+	}
+}
