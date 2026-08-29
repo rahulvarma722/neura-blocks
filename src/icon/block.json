@@ -1,0 +1,75 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "blockkit/icon",
+	"version": "0.0.1",
+	"title": "Kit Icon",
+	"category": "blockkit",
+	"icon": "star-filled",
+	"description": "An SVG icon from the WordPress icon library, with flip and rotation controls.",
+	"keywords": [ "svg", "symbol", "graphic" ],
+	"textdomain": "blockkit",
+	"attributes": {
+		"icon": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"flipHorizontal": {
+			"type": "boolean",
+			"default": false
+		},
+		"flipVertical": {
+			"type": "boolean",
+			"default": false
+		},
+		"rotation": {
+			"type": "number",
+			"default": 0
+		},
+		"label": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"html": false,
+		"anchor": true,
+		"align": [ "left", "center", "right" ],
+		"shadow": true,
+		"color": {
+			"gradients": true,
+			"text": true,
+			"background": true,
+			"__experimentalDefaultControls": {
+				"text": true
+			}
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"__experimentalDefaultControls": {
+				"margin": true
+			}
+		},
+		"dimensions": {
+			"width": true,
+			"__experimentalDefaultControls": {
+				"width": true
+			}
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"radius": true
+			}
+		}
+	},
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"editorStyle": "file:./index.css",
+	"render": "file:./render.php"
+}

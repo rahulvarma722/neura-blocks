@@ -1,0 +1,22 @@
+/**
+ * Kit Icon — editor-only styles.
+ *
+ * The shared rules in style.scss already apply in the canvas. Only editing
+ * affordances belong here.
+ */
+
+.wp-block-blockkit-icon {
+
+	// The preview span mirrors what render.php emits on the front end, so the
+	// SVG needs the same sizing rules the wrapper's svg selector gives it.
+	.wp-block-blockkit-icon__svg {
+		display: block;
+		line-height: 0;
+
+		svg {
+			width: 100%;
+			height: auto;
+			fill: currentcolor;
+		}
+	}
+}

@@ -1,0 +1,78 @@
+/**
+ * Kit Icon — shared styles, front end and editor canvas.
+ *
+ * Modelled on core's own icon block CSS, which is worth matching rather than
+ * inventing: `line-height: 0` stops the inline SVG sitting on a text baseline
+ * and leaving a gap under it, and `fill: currentColor` is what makes the
+ * `color` block support work at all.
+ */
+
+.wp-block-blockkit-icon {
+	// Without this the wrapper keeps a text line-box and the icon appears to
+	// have unexplained space beneath it.
+	line-height: 0;
+
+	// The wrapper is only as big as the icon, so a background, border or
+	// padding from the block supports hugs the icon rather than the column.
+	display: inline-block;
+
+	&.aligncenter {
+		display: flex;
+		justify-content: center;
+	}
+
+	svg {
+		box-sizing: border-box;
+
+		/*
+		 * THIS IS WHAT MAKES THE COLOUR CONTROL WORK.
+		 *
+		 * Core's icons carry no fill of their own, so they inherit. The
+		 * `color` support serialises a `color` declaration onto the wrapper,
+		 * and currentColor turns that into the icon's fill.
+		 */
+		fill: currentcolor;
+
+		/*
+		 * The icon fills the wrapper, and the wrapper is sized by the
+		 * `dimensions.width` support.
+		 *
+		 * render.php deliberately passes `size => null` to wp_get_icon() so no
+		 * width/height attributes are baked into the SVG. That leaves sizing
+		 * to CSS, where a user's width setting can win — and it is why this
+		 * rule exists rather than a hard-coded icon size.
+		 */
+		width: 100%;
+		height: auto;
+	}
+
+	/*
+	 * Flip and rotation.
+	 *
+	 * On the SVG, never the wrapper: a transform on the wrapper would rotate
+	 * any background, border and padding with it, and the user asked to rotate
+	 * the icon, not the box.
+	 *
+	 * `rotate` is set inline by render.php because it is a free numeric value.
+	 * Flips are classes because there are only two of them, and a class
+	 * composes with the rotation without either overwriting the other — which
+	 * a single `transform` shorthand would not.
+	 */
+	svg.is-flip-horizontal {
+		scale: -1 1;
+	}
+
+	svg.is-flip-vertical {
+		scale: 1 -1;
+	}
+
+	svg.is-flip-horizontal.is-flip-vertical {
+		scale: -1 -1;
+	}
+}
+
+// A default size, so an icon with no width set is visible rather than
+// collapsing to nothing. Overridden the moment the user sets a width.
+.wp-block-blockkit-icon:not([style*="width"]) {
+	width: 1.5rem;
+}

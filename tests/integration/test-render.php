@@ -151,6 +151,84 @@ bk_check( 'unknown icon key ignored', false === strpos( $out, 'passwd' ) );
 bk_check( 'no </style> breakout', 1 >= substr_count( $out, '</style>' ) );
 
 // ---------------------------------------------------------------------
+echo "\nKit Icon — core's icon registry\n";
+// ---------------------------------------------------------------------
+bk_check( 'blockkit/icon registered', $registry->is_registered( 'blockkit/icon' ) );
+bk_check( "core's wp_get_icon() is available", function_exists( 'wp_get_icon' ) );
+
+$out = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled"} /-->' );
+
+bk_check( 'renders an SVG from the registry', false !== strpos( $out, '<svg' ) );
+bk_check( 'wrapped for block supports', false !== strpos( $out, 'wp-block-blockkit-icon' ) );
+
+/*
+ * The accessibility branch is core's, and it is the reason for using
+ * wp_get_icon() rather than emitting SVG by hand: an unlabelled icon is
+ * decoration and must be hidden from assistive technology, a labelled one is
+ * content and must be announced.
+ */
+bk_check(
+    'no label -> aria-hidden + focusable=false',
+    false !== strpos( $out, 'aria-hidden="true"' ) && false !== strpos( $out, 'focusable="false"' )
+);
+
+$labelled = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","label":"Rating"} /-->' );
+
+bk_check(
+    'label -> role=img + aria-label',
+    false !== strpos( $labelled, 'role="img"' ) && false !== strpos( $labelled, 'aria-label="Rating"' )
+);
+bk_check( 'a labelled icon is NOT aria-hidden', false === strpos( $labelled, 'aria-hidden' ) );
+
+// Flip and rotation belong on the SVG, not the wrapper: a transform on the
+// wrapper would rotate any background, border and padding with it.
+$flipped = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","flipHorizontal":true,"flipVertical":true} /-->' );
+
+bk_check( 'flip classes land on the svg', 1 === preg_match( '/<svg[^>]*is-flip-horizontal is-flip-vertical/', $flipped ) );
+bk_check( 'flip classes are NOT on the wrapper', 1 !== preg_match( '/<div[^>]*is-flip-horizontal/', $flipped ) );
+
+$rotated = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":90} /-->' );
+bk_check( 'rotation emitted on the svg', 1 === preg_match( '/<svg[^>]*rotate:90deg/', $rotated ) );
+
+// Normalisation: a stored value outside 0-359 must not emit a meaningless
+// declaration, and a negative must resolve to its positive equivalent.
+bk_check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":720} /-->' ), 'rotate:' ) );
+bk_check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
+
+// ---------------------------------------------------------------------
+echo "\nKit Icon — the icon name is resolved by core, which is the validation\n";
+// ---------------------------------------------------------------------
+/*
+ * There is no allow-list in render.php on purpose. wp_get_icon() returns ''
+ * for anything not in WP_Icons_Registry, so an unregistered or hostile name
+ * cannot produce markup at all. This asserts that property rather than
+ * assuming it.
+ */
+$hostile = array(
+    'unregistered'     => 'core/does-not-exist',
+    'unnamespaced'     => 'star-filled',
+    'path traversal'   => '../../wp-config',
+    'script injection' => 'core/x"><script>alert(1)</script>',
+    'raw svg tag'      => '<svg onload=alert(1)>',
+    'empty'            => '',
+);
+$all_empty = true;
+
+foreach ( $hostile as $why => $name ) {
+    $result = trim( do_blocks( '<!-- wp:blockkit/icon ' . wp_json_encode( array( 'icon' => $name ) ) . ' /-->' ) );
+
+    if ( '' !== $result ) {
+        $all_empty = false;
+        printf( "        leaked (%s): %s\n", $why, substr( $result, 0, 60 ) );
+    }
+}
+
+bk_check( 'every unresolvable or hostile icon name renders nothing', $all_empty );
+
+$escaped = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","label":"\"><script>alert(1)</script>"} /-->' );
+bk_check( 'a hostile label cannot break out of the attribute', false === stripos( $escaped, '<script' ) );
+
+// ---------------------------------------------------------------------
 echo "\nKit Text — visual presets\n";
 // ---------------------------------------------------------------------
 bk_check( 'blockkit/text registered', $registry->is_registered( 'blockkit/text' ) );

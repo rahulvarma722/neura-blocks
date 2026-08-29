@@ -1,6 +1,78 @@
 # Blocks
 
-Three blocks: a text block, and a container with its only permitted child.
+Four blocks: an icon, a text block, and a container with its only permitted
+child.
+
+## Kit Icon — `blockkit/icon`
+
+Built on **core's icon API**, new in WordPress 7.1, rather than a bundled icon
+set:
+
+```php
+wp_get_icon( $name, array( 'size' => null, 'label' => $label ) )
+```
+
+That resolves a namespaced name — `core/star-filled` — against
+`WP_Icons_Registry`. 88 icons ship with core, in the `core` collection.
+
+Attributes: `icon`, `flipHorizontal`, `flipVertical`, `rotation`, `label`.
+
+### Why core's registry and not our own SVGs
+
+The button block shows the alternative: `src/button/icon.js` holds four SVG
+paths and `render.php` holds a PHP twin, kept in step **by hand**, and a key
+added to one and not the other makes the icon vanish on save. The registry has
+no such seam — the editor reads it over REST, the front end reads it in PHP,
+and both see the same source.
+
+It also means anything a plugin registers with `wp_register_icon()` appears in
+this block with no JavaScript at all. Registration is PHP-only; the editor picks
+it up over `/wp/v2/icons`.
+
+### The icon name needs no allow-list
+
+`wp_get_icon()` returns `''` for anything not in the registry, so an
+unregistered or hostile name **cannot produce markup**. Verified for six cases
+— unregistered, unnamespaced, path traversal, script injection, a raw `<svg>`
+tag, and empty — all of which render nothing.
+
+That is why `render.php` has no allow-list here, unlike the tag name in an
+earlier version of Kit Text: there, the value landed in an element position and
+had to be validated; here, core resolves it or refuses.
+
+### Accessibility is core's branch, and it is the point
+
+| Label | Output |
+|---|---|
+| empty | `aria-hidden="true" focusable="false"` — decoration |
+| set | `role="img" aria-label="…"` — content |
+
+Getting that wrong is the most common icon-accessibility mistake. Using
+`wp_get_icon()` means it is already right, and the label is escaped by core.
+
+### `size => null`, deliberately
+
+`wp_get_icon()` would otherwise bake `width` and `height` **attributes** into
+the SVG at 24px. Passing null leaves the intrinsic `viewBox` alone, so sizing
+belongs to the `dimensions.width` support: core serialises it onto the wrapper
+and `style.scss` makes the SVG fill it. A user's width setting then wins,
+instead of CSS fighting a hard-coded attribute.
+
+### Flip and rotation go on the SVG
+
+Applied with `WP_HTML_Tag_Processor` rather than string surgery, which is also
+what core's icon block does — parsing the markup means adding a class cannot
+corrupt an attribute.
+
+**Not on the wrapper**, because a transform there would rotate any background,
+border and padding with it. The user asked to rotate the icon, not the box.
+
+Flips are classes; rotation is an inline `rotate` because it is a free numeric
+value. Keeping them separate lets them compose — a single `transform` shorthand
+would have one overwrite the other. Rotation is cast with `(int)` and taken
+modulo 360, so a stored `720` emits nothing and `-90` becomes `270deg`.
+
+
 
 ## Kit Text — `blockkit/text`
 

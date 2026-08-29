@@ -18,9 +18,21 @@ reimplemented. What BlockKit adds is the part core leaves out.
 
 = Blocks =
 
+* **Kit Icon** — an SVG icon from the WordPress icon library, with flip, free rotation and a proper decorative/meaningful accessibility choice.
 * **Kit Text** — a paragraph with a visual style preset: Display, H1–H6, Lead, Body, Caption or Eyebrow, chosen independently of the theme's default paragraph sizing.
 * **Kit Buttons** — a flex container for one or more buttons, with block gap, padding and wide/full alignment.
 * **Kit Button** — a button-style link with an optional icon, and per-viewport width and icon size.
+
+= Built on the WordPress icon library =
+
+Kit Icon uses the icon registry WordPress 7.1 added, so it draws on the 88
+icons that ship with core rather than bundling its own set — and any icon a
+theme or plugin registers appears in it automatically.
+
+Icons are marked up correctly for assistive technology: leave the alternative
+text empty and the icon is hidden from screen readers as decoration; set it and
+the icon is announced as content. That distinction is the most commonly missed
+part of icon accessibility.
 
 = The typographic scale follows your theme =
 
