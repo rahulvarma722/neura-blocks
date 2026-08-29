@@ -22,6 +22,11 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
+          # The plugin's declared floor, so CI runs the oldest PHP the plugin
+          # claims to support. That matters more than it looks: PHPCompatibility
+          # 9.3.5 cannot detect PHP 8 SYNTAX (it predates it, and newer versions
+          # need PHPCS 4.x which WPCS does not support), so actually EXECUTING
+          # the suite on the floor is the only real check that the floor holds.
           php-version: '8.1'
           tools: composer
 

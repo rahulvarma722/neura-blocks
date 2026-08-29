@@ -23,7 +23,7 @@ final class AutoloaderTest extends TestCase {
 		$this->assertTrue( class_exists( 'BlockKit\\Blocks' ) );
 		$this->assertTrue( class_exists( 'BlockKit\\Block_Render' ), 'underscores become hyphens' );
 		$this->assertTrue( class_exists( 'BlockKit\\Responsive_Styles' ) );
-		$this->assertTrue( class_exists( 'BlockKit\\Requirements' ) );
+		$this->assertTrue( class_exists( 'BlockKit\\Helper' ) );
 		$this->assertTrue( class_exists( 'BlockKit\\Plugin' ) );
 	}
 

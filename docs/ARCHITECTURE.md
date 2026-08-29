@@ -7,7 +7,6 @@ blockkit.php                          plugin header, constants, boot
 includes/
   class-autoloader.php                BlockKit\*  ->  includes/{class,interface,trait}-*.php
   interface-module.php                the contract every feature implements
-  class-requirements.php              PHP / WordPress floor
   class-plugin.php                    module registry
   class-helper.php                    shared environment getters
   class-blocks.php                    block registration + JS translations  [Module]
@@ -31,7 +30,6 @@ loaded on demand.
 ```php
 BlockKit\Autoloader          includes/class-autoloader.php
 BlockKit\Module              includes/interface-module.php      <- interface-
-BlockKit\Requirements        includes/class-requirements.php
 BlockKit\Plugin              includes/class-plugin.php
 BlockKit\Helper              includes/class-helper.php
 BlockKit\Blocks              includes/class-blocks.php
@@ -90,20 +88,32 @@ loading it.
 2.  Constants      BLOCKKIT_VERSION, BLOCKKIT_SLUG, BLOCKKIT_PATH
                    BLOCKKIT_MIN_PHP, BLOCKKIT_MIN_WP
 3.  Autoloader     require + register — the only require in the file
-4.  Requirements   BlockKit\Requirements::are_met()
-                     ├─ fails -> admin_notices, then RETURN. Nothing else loads.
-                     └─ passes -> continue
-5.  Boot           BlockKit\Plugin::init()
+4.  Boot           BlockKit\Plugin::init()
                      ├─ filter `blockkit_modules` (the extension point)
                      └─ for each module: new, then ->register()
                           └─ Blocks: add_action( 'init', … )
                                      add_filter( 'block_categories_all', … )
 ```
 
-Requirements are checked **on load**, not only on activation, so a site that
-downgrades PHP or WordPress after activating gets an admin notice instead of a
-fatal error. The notice callback is registered with a *string* class name so
-the class is not loaded unless the notice actually renders.
+**There is no runtime version check**, deliberately. Core validates
+`Requires at least` and `Requires PHP` inside `activate_plugin()`
+(`wp-admin/includes/plugin.php`) and refuses to activate below either floor;
+the plugins list screen flags incompatibility too.
+
+Core does not re-check an already-active plugin on later loads, so a host
+downgrading afterwards goes unnoticed — but that produced no crash to catch:
+the plugin uses no syntax newer than its floor, and its one WordPress 7.1
+dependency is guarded at the point of use in `Helper::media_queries()`, with a
+documented pre-7.1 fallback.
+
+If a future feature genuinely cannot degrade, guard it **at its own call site**.
+A global gate disables the whole plugin over one feature's dependency.
+
+One caveat on the floor itself: PHPCompatibility 9.3.5 predates PHP 8 and has
+no sniffs for its syntax, and newer versions require PHPCS 4.x which WPCS does
+not yet support. So `testVersion` catches removed/added *functions* but not new
+*syntax* — which is why CI runs the suite on 8.1 itself. Executing on the floor
+is the only real check that the floor holds.
 
 ## Constants
 
@@ -119,18 +129,6 @@ block names only from `block.json`, so a constant could only duplicate that
 literal and drift from it. See [Renaming](RENAMING.md).
 
 ## The classes
-
-### `Requirements`
-Compares `PHP_VERSION` and `get_bloginfo( 'version' )` against the declared
-floor and returns human-readable failures. `render_notice()` checks
-`current_user_can( 'activate_plugins' )` first — a subscriber has no use for a
-message about PHP versions.
-
-The notice builds its list with a `foreach` and inline `esc_html()` rather than
-`array_map()` + `implode()`. Both escape identically, but PHPCS cannot follow a
-value out of a callback, so the `array_map()` form raised an
-`EscapeOutput.OutputNotEscaped` **error** on already-safe code. Writing the
-escaping where the sniff can see it beats silencing a security sniff.
 
 ### `Plugin` — the module registry
 A list of what is enabled, not a place where behaviour accumulates. It

@@ -49,22 +49,6 @@ define( 'BLOCKKIT_VERSION', '0.0.1' );
 define( 'BLOCKKIT_SLUG', 'blockkit' );
 define( 'BLOCKKIT_PATH', plugin_dir_path( __FILE__ ) );
 
-/**
- * Minimum environment the plugin supports.
- *
- * Checked on load rather than only on activation, so that a site which
- * downgrades PHP or WordPress gets a notice instead of a fatal error.
- *
- * The WordPress floor is 7.1 because per-viewport style states are a 7.1
- * feature and the button's width/icon-size controls are built directly on
- * them: they write core's `@tablet` / `@mobile` layers and detect which state
- * the editor is in by probing core's own slots. On 6.x those slots do not
- * exist, so the controls would still render and still store values — into
- * layers the editor cannot read back. Failing loudly beats that.
- */
-const BLOCKKIT_MIN_PHP = '8.1';
-const BLOCKKIT_MIN_WP  = '7.1';
-
 /*
  * ---------------------------------------------------------------------
  * Boot
@@ -72,26 +56,20 @@ const BLOCKKIT_MIN_WP  = '7.1';
  * This file stays in the GLOBAL namespace, because a plugin's main file is
  * also its header block and WordPress reads that by parsing the file rather
  * than loading it. Everything else lives under the `BlockKit` namespace, so
- * the references below are fully qualified.
+ * the reference below is fully qualified.
  *
  * The autoloader is the only require. Adding a class means adding a file —
  * there is no list here to keep in step, which is the whole point.
+ *
+ * There is deliberately NO runtime version check. Core enforces the two
+ * version headers above when a plugin is activated, and this plugin has no
+ * hard dependency that would fatal afterwards — its one WordPress 7.1 API is
+ * guarded at the point of use, in the Helper class. The full reasoning, and
+ * what to do instead if a future feature genuinely cannot degrade, is in
+ * docs/ARCHITECTURE.md.
  */
 require_once BLOCKKIT_PATH . 'includes/class-autoloader.php';
 
 BlockKit\Autoloader::register();
-
-/*
- * Requirements are checked before anything else is touched.
- *
- * Note the class is referenced as a STRING in the callback. That is
- * deliberate: `array( ClassName::class, 'method' )` would be tidier, but the
- * point of this branch is that the environment cannot run the plugin, and a
- * string defers class loading until the notice actually renders.
- */
-if ( ! BlockKit\Requirements::are_met() ) {
-	add_action( 'admin_notices', array( 'BlockKit\\Requirements', 'render_notice' ) );
-	return;
-}
 
 BlockKit\Plugin::init();
