@@ -6,10 +6,10 @@
 > per-viewport attribute end to end so the mechanism can be watched rather than
 > guessed at.
 >
-> **Why it exists.** Spectra needed two questions answered before its production
+> **Why it exists.** a production block plugin needed two questions answered before its production
 > code could be changed: *can a plugin put a control in the responsive view at
 > all*, and *how does a custom attribute behave like a core one*. Answering those
-> in Spectra would have meant debugging inside 45 blocks and a large routing
+> in a production block plugin would have meant debugging inside 45 blocks and a large routing
 > extension. This plugin answers them in ~600 lines.
 >
 > **Status.** Working and verified — editor (commit `35f1334`) and front end
@@ -30,9 +30,8 @@
 6. [Front-end CSS](#6-front-end-css)
 7. [Findings](#7-findings)
 8. [Two bugs found while building it](#8-two-bugs-found-while-building-it)
-9. [How this differs from Spectra's production code](#9-how-this-differs-from-spectras-production-code)
-10. [Running the experiment](#10-running-the-experiment)
-11. [File map](#11-file-map)
+9. [Running the experiment](#9-running-the-experiment)
+10. [File map](#10-file-map)
 
 ---
 
@@ -83,7 +82,7 @@ export const EXPERIMENT_GROUP = 'dimensions';
 | Value | What it demonstrates | Expected result |
 |---|---|---|
 | `'dimensions'` | **the working arrangement** — one of the seven groups core renders in the responsive view | control appears in the Styles tab on Desktop **and** in the responsive view on Tablet/Mobile |
-| `'styles'` | **reproduces the Spectra bug** — the general-purpose third-party group, rendered by the Styles tab but not by `StyleStateInspectorSlots` | control has its own panel heading on Desktop, then **vanishes** on Tablet/Mobile while its stored values stay in post content, unreachable |
+| `'styles'` | **reproduces the a production block plugin bug** — the general-purpose third-party group, rendered by the Styles tab but not by `StyleStateInspectorSlots` | control has its own panel heading on Desktop, then **vanishes** on Tablet/Mobile while its stored values stay in post content, unreachable |
 | `'viewport'` | **negative control** — a group that does not exist in 7.1 | console logs `Unknown InspectorControls group "viewport" provided.` and nothing renders |
 
 The third value is the interesting one long-term: `viewport` is the group added by
@@ -248,11 +247,11 @@ rule instead of emitting a near-duplicate each.
 ```html
 <div class="wp-block-blockkit-buttons is-layout-flex …">
   <style>
-    .bk-btn-w-ccc3ba64{width:200px;}
-    @media (width <= 480px){.bk-btn-w-ccc3ba64{width:100%;}}
-    @media (480px < width <= 782px){.bk-btn-w-ccc3ba64{width:150px;}}
+    .blockkit-btn-w-ccc3ba64{width:200px;}
+    @media (width <= 480px){.blockkit-btn-w-ccc3ba64{width:100%;}}
+    @media (480px < width <= 782px){.blockkit-btn-w-ccc3ba64{width:150px;}}
   </style>
-  <a class="bk-btn-w-ccc3ba64 wp-block-blockkit-button" href="https://example.com">Click me</a>
+  <a class="blockkit-btn-w-ccc3ba64 wp-block-blockkit-button" href="https://example.com">Click me</a>
 </div>
 ```
 
@@ -277,7 +276,7 @@ queries silently reintroduces a tablet-into-mobile cascade.
 - All seven responsive slots are **labelled**, so no plugin can own a self-headed
   panel there.
 - **Filling one of the seven is enough** to appear in the responsive view. That is
-  the only route on 7.1, and it is what Spectra now does for its container
+  the only route on 7.1, and it is what a production block plugin now does for its container
   Background / Overlay / Shape Divider panels.
 
 ### 7.2 Alignment
@@ -339,32 +338,7 @@ for once before output.
 
 ---
 
-## 9. How this differs from Spectra's production code
-
-Same rule, different plumbing. Know which you are reading.
-
-| | BlockKit (this plugin) | Spectra (production) |
-|---|---|---|
-| Storage | namespaced key inside `style` (`style.blockkit.width`) | `style` groups plus flat keys, declared in `BLOCK_RESPONSIVE_KEYS` |
-| Who routes writes | the control, explicitly | `withResponsiveControls` intercepts `setAttributes` for every allowed block |
-| Who resolves reads | the control, explicitly | the HOC projects resolved values onto `props.attributes` |
-| Signal scope | per block — fine, one block | **published from the selected block only**, subscribed by the rest |
-| Pre-7.1 | not handled — 7.1-only bench | five capability guards, behaviour unchanged below 7.1 |
-| Legacy content | none | `lg`/`md`/`sm` migration with the old cascade baked in |
-
-**The signal-scope row is the important one.** Spectra found that core gates both
-probe fills on the block-edit context, so probes mount only in the *selected*
-block — and since the inspector term is a negative test, an unselected block
-cannot distinguish "core dropped the slot" from "I am not selected". Read
-per-block, every unselected block concluded the mode was on. This plugin never hit
-that because a single block is always the selected one while you are testing it.
-
-If you port anything from here into production code, port the *rule* and re-derive
-the plumbing. See `spectra-blocks/docs/GENERAL-RESPONSIVE-STYLES.md` §5.
-
----
-
-## 10. Running the experiment
+## 9. Running the experiment
 
 ```bash
 cd wp-content/plugins/blockkit
@@ -384,11 +358,11 @@ Then in the editor: insert **Kit Buttons**, select the inner **Kit Button**.
 | 7 | Set `EXPERIMENT_GROUP = 'styles'`, rebuild | own panel on Desktop, **gone** on Tablet/Mobile |
 | 8 | Set `EXPERIMENT_GROUP = 'viewport'`, rebuild | console warning, nothing renders |
 
-Step 4→5 is the alignment behaviour; step 7 is the Spectra bug in isolation.
+Step 4→5 is the alignment behaviour; step 7 is the a production block plugin bug in isolation.
 
 ---
 
-## 11. File map
+## 10. File map
 
 **This plugin**
 
@@ -415,11 +389,8 @@ Step 4→5 is the alignment behaviour; step 7 is the Spectra bug in isolation.
 | `editor/src/store/selectors.js` | `getDeviceType()` — public |
 | `wp-includes/class-wp-theme-json.php` | `get_viewport_media_queries()` |
 
-**Related documents**
+**Related reading**
 
 | Doc | Covers |
 |---|---|
-| `spectra-blocks/docs/SPECTRA-RESPONSIVE-ATTRIBUTE-MAPPING.md` | authoring guide: groups, visibility, CSS, checklist |
-| `spectra-blocks/docs/GENERAL-RESPONSIVE-STYLES.md` | Spectra's production implementation (PR #779) — and §14, the Phase 2 plan to hand CSS generation back to core |
-| `wp-audit-7.1/spectra-responsive-inspector-findings-2026-08-26.md` | the wider 7.1 analysis and upstream state |
 | Gutenberg [#78280](https://github.com/WordPress/gutenberg/pull/78280) · [#80388](https://github.com/WordPress/gutenberg/issues/80388) · [#82003](https://github.com/WordPress/gutenberg/pull/82003) | why the view is limited, and the `viewport` group in progress |

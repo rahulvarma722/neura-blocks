@@ -1,7 +1,6 @@
 <?php
 /**
  * Plugin Name:       BlockKit
- * Plugin URI:        https://github.com/rahulvarma722/blockkit
  * Description:       A Gutenberg block collection built on the WordPress 7.1 block API.
  * Version:           0.0.1
  * Requires at least: 7.1

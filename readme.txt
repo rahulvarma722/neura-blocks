@@ -82,9 +82,8 @@ REST endpoints or AJAX handlers.
 = Source code =
 
 The JavaScript in `build/` is compiled and minified by `@wordpress/scripts`.
-The unminified sources are included in this plugin under `src/`, and the full
-development history, build tooling and issue tracker are public at
-https://github.com/rahulvarma722/blockkit
+The unminified sources are included in this plugin under `src/`, together with
+the `package.json` that builds them.
 
 To build from source: `npm install && npm run build`.
 

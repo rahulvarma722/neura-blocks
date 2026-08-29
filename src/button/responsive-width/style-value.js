@@ -41,7 +41,7 @@ export function getStateValue( style, stateKey, key = WIDTH_KEY ) {
  * as `array_replace( base, state )` against mutually exclusive media queries.
  *
  * So mobile falls back to the BASE, never to tablet. That is the single
- * biggest behavioural difference from the pre-7.1 Spectra generator, which
+ * biggest behavioural difference from a pre-7.1 responsive generator, which
  * resolved `sm -> md -> lg` and therefore let a tablet value apply on phones.
  *
  * @param {?Object} style  The block's `style` attribute.

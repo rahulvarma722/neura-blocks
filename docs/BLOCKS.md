@@ -175,7 +175,7 @@ A configurable HTML tag is **future scope**, and its absence is asserted rather
 than assumed:
 
 ```php
-bk_check( 'a stray tagName attribute is ignored entirely', … );
+blockkit_check( 'a stray tagName attribute is ignored entirely', … );
 ```
 
 When it returns, the validation belongs in `render.php` against an allow-list.

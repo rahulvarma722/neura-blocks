@@ -256,9 +256,9 @@ $responsive = Block_Render::responsive(
 	array(
 		// style key => CSS property emitted.
 		'width'    => 'width',
-		'iconSize' => '--bk-button-icon-size',
+		'iconSize' => '--blockkit-button-icon-size',
 	),
-	'bk-btn-'
+	'blockkit-btn-'
 );
 
 $wrapper_classes = array_filter(

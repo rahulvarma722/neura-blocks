@@ -143,7 +143,7 @@ Worth stating plainly so nobody assumes otherwise:
 
 ## Adding tests
 
-Pure PHP logic → `tests/unit/`. Needs WordPress → add a `bk_check()` line to
+Pure PHP logic → `tests/unit/`. Needs WordPress → add a `blockkit_check()` line to
 `tests/integration/test-render.php`. Pure JS → `tests/js/`.
 
 Keep the assertion messages specific. `assertTrue( $result )` tells you nothing

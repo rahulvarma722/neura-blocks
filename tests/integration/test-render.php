@@ -24,12 +24,12 @@
 // A third-party plugin's deprecations are not this suite's business.
 error_reporting( E_ALL );
 
-$GLOBALS['bk_notices'] = array();
+$GLOBALS['blockkit_notices'] = array();
 
 set_error_handler(
 	static function ( $errno, $message, $file, $line ) {
 		if ( false !== strpos( $file, 'plugins/blockkit' ) ) {
-			$GLOBALS['bk_notices'][] = sprintf( '%s in %s:%d', $message, basename( $file ), $line );
+			$GLOBALS['blockkit_notices'][] = sprintf( '%s in %s:%d', $message, basename( $file ), $line );
 		}
 		return false;
 	},
@@ -37,16 +37,16 @@ set_error_handler(
 );
 
 /*
- * Counters live in $GLOBALS, not as `global $bk_pass`.
+ * Counters live in $GLOBALS, not as `global $blockkit_pass`.
  *
  * `wp eval-file` includes this file from INSIDE a function, so a top-level
- * assignment here is a LOCAL variable — and `global $bk_pass` in bk_check()
+ * assignment here is a LOCAL variable — and `global $blockkit_pass` in blockkit_check()
  * would then bind to a different, unset variable. The counts stayed at zero
  * while every check printed PASS, which also meant the exit code never fired
  * and this suite was useless as a gate. $GLOBALS is unambiguous either way.
  */
-$GLOBALS['bk_pass'] = 0;
-$GLOBALS['bk_fail'] = 0;
+$GLOBALS['blockkit_pass'] = 0;
+$GLOBALS['blockkit_fail'] = 0;
 
 /**
  * Asserts one condition.
@@ -55,14 +55,14 @@ $GLOBALS['bk_fail'] = 0;
  * @param bool   $condition Result.
  * @return void
  */
-function bk_check( $label, $condition ) {
+function blockkit_check( $label, $condition ) {
 	if ( $condition ) {
-		++$GLOBALS['bk_pass'];
+		++$GLOBALS['blockkit_pass'];
 		printf( "  \033[32mPASS\033[0m  %s\n", $label );
 		return;
 	}
 
-	++$GLOBALS['bk_fail'];
+	++$GLOBALS['blockkit_fail'];
 	printf( "  \033[31mFAIL\033[0m  %s\n", $label );
 }
 
@@ -71,27 +71,27 @@ echo "\nRegistration\n";
 // ---------------------------------------------------------------------
 $registry = WP_Block_Type_Registry::get_instance();
 
-bk_check( 'blockkit/buttons registered', $registry->is_registered( 'blockkit/buttons' ) );
-bk_check( 'blockkit/button registered', $registry->is_registered( 'blockkit/button' ) );
+blockkit_check( 'blockkit/buttons registered', $registry->is_registered( 'blockkit/buttons' ) );
+blockkit_check( 'blockkit/button registered', $registry->is_registered( 'blockkit/button' ) );
 
 $button = $registry->get_registered( 'blockkit/button' );
 
-bk_check( 'button render callback is callable', $button && is_callable( $button->render_callback ) );
-bk_check(
+blockkit_check( 'button render callback is callable', $button && is_callable( $button->render_callback ) );
+blockkit_check(
 	'editor script handle resolved (script translations wired)',
 	$button && ! empty( $button->editor_script_handles )
 );
-bk_check( 'button declares buttons as parent', $button && in_array( 'blockkit/buttons', (array) $button->parent, true ) );
+blockkit_check( 'button declares buttons as parent', $button && in_array( 'blockkit/buttons', (array) $button->parent, true ) );
 
 // ---------------------------------------------------------------------
 echo "\nAutoloading and module registry\n";
 // ---------------------------------------------------------------------
-bk_check( 'interface BlockKit\\Module autoloads', interface_exists( 'BlockKit\\Module' ) );
-bk_check( 'BlockKit\\Block\\Registrar implements Module', in_array( 'BlockKit\\Module', (array) class_implements( 'BlockKit\\Block\\Registrar' ), true ) );
-bk_check( 'module reachable after boot', BlockKit\Plugin::module( BlockKit\Block\Registrar::class ) instanceof BlockKit\Block\Registrar );
-bk_check( 'no legacy global class names remain', ! class_exists( 'BlockKit_Blocks' ) && ! class_exists( 'BlockKit_Block_Render' ) );
-bk_check( 'pre-move class names are gone too', ! class_exists( 'BlockKit\\Blocks' ) && ! class_exists( 'BlockKit\\Block_Render' ) );
-bk_check( 'sub-namespace classes autoload from includes/block/', class_exists( 'BlockKit\\Block\\Render' ) );
+blockkit_check( 'interface BlockKit\\Module autoloads', interface_exists( 'BlockKit\\Module' ) );
+blockkit_check( 'BlockKit\\Block\\Registrar implements Module', in_array( 'BlockKit\\Module', (array) class_implements( 'BlockKit\\Block\\Registrar' ), true ) );
+blockkit_check( 'module reachable after boot', BlockKit\Plugin::module( BlockKit\Block\Registrar::class ) instanceof BlockKit\Block\Registrar );
+blockkit_check( 'no legacy global class names remain', ! class_exists( 'BlockKit_Blocks' ) && ! class_exists( 'BlockKit_Block_Render' ) );
+blockkit_check( 'pre-move class names are gone too', ! class_exists( 'BlockKit\\Blocks' ) && ! class_exists( 'BlockKit\\Block_Render' ) );
+blockkit_check( 'sub-namespace classes autoload from includes/block/', class_exists( 'BlockKit\\Block\\Render' ) );
 
 // ---------------------------------------------------------------------
 echo "\nRendering — the happy path\n";
@@ -104,21 +104,21 @@ $good = '<!-- wp:blockkit/buttons -->'
 
 $out = do_blocks( $good );
 
-bk_check( 'base width emitted unwrapped', false !== strpos( $out, 'width:200px' ) );
-bk_check( 'tablet band emitted', false !== strpos( $out, '150px' ) );
-bk_check( 'mobile band emitted', false !== strpos( $out, '100%' ) );
-bk_check( 'icon size emitted as a custom property', false !== strpos( $out, '--bk-button-icon-size' ) );
-bk_check(
+blockkit_check( 'base width emitted unwrapped', false !== strpos( $out, 'width:200px' ) );
+blockkit_check( 'tablet band emitted', false !== strpos( $out, '150px' ) );
+blockkit_check( 'mobile band emitted', false !== strpos( $out, '100%' ) );
+blockkit_check( 'icon size emitted as a custom property', false !== strpos( $out, '--blockkit-button-icon-size' ) );
+blockkit_check(
 	"core's mutually exclusive ranges, not stacked max-width",
 	false !== strpos( $out, 'width <= 480px' ) && false !== strpos( $out, '480px < width' )
 );
-bk_check( 'icon is aria-hidden', false !== strpos( $out, 'aria-hidden="true"' ) );
-bk_check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 20 20"' ) );
-bk_check( 'left icon position class applied', false !== strpos( $out, 'has-icon-left' ) );
-bk_check( 'noopener added for target=_blank', false !== strpos( $out, 'noopener' ) );
-bk_check( 'ampersand not double-encoded', false === strpos( $out, '&amp;#038;' ) );
-bk_check( 'inner blocks survived the container save', false !== strpos( $out, 'Click me' ) );
-bk_check( 'no diagnostics readout in output', false === strpos( $out, 'stylesProbe' ) );
+blockkit_check( 'icon is aria-hidden', false !== strpos( $out, 'aria-hidden="true"' ) );
+blockkit_check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 20 20"' ) );
+blockkit_check( 'left icon position class applied', false !== strpos( $out, 'has-icon-left' ) );
+blockkit_check( 'noopener added for target=_blank', false !== strpos( $out, 'noopener' ) );
+blockkit_check( 'ampersand not double-encoded', false === strpos( $out, '&amp;#038;' ) );
+blockkit_check( 'inner blocks survived the container save', false !== strpos( $out, 'Click me' ) );
+blockkit_check( 'no diagnostics readout in output', false === strpos( $out, 'stylesProbe' ) );
 
 // ---------------------------------------------------------------------
 echo "\nRendering — hostile input\n";
@@ -135,31 +135,31 @@ $hostile = '<!-- wp:blockkit/buttons -->'
 
 $out = do_blocks( $hostile );
 
-bk_check( 'no <script> anywhere', false === stripos( $out, '<script' ) );
-bk_check( 'no onerror handler', false === stripos( $out, 'onerror' ) );
-bk_check( 'no onmouseover handler', false === stripos( $out, 'onmouseover' ) );
-bk_check( 'no <img> smuggled through the label', false === stripos( $out, '<img' ) );
-bk_check( '<strong> kept — the allow-list is not a blanket strip', false !== strpos( $out, '<strong>bold</strong>' ) );
-bk_check( 'unrecognised target dropped', false === strpos( $out, 'evil' ) );
-bk_check( 'garbage rel token dropped whole', false === strpos( $out, 'noopenerscript' ) );
-bk_check( 'title tags stripped, text kept', false !== strpos( $out, 'title="tip"' ) );
-bk_check( 'expression() rejected', false === stripos( $out, 'expression(' ) );
-bk_check( 'negative width rejected', false === strpos( $out, '-50px' ) );
-bk_check( 'javascript: url -> <button>, never href=""', false === stripos( $out, 'javascript:' ) && false === strpos( $out, 'href=""' ) );
-bk_check( 'data: url rejected', false === stripos( $out, 'data:text/html' ) );
-bk_check( 'unknown icon key ignored', false === strpos( $out, 'passwd' ) );
-bk_check( 'no </style> breakout', 1 >= substr_count( $out, '</style>' ) );
+blockkit_check( 'no <script> anywhere', false === stripos( $out, '<script' ) );
+blockkit_check( 'no onerror handler', false === stripos( $out, 'onerror' ) );
+blockkit_check( 'no onmouseover handler', false === stripos( $out, 'onmouseover' ) );
+blockkit_check( 'no <img> smuggled through the label', false === stripos( $out, '<img' ) );
+blockkit_check( '<strong> kept — the allow-list is not a blanket strip', false !== strpos( $out, '<strong>bold</strong>' ) );
+blockkit_check( 'unrecognised target dropped', false === strpos( $out, 'evil' ) );
+blockkit_check( 'garbage rel token dropped whole', false === strpos( $out, 'noopenerscript' ) );
+blockkit_check( 'title tags stripped, text kept', false !== strpos( $out, 'title="tip"' ) );
+blockkit_check( 'expression() rejected', false === stripos( $out, 'expression(' ) );
+blockkit_check( 'negative width rejected', false === strpos( $out, '-50px' ) );
+blockkit_check( 'javascript: url -> <button>, never href=""', false === stripos( $out, 'javascript:' ) && false === strpos( $out, 'href=""' ) );
+blockkit_check( 'data: url rejected', false === stripos( $out, 'data:text/html' ) );
+blockkit_check( 'unknown icon key ignored', false === strpos( $out, 'passwd' ) );
+blockkit_check( 'no </style> breakout', 1 >= substr_count( $out, '</style>' ) );
 
 // ---------------------------------------------------------------------
 echo "\nKit Icon — core's icon registry\n";
 // ---------------------------------------------------------------------
-bk_check( 'blockkit/icon registered', $registry->is_registered( 'blockkit/icon' ) );
-bk_check( "core's wp_get_icon() is available", function_exists( 'wp_get_icon' ) );
+blockkit_check( 'blockkit/icon registered', $registry->is_registered( 'blockkit/icon' ) );
+blockkit_check( "core's wp_get_icon() is available", function_exists( 'wp_get_icon' ) );
 
 $out = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled"} /-->' );
 
-bk_check( 'renders an SVG from the registry', false !== strpos( $out, '<svg' ) );
-bk_check( 'wrapped for block supports', false !== strpos( $out, 'wp-block-blockkit-icon' ) );
+blockkit_check( 'renders an SVG from the registry', false !== strpos( $out, '<svg' ) );
+blockkit_check( 'wrapped for block supports', false !== strpos( $out, 'wp-block-blockkit-icon' ) );
 
 /*
  * The accessibility branch is core's, and it is the reason for using
@@ -167,33 +167,33 @@ bk_check( 'wrapped for block supports', false !== strpos( $out, 'wp-block-blockk
  * decoration and must be hidden from assistive technology, a labelled one is
  * content and must be announced.
  */
-bk_check(
+blockkit_check(
     'no label -> aria-hidden + focusable=false',
     false !== strpos( $out, 'aria-hidden="true"' ) && false !== strpos( $out, 'focusable="false"' )
 );
 
 $labelled = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","label":"Rating"} /-->' );
 
-bk_check(
+blockkit_check(
     'label -> role=img + aria-label',
     false !== strpos( $labelled, 'role="img"' ) && false !== strpos( $labelled, 'aria-label="Rating"' )
 );
-bk_check( 'a labelled icon is NOT aria-hidden', false === strpos( $labelled, 'aria-hidden' ) );
+blockkit_check( 'a labelled icon is NOT aria-hidden', false === strpos( $labelled, 'aria-hidden' ) );
 
 // Flip and rotation belong on the SVG, not the wrapper: a transform on the
 // wrapper would rotate any background, border and padding with it.
 $flipped = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","flipHorizontal":true,"flipVertical":true} /-->' );
 
-bk_check( 'flip classes land on the svg', 1 === preg_match( '/<svg[^>]*is-flip-horizontal is-flip-vertical/', $flipped ) );
-bk_check( 'flip classes are NOT on the wrapper', 1 !== preg_match( '/<div[^>]*is-flip-horizontal/', $flipped ) );
+blockkit_check( 'flip classes land on the svg', 1 === preg_match( '/<svg[^>]*is-flip-horizontal is-flip-vertical/', $flipped ) );
+blockkit_check( 'flip classes are NOT on the wrapper', 1 !== preg_match( '/<div[^>]*is-flip-horizontal/', $flipped ) );
 
 $rotated = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":90} /-->' );
-bk_check( 'rotation emitted on the svg', 1 === preg_match( '/<svg[^>]*rotate:90deg/', $rotated ) );
+blockkit_check( 'rotation emitted on the svg', 1 === preg_match( '/<svg[^>]*rotate:90deg/', $rotated ) );
 
 // Normalisation: a stored value outside 0-359 must not emit a meaningless
 // declaration, and a negative must resolve to its positive equivalent.
-bk_check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":720} /-->' ), 'rotate:' ) );
-bk_check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
+blockkit_check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":720} /-->' ), 'rotate:' ) );
+blockkit_check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
 
 // ---------------------------------------------------------------------
 echo "\nKit Icon — block by default, inline on request\n";
@@ -206,13 +206,13 @@ echo "\nKit Icon — block by default, inline on request\n";
 $block_level = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled"} /-->' );
 $inline      = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","isInline":true} /-->' );
 
-bk_check( 'default emits no is-inline class', false === strpos( $block_level, 'is-inline' ) );
-bk_check( 'isInline true emits is-inline', false !== strpos( $inline, 'is-inline' ) );
-bk_check(
+blockkit_check( 'default emits no is-inline class', false === strpos( $block_level, 'is-inline' ) );
+blockkit_check( 'isInline true emits is-inline', false !== strpos( $inline, 'is-inline' ) );
+blockkit_check(
     'isInline false is the same as omitting it',
     ( false === strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","isInline":false} /-->' ), 'is-inline' ) )
 );
-bk_check(
+blockkit_check(
     'is-inline composes with rotation and a width',
     1 === preg_match( '/<div[^>]*is-inline/', do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","isInline":true,"rotation":90,"style":{"dimensions":{"width":"32px"}}} /-->' ) )
 );
@@ -245,27 +245,27 @@ foreach ( $hostile as $why => $name ) {
     }
 }
 
-bk_check( 'every unresolvable or hostile icon name renders nothing', $all_empty );
+blockkit_check( 'every unresolvable or hostile icon name renders nothing', $all_empty );
 
 $escaped = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","label":"\"><script>alert(1)</script>"} /-->' );
-bk_check( 'a hostile label cannot break out of the attribute', false === stripos( $escaped, '<script' ) );
+blockkit_check( 'a hostile label cannot break out of the attribute', false === stripos( $escaped, '<script' ) );
 
 // ---------------------------------------------------------------------
 echo "\nKit Text — visual presets\n";
 // ---------------------------------------------------------------------
-bk_check( 'blockkit/text registered', $registry->is_registered( 'blockkit/text' ) );
+blockkit_check( 'blockkit/text registered', $registry->is_registered( 'blockkit/text' ) );
 
 $out = do_blocks( '<!-- wp:blockkit/text {"styleAs":"caption","content":"Title"} /-->' );
 
-bk_check( 'renders a paragraph', false !== strpos( $out, '<p' ) );
-bk_check( 'visual preset applied as a class', false !== strpos( $out, 'has-style-caption' ) );
-bk_check( 'preset is a CLASS, not an inline font-size', false === strpos( $out, 'font-size:' ) );
+blockkit_check( 'renders a paragraph', false !== strpos( $out, '<p' ) );
+blockkit_check( 'visual preset applied as a class', false !== strpos( $out, 'has-style-caption' ) );
+blockkit_check( 'preset is a CLASS, not an inline font-size', false === strpos( $out, 'font-size:' ) );
 
-bk_check(
+blockkit_check(
 	'an unknown preset is dropped rather than emitted',
 	false === strpos( do_blocks( '<!-- wp:blockkit/text {"styleAs":"evil\" onmouseover=\"x","content":"X"} /-->' ), 'onmouseover' )
 );
-bk_check(
+blockkit_check(
 	'and leaves no orphan class behind',
 	false === strpos( do_blocks( '<!-- wp:blockkit/text {"styleAs":"nonsense","content":"X"} /-->' ), 'has-style-' )
 );
@@ -278,7 +278,7 @@ bk_check(
  */
 $out = do_blocks( '<!-- wp:blockkit/text {"tagName":"script","content":"X"} /-->' );
 
-bk_check( 'a stray tagName attribute is ignored entirely', false === stripos( $out, '<script' ) && false !== strpos( $out, '<p' ) );
+blockkit_check( 'a stray tagName attribute is ignored entirely', false === stripos( $out, '<script' ) && false !== strpos( $out, '<p' ) );
 
 // ---------------------------------------------------------------------
 // ---------------------------------------------------------------------
@@ -312,15 +312,15 @@ $round_trip = serialize_blocks(
 	)
 );
 
-bk_check(
+blockkit_check(
 	'content is serialised into the block delimiter',
 	false !== strpos( $round_trip, 'Round trip text' )
 );
 
 $out = do_blocks( $round_trip );
 
-bk_check( 'content survives serialise -> parse -> render', false !== strpos( $out, 'Round trip text' ) );
-bk_check( 'styleAs survives the round trip', false !== strpos( $out, 'has-style-eyebrow' ) );
+blockkit_check( 'content survives serialise -> parse -> render', false !== strpos( $out, 'Round trip text' ) );
+blockkit_check( 'styleAs survives the round trip', false !== strpos( $out, 'has-style-eyebrow' ) );
 
 /*
  * And the same thing through a real post and the_content, because that is the
@@ -339,25 +339,25 @@ if ( $probe_id && ! is_wp_error( $probe_id ) ) {
 	$probe_post = get_post( $probe_id );
 	$front_end  = apply_filters( 'the_content', $probe_post->post_content );
 
-	bk_check( 'content is visible through the_content on a real post', false !== strpos( $front_end, 'Round trip text' ) );
+	blockkit_check( 'content is visible through the_content on a real post', false !== strpos( $front_end, 'Round trip text' ) );
 
 	wp_delete_post( $probe_id, true );
 } else {
-	bk_check( 'could create a probe post', false );
+	blockkit_check( 'could create a probe post', false );
 }
 
 // ---------------------------------------------------------------------
 echo "\nEdge cases\n";
 // ---------------------------------------------------------------------
-bk_check(
+blockkit_check(
 	'empty label renders nothing at all',
 	'' === trim( do_blocks( '<!-- wp:blockkit/button {"text":"  "} /-->' ) )
 );
-bk_check(
+blockkit_check(
 	'empty container renders nothing at all',
 	'' === trim( do_blocks( '<!-- wp:blockkit/buttons --><!-- /wp:blockkit/buttons -->' ) )
 );
-bk_check(
+blockkit_check(
 	'empty text renders nothing at all',
 	'' === trim( do_blocks( '<!-- wp:blockkit/text {"content":"  "} /-->' ) )
 );
@@ -365,17 +365,17 @@ bk_check(
 // ---------------------------------------------------------------------
 echo "\nPHP notices from plugin files\n";
 // ---------------------------------------------------------------------
-$notices = array_unique( $GLOBALS['bk_notices'] );
+$notices = array_unique( $GLOBALS['blockkit_notices'] );
 
-bk_check( 'no notices, warnings or deprecations', empty( $notices ) );
+blockkit_check( 'no notices, warnings or deprecations', empty( $notices ) );
 
 foreach ( $notices as $notice ) {
 	printf( "        %s\n", $notice );
 }
 
 // ---------------------------------------------------------------------
-printf( "\n%d passed, %d failed\n\n", $GLOBALS['bk_pass'], $GLOBALS['bk_fail'] );
+printf( "\n%d passed, %d failed\n\n", $GLOBALS['blockkit_pass'], $GLOBALS['blockkit_fail'] );
 
-if ( $GLOBALS['bk_fail'] > 0 ) {
+if ( $GLOBALS['blockkit_fail'] > 0 ) {
 	exit( 1 );
 }

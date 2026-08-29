@@ -167,9 +167,9 @@ final class ResponsiveStylesTest extends TestCase {
 			'.t',
 			'blockkit',
 			'iconSize',
-			'--bk-button-icon-size'
+			'--blockkit-button-icon-size'
 		);
 
-		$this->assertSame( '.t{--bk-button-icon-size:1.5em;}', $css );
+		$this->assertSame( '.t{--blockkit-button-icon-size:1.5em;}', $css );
 	}
 }

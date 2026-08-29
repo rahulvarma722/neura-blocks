@@ -73,8 +73,8 @@
 
 	&__icon {
 		flex: none;
-		width: var(--bk-button-icon-size, 1em);
-		height: var(--bk-button-icon-size, 1em);
+		width: var(--blockkit-button-icon-size, 1em);
+		height: var(--blockkit-button-icon-size, 1em);
 	}
 
 	// `row-reverse` rather than `order`, so the DOM keeps text-then-icon and the

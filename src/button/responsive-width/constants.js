@@ -84,6 +84,13 @@ export const ICON_SIZE_KEY = 'iconSize';
 /**
  * CSS custom properties the stylesheet reads.
  *
+ * Named `--blockkit-*`, not `--bk-*`. A custom property lands in the page's
+ * global CSS namespace alongside every other plugin's, so the prefix is the
+ * only thing keeping it from colliding — and an abbreviation is a much weaker
+ * guarantee than the full slug. The plugin used both spellings for a while,
+ * which is worse than either: two prefixes to remember and no rule about
+ * which applies where.
+ *
  * Only descendant-targeting properties belong here. The wrapper carries the
  * variable and the descendant consumes it, and that single indirection is what
  * makes a child element stylable from the one place the platform lets us write
@@ -93,7 +100,7 @@ export const ICON_SIZE_KEY = 'iconSize';
  * @type {Object<string, string>}
  */
 export const CSS_VARS = {
-	iconSize: '--bk-button-icon-size',
+	iconSize: '--blockkit-button-icon-size',
 };
 
 /**

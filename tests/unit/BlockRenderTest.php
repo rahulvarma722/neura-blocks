@@ -99,11 +99,11 @@ final class BlockRenderTest extends TestCase {
 			),
 			'blockkit',
 			array( 'width' => 'width' ),
-			'bk-btn-'
+			'blockkit-btn-'
 		);
 
-		$this->assertStringStartsWith( 'bk-btn-', $result['class'] );
-		$this->assertSame( 8, strlen( $result['class'] ) - strlen( 'bk-btn-' ), 'class carries an 8-char hash' );
+		$this->assertStringStartsWith( 'blockkit-btn-', $result['class'] );
+		$this->assertSame( 8, strlen( $result['class'] ) - strlen( 'blockkit-btn-' ), 'class carries an 8-char hash' );
 		$this->assertStringContainsString( '.' . $result['class'], $result['css'], 'CSS is scoped to the class' );
 		$this->assertStringContainsString( '200px', $result['css'] );
 		$this->assertStringContainsString( '100%', $result['css'] );
@@ -119,9 +119,9 @@ final class BlockRenderTest extends TestCase {
 		$style = array( 'blockkit' => array( 'width' => '200px' ) );
 		$props = array( 'width' => 'width' );
 
-		$a = Block_Render::responsive( $style, 'blockkit', $props, 'bk-' );
-		$b = Block_Render::responsive( $style, 'blockkit', $props, 'bk-' );
-		$c = Block_Render::responsive( array( 'blockkit' => array( 'width' => '201px' ) ), 'blockkit', $props, 'bk-' );
+		$a = Block_Render::responsive( $style, 'blockkit', $props, 'blockkit-' );
+		$b = Block_Render::responsive( $style, 'blockkit', $props, 'blockkit-' );
+		$c = Block_Render::responsive( array( 'blockkit' => array( 'width' => '201px' ) ), 'blockkit', $props, 'blockkit-' );
 
 		$this->assertSame( $a['class'], $b['class'], 'same values, same class' );
 		$this->assertNotSame( $a['class'], $c['class'], 'different values, different class' );
@@ -140,7 +140,7 @@ final class BlockRenderTest extends TestCase {
 			array( 'blockkit' => array( 'width' => 'expression(alert(1))' ) ),
 			'blockkit',
 			array( 'width' => 'width' ),
-			'bk-'
+			'blockkit-'
 		);
 
 		$this->assertSame( '', $result['class'] );
@@ -154,7 +154,7 @@ final class BlockRenderTest extends TestCase {
 	 */
 	public function test_responsive_is_empty_when_unset() {
 		foreach ( array( array(), 'nope', null ) as $style ) {
-			$result = Block_Render::responsive( $style, 'blockkit', array( 'width' => 'width' ), 'bk-' );
+			$result = Block_Render::responsive( $style, 'blockkit', array( 'width' => 'width' ), 'blockkit-' );
 			$this->assertSame( array( 'class' => '', 'css' => '' ), $result );
 		}
 	}
