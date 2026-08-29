@@ -95,7 +95,7 @@ child expects, which is why neither is useful alone.
 
 ## Registration
 
-`BlockKit\Blocks::register()` scans `build/*/` for `block.json` and registers
+`BlockKit\Block\Registrar::register_blocks()` scans `build/*/` for `block.json` and registers
 each directory it finds. There is no array of block names anywhere.
 
 **It reads `build/`, not `src/`.** `wp-scripts` copies `block.json` and

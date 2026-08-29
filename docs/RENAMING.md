@@ -66,6 +66,6 @@ display name lives in a plugin header rather than in an identifier.
   plugin stores no settings — add one when it does, rather than keeping an
   unused class around in anticipation.
 - Never hardcode a script handle. Build it from `BLOCKKIT_SLUG`, or read it back
-  off the registered `\WP_Block_Type`, as `BlockKit\Blocks` does.
+  off the registered `\WP_Block_Type`, as `BlockKit\Block\Registrar` does.
 - Keep the display name (`Plugin Name:` header, admin titles) out of
   identifiers. It should be free to change at any time.

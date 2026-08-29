@@ -7,6 +7,8 @@
 
 namespace BlockKit;
 
+use BlockKit\Block\Registrar;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -28,7 +30,7 @@ final class Plugin {
 	 * @var string[] Fully-qualified class names implementing Module.
 	 */
 	const MODULES = array(
-		Blocks::class,
+		Registrar::class,
 	);
 
 	/**

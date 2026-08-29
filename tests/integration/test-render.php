@@ -87,9 +87,11 @@ bk_check( 'button declares buttons as parent', $button && in_array( 'blockkit/bu
 echo "\nAutoloading and module registry\n";
 // ---------------------------------------------------------------------
 bk_check( 'interface BlockKit\\Module autoloads', interface_exists( 'BlockKit\\Module' ) );
-bk_check( 'BlockKit\\Blocks implements Module', in_array( 'BlockKit\\Module', (array) class_implements( 'BlockKit\\Blocks' ), true ) );
-bk_check( 'module reachable after boot', BlockKit\Plugin::module( BlockKit\Blocks::class ) instanceof BlockKit\Blocks );
-bk_check( 'no legacy global class names remain', ! class_exists( 'BlockKit_Blocks' ) && ! class_exists( 'BlockKit_Responsive_Styles' ) );
+bk_check( 'BlockKit\\Block\\Registrar implements Module', in_array( 'BlockKit\\Module', (array) class_implements( 'BlockKit\\Block\\Registrar' ), true ) );
+bk_check( 'module reachable after boot', BlockKit\Plugin::module( BlockKit\Block\Registrar::class ) instanceof BlockKit\Block\Registrar );
+bk_check( 'no legacy global class names remain', ! class_exists( 'BlockKit_Blocks' ) && ! class_exists( 'BlockKit_Block_Render' ) );
+bk_check( 'pre-move class names are gone too', ! class_exists( 'BlockKit\\Blocks' ) && ! class_exists( 'BlockKit\\Block_Render' ) );
+bk_check( 'sub-namespace classes autoload from includes/block/', class_exists( 'BlockKit\\Block\\Render' ) );
 
 // ---------------------------------------------------------------------
 echo "\nRendering — the happy path\n";

@@ -37,7 +37,7 @@ defined( 'ABSPATH' ) || exit;
  * inside Block_Render now, and importing a name this file no longer uses would
  * be a lie about its dependencies.
  */
-use BlockKit\Block_Render;
+use BlockKit\Block\Render as Block_Render;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

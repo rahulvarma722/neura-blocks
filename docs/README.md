@@ -23,10 +23,12 @@ own.
 blockkit.php              header + constants + boot (GLOBAL namespace)
   └─ includes/            everything else, namespace BlockKit
        class-autoloader.php        BlockKit\* -> includes/class-*.php
-       class-requirements.php      PHP/WP floor, checked before anything loads
-       class-plugin.php            wiring: a list of what is enabled
-       class-blocks.php            registers every block found in build/
+       class-plugin.php            module registry: a list of what is enabled
+       class-helper.php            environment getters (breakpoints, paths)
        class-responsive-styles.php turns per-viewport values into CSS
+       block/                      code that talks to the block API
+         class-registrar.php         registers every block found in build/
+         class-render.php            shared render-template helpers
   ├─ src/                 authored blocks — edit.js, block.json, scss, render.php
   └─ build/               wp-scripts output; THIS is what gets registered
 ```

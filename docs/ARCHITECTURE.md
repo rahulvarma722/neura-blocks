@@ -9,9 +9,10 @@ includes/
   interface-module.php                the contract every feature implements
   class-plugin.php                    module registry
   class-helper.php                    shared environment getters
-  class-blocks.php                    block registration + JS translations  [Module]
-  class-block-render.php              shared render-template helpers
   class-responsive-styles.php         per-viewport values -> CSS
+  block/                              code that talks to the block API
+    class-registrar.php               registration + category + JS translations  [Module]
+    class-render.php                  shared render-template helpers
 src/
   button/                             authored source for blockkit/button
   buttons/                            authored source for blockkit/buttons
@@ -21,6 +22,26 @@ bin/
   rename.sh                           rename the whole plugin
 docs/                                 this documentation
 ```
+
+## Why `block/` is a folder, and what may go in it
+
+In a block plugin, "block related" is nearly as broad as "helper" — almost
+everything relates to blocks. A folder with that admission rule becomes the same
+dumping ground one level down.
+
+So the criterion is narrower: **`block/` holds code that talks to the WordPress
+block API.** Not code that merely gets used by blocks.
+
+| Class | In `block/`? | Why |
+|---|---|---|
+| `Block\Registrar` | yes | `register_block_type()`, `block_categories_all`, script translations |
+| `Block\Render` | yes | Render-template plumbing — `get_block_wrapper_attributes()`, attributes |
+| `Responsive_Styles` | no | Generates CSS. Knows nothing about the block API |
+| `Helper` | no | Environment queries |
+| `Plugin`, `Autoloader`, `Module` | no | Plugin infrastructure |
+
+Two levels of nesting is the cap. `BlockKit\Blocks\Text\Presets\Sizes` is a
+directory tree pretending to be a design.
 
 ## Namespace and autoloading
 
@@ -32,8 +53,8 @@ BlockKit\Autoloader          includes/class-autoloader.php
 BlockKit\Module              includes/interface-module.php      <- interface-
 BlockKit\Plugin              includes/class-plugin.php
 BlockKit\Helper              includes/class-helper.php
-BlockKit\Blocks              includes/class-blocks.php
-BlockKit\Block_Render        includes/class-block-render.php
+BlockKit\Block\Registrar     includes/block/class-registrar.php
+BlockKit\Block\Render        includes/block/class-render.php
 BlockKit\Responsive_Styles   includes/class-responsive-styles.php
 ```
 
@@ -45,8 +66,8 @@ the kind into every type name (`Module_Interface`, `I_Module`) forever.
 
 The mapping strips the namespace, lowercases the rest, turns `_` into `-`, and
 prefixes `class-`. Sub-namespaces become sub-directories, so
-`BlockKit\Blocks\Registrar` would resolve to
-`includes/blocks/class-registrar.php` with no extra registration.
+`BlockKit\Block\Registrar` resolves to
+`includes/block/class-registrar.php` with no extra registration.
 
 ### Why not Composer's autoloader
 
@@ -64,7 +85,7 @@ dependency.
 
 **Global classes must be fully qualified.** Inside a namespace, an unqualified
 class name resolves *within that namespace* — there is no fallback to global.
-So `$x instanceof WP_Block_Type` inside `BlockKit\Blocks` would test against
+So `$x instanceof WP_Block_Type` inside `BlockKit\Block\Registrar` would test against
 `BlockKit\WP_Block_Type`, which does not exist, and silently evaluate false.
 Core classes are written `\WP_Block_Type`, `\WP_Theme_JSON`.
 
@@ -91,7 +112,7 @@ loading it.
 4.  Boot           BlockKit\Plugin::init()
                      ├─ filter `blockkit_modules` (the extension point)
                      └─ for each module: new, then ->register()
-                          └─ Blocks: add_action( 'init', … )
+                          └─ Block\Registrar: add_action( 'init', … )
                                      add_filter( 'block_categories_all', … )
 ```
 
@@ -164,7 +185,7 @@ nothing had dependencies. It stops being fine the moment a module needs a
 collaborator or a test needs to substitute one — a static method cannot be
 given a fake, and static state does not reset between test cases.
 
-### `Block_Render`
+### `Block\Render`
 The parts every render template repeats: attribute reads, allow-lists, token
 filtering, per-instance responsive CSS, the `<style>` guard, and the
 `LABEL_HTML` allow-list. Extracted when `button/render.php` hit 408 lines with
@@ -179,7 +200,7 @@ No `load_plugin_textdomain()` call: core has loaded translations for
 call as discouraged. The text domain must still match the folder slug for that
 to work.
 
-### `Blocks`
+### `Block\Registrar`
 Registers every block found by scanning `build/` — adding a block means adding
 a directory under `src/`, with no PHP to update. Also:
 

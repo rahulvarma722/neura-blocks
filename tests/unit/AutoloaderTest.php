@@ -20,8 +20,9 @@ final class AutoloaderTest extends TestCase {
 	 * @return void
 	 */
 	public function test_resolves_classes() {
-		$this->assertTrue( class_exists( 'BlockKit\\Blocks' ) );
-		$this->assertTrue( class_exists( 'BlockKit\\Block_Render' ), 'underscores become hyphens' );
+		$this->assertTrue( class_exists( 'BlockKit\\Block\\Registrar' ), 'sub-namespace resolves to includes/block/' );
+		$this->assertTrue( class_exists( 'BlockKit\\Block\\Render' ) );
+		$this->assertTrue( class_exists( 'BlockKit\\Responsive_Styles' ), 'underscores become hyphens' );
 		$this->assertTrue( class_exists( 'BlockKit\\Responsive_Styles' ) );
 		$this->assertTrue( class_exists( 'BlockKit\\Helper' ) );
 		$this->assertTrue( class_exists( 'BlockKit\\Plugin' ) );

@@ -7,11 +7,11 @@
 
 namespace BlockKit\Tests\Unit;
 
-use BlockKit\Block_Render;
+use BlockKit\Block\Render as Block_Render;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \BlockKit\Block_Render
+ * @covers \BlockKit\Block\Render
  */
 final class BlockRenderTest extends TestCase {
 

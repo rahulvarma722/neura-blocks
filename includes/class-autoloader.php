@@ -30,9 +30,9 @@ defined( 'ABSPATH' ) || exit;
  * The namespace is stripped, then the remaining class name is lowercased and
  * underscores become hyphens, prefixed with `class-`:
  *
- *   BlockKit\Blocks               -> includes/class-blocks.php
+ *   BlockKit\Helper               -> includes/class-helper.php
  *   BlockKit\Responsive_Styles    -> includes/class-responsive-styles.php
- *   BlockKit\Blocks\Registrar     -> includes/blocks/class-registrar.php
+ *   BlockKit\Block\Registrar      -> includes/block/class-registrar.php
  *
  * That is the WordPress file-naming convention, so the layout stays legible to
  * anyone who has read another WordPress plugin, and sub-namespaces map onto
@@ -42,7 +42,7 @@ defined( 'ABSPATH' ) || exit;
  * specifies:
  *
  *   BlockKit\Module               -> includes/interface-module.php
- *   BlockKit\Renders_Blocks       -> includes/trait-renders-blocks.php
+ *   BlockKit\Block\Caches_Values  -> includes/block/trait-caches-values.php
  *
  * PHP gives an autoloader no way to know which of the three it has been asked
  * for — `class_exists()`, `interface_exists()` and `trait_exists()` all route

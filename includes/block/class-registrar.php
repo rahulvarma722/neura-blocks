@@ -5,7 +5,9 @@
  * @package BlockKit
  */
 
-namespace BlockKit;
+namespace BlockKit\Block;
+
+use BlockKit\Module;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -16,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
  * an array, so adding a block means adding a folder under src/ — no PHP
  * change, and nothing to keep in sync.
  */
-final class Blocks implements Module {
+final class Registrar implements Module {
 
 	/**
 	 * Adds the module's hooks.

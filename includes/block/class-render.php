@@ -5,7 +5,9 @@
  * @package BlockKit
  */
 
-namespace BlockKit;
+namespace BlockKit\Block;
+
+use BlockKit\Responsive_Styles;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -30,7 +32,7 @@ defined( 'ABSPATH' ) || exit;
  * nothing; see the note in interface-module.php for where instances DO earn
  * their keep.
  */
-final class Block_Render {
+final class Render {
 
 	/**
 	 * Reads one attribute as a trimmed string.

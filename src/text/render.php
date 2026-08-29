@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
  * closure in wp-includes/blocks.php, which is global scope, and the alias still
  * applies here.
  */
-use BlockKit\Block_Render;
+use BlockKit\Block\Render as Block_Render;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
