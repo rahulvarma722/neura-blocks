@@ -12,13 +12,52 @@
 	// have unexplained space beneath it.
 	line-height: 0;
 
-	// The wrapper is only as big as the icon, so a background, border or
-	// padding from the block supports hugs the icon rather than the column.
-	display: inline-block;
+	/*
+	 * A default size, so an icon with no width set is visible rather than
+	 * collapsing to nothing.
+	 *
+	 * A plain declaration, NOT `:not([style*="width"])`. That guard was wrong
+	 * twice over: an inline `style="width:48px"` from the dimensions support
+	 * already beats any class selector on specificity, so the guard was
+	 * unnecessary — and `[style*="width"]` also matches `max-width` and
+	 * `min-width`, so setting either would have silently switched the default
+	 * size off.
+	 */
+	width: 1.5rem;
 
+	/*
+	 * BLOCK BY DEFAULT, inline on request.
+	 *
+	 * An icon is usually its own element — a feature bullet, a card badge, a
+	 * standalone mark — so block-level is the right default. Inline only
+	 * matters when the icon genuinely sits in a run of text, and having it on
+	 * by default meant every other use had to work around it.
+	 *
+	 * Either way the wrapper is only as wide as the icon, so a background,
+	 * border or padding from the block supports hugs the icon rather than the
+	 * whole column.
+	 */
+	display: block;
+
+	&.is-inline {
+		display: inline-block;
+
+		// An inline element sits on the text baseline, which reads better
+		// aligned to the middle of the line than to its bottom.
+		vertical-align: middle;
+	}
+
+	/*
+	 * `margin-inline: auto`, not `display: flex` with `justify-content`.
+	 *
+	 * Core's icon block uses flex — but core sets no width on its wrapper, so
+	 * the flex container spans the column and centring inside it works. This
+	 * wrapper has a width, so a flex container would be exactly as wide as the
+	 * icon and centring within it would do nothing at all. Auto margins are
+	 * what centre a fixed-width block.
+	 */
 	&.aligncenter {
-		display: flex;
-		justify-content: center;
+		margin-inline: auto;
 	}
 
 	svg {
@@ -71,8 +110,3 @@
 	}
 }
 
-// A default size, so an icon with no width set is visible rather than
-// collapsing to nothing. Overridden the moment the user sets a width.
-.wp-block-blockkit-icon:not([style*="width"]) {
-	width: 1.5rem;
-}

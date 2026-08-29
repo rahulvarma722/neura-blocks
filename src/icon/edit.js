@@ -3,28 +3,78 @@
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 import {
-	SelectControl,
+	useBlockProps,
+	InspectorControls,
+	BlockControls,
+} from '@wordpress/block-editor';
+import {
+	Button,
+	Modal,
 	ToggleControl,
 	RangeControl,
 	TextControl,
 	Placeholder,
 	Spinner,
+	ToolbarGroup,
+	ToolbarButton,
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
+import { useState } from '@wordpress/element';
 
 import { useIcons, findIcon } from './use-icons';
+import IconPicker from './icon-picker';
 
 export default function Edit( { attributes, setAttributes, clientId } ) {
-	const { icon, flipHorizontal, flipVertical, rotation, label } = attributes;
+	const { icon, isInline, flipHorizontal, flipVertical, rotation, label } =
+		attributes;
 
 	const { icons, isLoading } = useIcons();
 	const selected = findIcon( icons, icon );
 
+	/*
+	 * The picker opens in a MODAL, not inline in the sidebar.
+	 *
+	 * A grid of 88 glyphs in a 280px inspector panel is about four per row and
+	 * a lot of scrolling — you cannot scan it, which is the one thing a visual
+	 * picker has to allow. The modal also leaves room for search and the
+	 * collection filter without them squeezing the grid.
+	 */
+	const [ isPickerOpen, setIsPickerOpen ] = useState( false );
+
+	const choose = ( name ) => {
+		setAttributes( { icon: name } );
+		setIsPickerOpen( false );
+	};
+
+	/*
+	 * `is-placeholder` exists because blockProps HAS to sit on the outermost
+	 * element for the editor to work — selection, the toolbar and the block
+	 * outline all key off it — so the empty state renders inside the same
+	 * wrapper the icon does.
+	 *
+	 * That wrapper is sized like an icon: `width: 1.5rem`, `display:
+	 * inline-block`, `line-height: 0`. A Placeholder inside it gets crushed
+	 * into a 24px box with no line-height, which is unreadable. The class lets
+	 * editor.scss undo the icon sizing for exactly the states that are not an
+	 * icon yet.
+	 */
+	const hasIcon = !! icon;
+
 	const blockProps = useBlockProps( {
 		className: [
+			! hasIcon ? 'is-placeholder' : '',
+			/*
+			 * `is-inline` only while there IS an icon.
+			 *
+			 * Both classes set `display`, and at equal specificity, so which
+			 * won would come down to stylesheet order — editor.scss happening
+			 * to load after style.scss. Not emitting the conflict is more
+			 * robust than relying on that, and the placeholder is never inline
+			 * regardless of the setting.
+			 */
+			hasIcon && isInline ? 'is-inline' : '',
 			flipHorizontal ? 'is-flip-horizontal' : '',
 			flipVertical ? 'is-flip-vertical' : '',
 		]
@@ -32,13 +82,29 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			.join( ' ' ),
 	} );
 
-	const options = [
-		{ value: '', label: __( 'Select an icon…', 'blockkit' ) },
-		...icons.map( ( item ) => ( {
-			value: item.name,
-			label: item.label || item.name,
-		} ) ),
-	];
+	const modal = isPickerOpen && (
+		<Modal
+			title={ __( 'Icon library', 'blockkit' ) }
+			onRequestClose={ () => setIsPickerOpen( false ) }
+			size="medium"
+			className="blockkit-icon-picker__modal"
+		>
+			<IconPicker value={ icon } onSelect={ choose } />
+		</Modal>
+	);
+
+	const toolbar = (
+		<BlockControls group="block">
+			<ToolbarGroup>
+				<ToolbarButton
+					icon="star-filled"
+					label={ __( 'Select an icon', 'blockkit' ) }
+					onClick={ () => setIsPickerOpen( true ) }
+					aria-haspopup="dialog"
+				/>
+			</ToolbarGroup>
+		</BlockControls>
+	);
 
 	const controls = (
 		<InspectorControls group="settings">
@@ -46,6 +112,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				label={ __( 'Icon', 'blockkit' ) }
 				resetAll={ () =>
 					setAttributes( {
+						isInline: false,
 						flipHorizontal: false,
 						flipVertical: false,
 						rotation: 0,
@@ -61,23 +128,46 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					isShownByDefault
 					panelId={ clientId }
 				>
-					<SelectControl
+					<Button
 						__next40pxDefaultSize
-						__nextHasNoMarginBottom
-						label={ __( 'Icon', 'blockkit' ) }
-						value={ icon }
-						options={ options }
-						onChange={ ( value ) =>
-							setAttributes( { icon: value } )
-						}
+						variant="secondary"
+						onClick={ () => setIsPickerOpen( true ) }
 						disabled={ isLoading }
+						aria-haspopup="dialog"
+					>
+						{ selected
+							? sprintf(
+									/* translators: %s: the selected icon's name. */
+									__( 'Change icon: %s', 'blockkit' ),
+									selected.label || selected.name
+							  )
+							: __( 'Select an icon', 'blockkit' ) }
+					</Button>
+				</ToolsPanelItem>
+
+				<ToolsPanelItem
+					hasValue={ () => !! isInline }
+					label={ __( 'Inline', 'blockkit' ) }
+					onDeselect={ () => setAttributes( { isInline: false } ) }
+					isShownByDefault
+					panelId={ clientId }
+				>
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={ __( 'Display inline', 'blockkit' ) }
+						checked={ !! isInline }
+						onChange={ ( value ) =>
+							setAttributes( { isInline: value } )
+						}
 						help={
-							isLoading
-								? __( 'Loading the icon library…', 'blockkit' )
-								: sprintf(
-										/* translators: %d: number of icons available. */
-										__( '%d icons available.', 'blockkit' ),
-										icons.length
+							isInline
+								? __(
+										'The icon flows with surrounding text.',
+										'blockkit'
+								  )
+								: __(
+										'The icon sits on its own line.',
+										'blockkit'
 								  )
 						}
 					/>
@@ -171,7 +261,9 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	if ( isLoading && ! icon ) {
 		return (
 			<>
+				{ toolbar }
 				{ controls }
+				{ modal }
 				<div { ...blockProps }>
 					<Placeholder
 						icon="star-filled"
@@ -187,16 +279,27 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	if ( ! selected ) {
 		return (
 			<>
+				{ toolbar }
 				{ controls }
+				{ modal }
 				<div { ...blockProps }>
 					<Placeholder
 						icon="star-filled"
 						label={ __( 'Kit Icon', 'blockkit' ) }
 						instructions={ __(
-							'Choose an icon in the block settings.',
+							'Choose an icon to get started.',
 							'blockkit'
 						) }
-					/>
+					>
+						<Button
+							__next40pxDefaultSize
+							variant="primary"
+							onClick={ () => setIsPickerOpen( true ) }
+							aria-haspopup="dialog"
+						>
+							{ __( 'Browse the icon library', 'blockkit' ) }
+						</Button>
+					</Placeholder>
 				</div>
 			</>
 		);
@@ -204,7 +307,9 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	return (
 		<>
+			{ toolbar }
 			{ controls }
+			{ modal }
 			<div { ...blockProps }>
 				{ /*
 				 * The SVG markup comes from core's icon registry over an

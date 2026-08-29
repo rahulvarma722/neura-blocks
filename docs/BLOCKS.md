@@ -40,6 +40,79 @@ That is why `render.php` has no allow-list here, unlike the tag name in an
 earlier version of Kit Text: there, the value landed in an element position and
 had to be validated; here, core resolves it or refuses.
 
+### The picker
+
+`src/icon/icon-picker.js` — a searchable grid in a modal, opened from the
+toolbar, the inspector, or the empty-state placeholder.
+
+A grid rather than a `<select>`, because a dropdown of 88 icons shows their
+**labels** and hides the one thing you are choosing by. A modal rather than an
+inline panel, because 88 glyphs in a 280px sidebar is four per row and a lot of
+scrolling — you cannot scan it, which is the only thing a visual picker has to
+allow.
+
+**Filtering is client-side**, and that is a consequence of how the endpoint
+behaves rather than a shortcut: `/wp/v2/icons` declares `page` / `per_page`
+through `WP_REST_Controller::get_collection_params()` but its `get_items()`
+never applies them — `per_page=5` still returns all 88. The whole set arrives in
+one response regardless, so a `search` round-trip per keystroke would cost
+latency for data already in memory.
+
+`filterIcons()` matches **name as well as label**, mirroring
+`WP_Icons_Registry::get_registered_icons()`, so typing `chevron` finds
+`core/chevron-down` even where the label reads differently. Verified against the
+server for six terms including mixed case — the counts match exactly, so the
+picker cannot show a different result set than core would.
+
+The icon list and the collection list are each fetched **once per editor
+session** and cached at module scope: the data is identical for every Icon block
+on the page, and there can be many. A failed request clears its own cache so the
+next block retries rather than leaving the picker empty for the session.
+
+The collection filter renders only when more than one collection is registered.
+
+Each icon is a real `<button>` with an accessible name, so the grid is keyboard
+reachable and responds to Enter and Space without reimplementing any of it.
+`aria-pressed` rather than `aria-selected` — these are toggle buttons, not
+options in a listbox, and screen readers announce the two differently.
+
+### Layout: block by default, inline on request
+
+```css
+.wp-block-blockkit-icon           { display: block; line-height: 0; width: 1.5rem }
+.wp-block-blockkit-icon.is-inline { display: inline-block; vertical-align: middle }
+.wp-block-blockkit-icon.aligncenter { margin-inline: auto }
+```
+
+An icon is usually its own element — a feature bullet, a card badge, a
+standalone mark — so block-level is the default and the `isInline` attribute is
+opt-in.
+
+**`aligncenter` uses auto margins, not flex.** Core's icon block uses
+`display: flex; justify-content: center`, which works *for core* because core
+sets no width on its wrapper, so the flex container spans the column. This
+wrapper has a width, so a flex container would be exactly as wide as the icon
+and centring inside it would do nothing at all.
+
+**The default size is a plain declaration**, not `:not([style*="width"])`. That
+guard was wrong twice: an inline `style="width:64px"` from the `dimensions`
+support already beats a class selector on specificity, so it was unnecessary —
+and `[style*="width"]` also matches `max-width` and `min-width`, so setting
+either would have silently switched the default size off.
+
+### The empty state must not be sized like an icon
+
+`blockProps` has to sit on the outermost element for editor selection, the
+toolbar and the block outline to work, so the `Placeholder` renders inside the
+same wrapper the icon does — and inherits `width: 1.5rem` and `line-height: 0`,
+which crushed the whole panel into a 24px box. An `is-placeholder` class undoes
+just the layout, leaving any colour and border from the block supports visible.
+
+`is-inline` is only emitted when an icon is actually selected. Both classes set
+`display` at equal specificity, so which won would otherwise depend on
+`editor.scss` loading after `style.scss` — not emitting the conflict is more
+robust than relying on stylesheet order.
+
 ### Accessibility is core's branch, and it is the point
 
 | Label | Output |

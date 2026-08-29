@@ -196,6 +196,28 @@ bk_check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp
 bk_check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
 
 // ---------------------------------------------------------------------
+echo "\nKit Icon — block by default, inline on request\n";
+// ---------------------------------------------------------------------
+/*
+ * An icon is usually its own element, so block-level is the default and inline
+ * is opt-in. Asserted because the class is what the CSS keys off — a silent
+ * change here would alter every icon's layout on every site.
+ */
+$block_level = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled"} /-->' );
+$inline      = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","isInline":true} /-->' );
+
+bk_check( 'default emits no is-inline class', false === strpos( $block_level, 'is-inline' ) );
+bk_check( 'isInline true emits is-inline', false !== strpos( $inline, 'is-inline' ) );
+bk_check(
+    'isInline false is the same as omitting it',
+    ( false === strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","isInline":false} /-->' ), 'is-inline' ) )
+);
+bk_check(
+    'is-inline composes with rotation and a width',
+    1 === preg_match( '/<div[^>]*is-inline/', do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","isInline":true,"rotation":90,"style":{"dimensions":{"width":"32px"}}} /-->' ) )
+);
+
+// ---------------------------------------------------------------------
 echo "\nKit Icon — the icon name is resolved by core, which is the validation\n";
 // ---------------------------------------------------------------------
 /*

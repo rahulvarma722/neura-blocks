@@ -113,7 +113,17 @@ if ( $processor->next_tag( 'svg' ) ) {
 	$svg = $processor->get_updated_html();
 }
 
-$wrapper_attributes = get_block_wrapper_attributes();
+/*
+ * `is-inline` is opt-in, and the default is a block-level wrapper.
+ *
+ * An icon is usually its own element — a feature bullet, a card badge, a
+ * standalone mark — so `display: block` is the right default. Inline matters
+ * only when the icon genuinely sits in a run of text, and forcing it on
+ * everybody meant every other use had to work around it.
+ */
+$wrapper_attributes = get_block_wrapper_attributes(
+	empty( $attributes['isInline'] ) ? array() : array( 'class' => 'is-inline' )
+);
 
 printf(
 	'<div %1$s>%2$s</div>',

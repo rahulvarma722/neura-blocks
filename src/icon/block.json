@@ -7,13 +7,21 @@
 	"category": "blockkit",
 	"icon": "star-filled",
 	"description": "An SVG icon from the WordPress icon library, with flip and rotation controls.",
-	"keywords": [ "svg", "symbol", "graphic" ],
+	"keywords": [
+		"svg",
+		"symbol",
+		"graphic"
+	],
 	"textdomain": "blockkit",
 	"attributes": {
 		"icon": {
 			"type": "string",
 			"default": "",
 			"role": "content"
+		},
+		"isInline": {
+			"type": "boolean",
+			"default": false
 		},
 		"flipHorizontal": {
 			"type": "boolean",
@@ -35,7 +43,11 @@
 	"supports": {
 		"html": false,
 		"anchor": true,
-		"align": [ "left", "center", "right" ],
+		"align": [
+			"left",
+			"center",
+			"right"
+		],
 		"shadow": true,
 		"color": {
 			"gradients": true,
