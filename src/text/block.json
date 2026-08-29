@@ -6,18 +6,19 @@
 	"title": "Kit Text",
 	"category": "blockkit",
 	"icon": "editor-textcolor",
-	"description": "Text whose HTML tag and visual style are independent — an h2 that looks like a caption, or the reverse.",
-	"keywords": [ "heading", "paragraph", "title", "typography" ],
+	"description": "Text with a visual style chosen independently of the theme\u2019s default sizing.",
+	"keywords": [
+		"text",
+		"paragraph",
+		"typography",
+		"style"
+	],
 	"textdomain": "blockkit",
 	"attributes": {
 		"content": {
 			"type": "string",
 			"default": "",
 			"role": "content"
-		},
-		"tagName": {
-			"type": "string",
-			"default": "p"
 		},
 		"styleAs": {
 			"type": "string",
@@ -31,7 +32,10 @@
 		"html": false,
 		"anchor": true,
 		"splitting": true,
-		"align": [ "wide", "full" ],
+		"align": [
+			"wide",
+			"full"
+		],
 		"shadow": true,
 		"__experimentalSlashInserter": true,
 		"typography": {

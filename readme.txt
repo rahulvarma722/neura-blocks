@@ -7,7 +7,7 @@ Stable tag:        0.0.1
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-Blocks that extend WordPress 7.1 rather than reinvent it — separate visual style from semantic markup, and reach the CSS core leaves out.
+Blocks that extend WordPress 7.1 rather than reinvent it — a typographic scale that follows your theme, and per-viewport button sizing.
 
 == Description ==
 
@@ -18,27 +18,21 @@ reimplemented. What BlockKit adds is the part core leaves out.
 
 = Blocks =
 
-* **Kit Text** — one text block whose HTML tag and visual style are *independent*. Choose `h2` for your document outline and style it like a caption, or the reverse. Plus balanced text wrapping, a readability measure, and line clamping.
+* **Kit Text** — a paragraph with a visual style preset: Display, H1–H6, Lead, Body, Caption or Eyebrow, chosen independently of the theme's default paragraph sizing.
 * **Kit Buttons** — a flex container for one or more buttons, with block gap, padding and wide/full alignment.
 * **Kit Button** — a button-style link with an optional icon, and per-viewport width and icon size.
 
-= Why a separate text block =
+= The typographic scale follows your theme =
 
-Core couples a heading's level to its appearance. Pick `h2` and you get h2's
-size; pick the size you want and you change the heading level with it. That
-forces a choice between a correct document outline and the design you actually
-want, and the outline usually loses.
+Kit Text's presets are emitted as classes, and each one resolves through your
+theme's own `theme.json` font-size presets before falling back to a fluid
+`clamp()`. So a theme with a real type scale drives the look, a theme without
+one still renders sensibly, and a theme can override the whole scale in one
+place. Nothing is written as an inline style, which is what would otherwise beat
+the theme permanently.
 
-Kit Text splits the two. The tag is a semantic decision — for screen readers,
-for search engines, for the document outline. The visual style is a design
-decision. Neither constrains the other, and the editor warns you when a heading
-level is skipped or a second `h1` appears on the page.
-
-It also fills in typographic controls core has no UI for at all:
-
-* `text-wrap: balance` and `pretty` — headings that break evenly instead of leaving one orphaned word
-* **Measure** — a maximum line length in `ch`, the readability unit
-* **Line clamp** — truncate to a set number of lines with an ellipsis
+The Eyebrow preset — the small uppercase label that sits above a heading — has
+no equivalent in core, and is the one most often faked with an undersized H6.
 
 = On responsive values =
 

@@ -56,7 +56,6 @@ final class Blocks implements Module {
 
 			if ( $block_type instanceof \WP_Block_Type ) {
 				$this->set_script_translations( $block_type );
-				$this->localize( $block_type );
 			}
 		}
 	}
@@ -95,45 +94,6 @@ final class Blocks implements Module {
 			 */
 			wp_set_script_translations( $handle, BLOCKKIT_SLUG );
 		}
-	}
-
-	/**
-	 * Hands a block's editor script the data only PHP knows.
-	 *
-	 * The text block's tag vocabulary is a SETTING — a site switches optional
-	 * tags on, and a Pro add-on can add its own through the
-	 * `blockkit_text_tags` filter. Hardcoding it in JS would mean the dropdown
-	 * and the renderer disagreeing the moment either changed, and the renderer
-	 * is the one that decides what actually ships.
-	 *
-	 * wp_add_inline_script() rather than wp_localize_script(): localize is
-	 * documented for translations and wraps the value in its own object shape,
-	 * while this is plain configuration data.
-	 *
-	 * @param \WP_Block_Type $block_type The registered block type.
-	 * @return void
-	 */
-	private function localize( $block_type ) {
-		if ( 'blockkit/text' !== $block_type->name ) {
-			return;
-		}
-
-		$handles = (array) $block_type->editor_script_handles;
-		$handle  = reset( $handles );
-
-		if ( ! $handle ) {
-			return;
-		}
-
-		$data = array(
-			'tags' => Text_Tags::enabled(),
-		);
-
-		wp_add_inline_script(
-			$handle,
-			'window.blockkitText = ' . wp_json_encode( $data ) . ';',
-			'before'
-		);
 	}
 
 	/**

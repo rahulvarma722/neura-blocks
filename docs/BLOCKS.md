@@ -4,53 +4,49 @@ Three blocks: a text block, and a container with its only permitted child.
 
 ## Kit Text — `blockkit/text`
 
-One block whose **HTML tag and visual style are independent**. That is the whole
-point of it, and the reason it is not a duplicate of `core/heading`.
+A paragraph with a **visual style preset** chosen independently of the theme's
+default sizing.
 
-Core couples the two: pick `h2` and you get h2's size. So you choose between a
-correct document outline and the design you want, and the outline usually loses.
-
-| Control | Decides | Attribute |
-|---|---|---|
-| **HTML tag** | what the text *means* — screen readers, search engines, outline | `tagName` |
-| **Style as** | what the text *looks like* | `styleAs` |
-
-An `h2` styled as a caption:
-
-```html
-<h2 class="has-style-caption wp-block-blockkit-text">Section title</h2>
-```
+| Control | Attribute |
+|---|---|
+| **Style as** — Display / H1–H6 / Lead / Body / Caption / Eyebrow | `styleAs` |
 
 `styleAs` is emitted as a **class, never an inline style**, so `style.scss` can
 resolve each preset against the active theme's font-size presets — falling back
 to a `clamp()` only when the theme declares none — and a theme can override the
 whole scale in one place. An inline `font-size` would beat the theme forever.
 
-### The tag vocabulary is a setting
+```html
+<p class="has-style-caption wp-block-blockkit-text">Section title</p>
+```
 
-`includes/class-text-tags.php` owns it, and answers two different questions:
+The value is validated against the same fixed list `style.scss` implements. An
+unknown preset is dropped rather than emitted, so the block never carries a
+class with no rule behind it.
 
-- **`all()`** — what the RENDERER accepts
-- **`enabled()`** — what the EDITOR offers
+### The element is always `<p>` — for now
 
-They are deliberately different lists. Defaults are `h1`–`h6`, `p`, `span`,
-`div`; the rest are grouped and switched on per site. If a site disables
-`blockquote` after publishing posts that use it, those posts **keep rendering as
-`blockquote`** — turning a tag off stops new uses, it does not rewrite existing
-content.
-
-`NEVER` is the floor: no `script`, `iframe`, `img`, `a`, `style`, `form`, `svg`
-or anything else that can execute, load a resource or take input. A stored value
-*or a filter* cannot get past it, because `all()` sanitises its own filter
-output. The tag name lands in an element position, so this is an XSS boundary,
-not a styling preference.
-
-Extension points for a Pro add-on:
+A configurable HTML tag is **future scope**, and its absence is asserted rather
+than assumed:
 
 ```php
-add_filter( 'blockkit_text_tags', … );          // the vocabulary
-add_filter( 'blockkit_enabled_text_tags', … );  // what the editor offers
+bk_check( 'a stray tagName attribute is ignored entirely', … );
 ```
+
+When it returns, the validation belongs in `render.php` against an allow-list.
+The tag name lands in an **element position**, which makes it an XSS boundary
+rather than a styling preference — `<script>` or `<iframe>` reaching that line
+would be exploitable. That test failing is the reminder.
+
+Removed along with it: the settings-backed vocabulary (`Text_Tags`,
+`Settings`), the `blockkit_text_tags` / `blockkit_enabled_text_tags` filters,
+the PHP→JS bridge that carried the enabled list, and the heading-outline
+guardrail — which had nothing left to check once the level could not be chosen.
+
+**A consequence worth recording:** without the tag control there is no
+tag/visual-style decoupling, which was what distinguished this block from
+`core/paragraph` plus its typography supports. As it stands the differentiator
+is the preset scale itself.
 
 ### `content` has no `source` — and that is load-bearing
 
@@ -61,7 +57,7 @@ add_filter( 'blockkit_enabled_text_tags', … );  // what the editor offers
 Core stores it inside the block comment delimiter:
 
 ```html
-<!-- wp:blockkit/text {"content":"Hello","tagName":"h2"} /-->
+<!-- wp:blockkit/text {"content":"Hello","styleAs":"caption"} /-->
 ```
 
 Declaring `"source": "rich-text"` instead — which is what `core/heading` and
@@ -82,20 +78,6 @@ and `the_content`.
 
 If this block ever gains a real `save()`, `source` should come back with it. The
 two decisions belong together.
-
-### Heading-outline guardrail
-
-`use-outline-check.js` warns in the inspector when a heading **skips a level**
-(h2 → h4) or when a **second `h1`** appears. It walks the block tree recursively
-— headings inside a Group or Columns are still part of the outline — and counts
-`core/heading` too, because the outline belongs to the document, not to this
-plugin.
-
-Warnings only, never enforcement. A block that refused to save would be worse
-than one that mentions it.
-
-This pairs with `styleAs` by design: decoupling removes the *reason* people break
-an outline, and the warning covers the rest.
 
 ## Kit Buttons and Kit Button
 

@@ -149,20 +149,36 @@ bk_check( 'unknown icon key ignored', false === strpos( $out, 'passwd' ) );
 bk_check( 'no </style> breakout', 1 >= substr_count( $out, '</style>' ) );
 
 // ---------------------------------------------------------------------
-echo "\nKit Text — tag and style are independent\n";
+echo "\nKit Text — visual presets\n";
 // ---------------------------------------------------------------------
 bk_check( 'blockkit/text registered', $registry->is_registered( 'blockkit/text' ) );
 
-$out = do_blocks( '<!-- wp:blockkit/text {"tagName":"h2","styleAs":"caption","content":"Title"} /-->' );
+$out = do_blocks( '<!-- wp:blockkit/text {"styleAs":"caption","content":"Title"} /-->' );
 
-bk_check( 'semantic tag honoured (h2)', false !== strpos( $out, '<h2' ) );
-bk_check( 'visual style applied independently', false !== strpos( $out, 'has-style-caption' ) );
-bk_check( 'style is a CLASS, not an inline font-size', false === strpos( $out, 'font-size:' ) );
+bk_check( 'renders a paragraph', false !== strpos( $out, '<p' ) );
+bk_check( 'visual preset applied as a class', false !== strpos( $out, 'has-style-caption' ) );
+bk_check( 'preset is a CLASS, not an inline font-size', false === strpos( $out, 'font-size:' ) );
 
-$out = do_blocks( '<!-- wp:blockkit/text {"tagName":"p","styleAs":"display","content":"Big"} /-->' );
+bk_check(
+	'an unknown preset is dropped rather than emitted',
+	false === strpos( do_blocks( '<!-- wp:blockkit/text {"styleAs":"evil\" onmouseover=\"x","content":"X"} /-->' ), 'onmouseover' )
+);
+bk_check(
+	'and leaves no orphan class behind',
+	false === strpos( do_blocks( '<!-- wp:blockkit/text {"styleAs":"nonsense","content":"X"} /-->' ), 'has-style-' )
+);
 
-bk_check( 'and the reverse — p styled as display', false !== strpos( $out, '<p' ) && false !== strpos( $out, 'has-style-display' ) );
+/*
+ * A configurable HTML tag is out of scope for now, so the element is fixed.
+ * Asserted rather than assumed: if a tag attribute is ever reintroduced, it
+ * lands in an ELEMENT POSITION and becomes an XSS boundary, and this check
+ * failing is the reminder to validate it against an allow-list.
+ */
+$out = do_blocks( '<!-- wp:blockkit/text {"tagName":"script","content":"X"} /-->' );
 
+bk_check( 'a stray tagName attribute is ignored entirely', false === stripos( $out, '<script' ) && false !== strpos( $out, '<p' ) );
+
+// ---------------------------------------------------------------------
 // ---------------------------------------------------------------------
 echo "\nKit Text — content survives a save/load round trip\n";
 // ---------------------------------------------------------------------
@@ -185,7 +201,6 @@ $round_trip = serialize_blocks(
 			'blockName'    => 'blockkit/text',
 			'attrs'        => array(
 				'content' => 'Round trip text',
-				'tagName' => 'h3',
 				'styleAs' => 'eyebrow',
 			),
 			'innerBlocks'  => array(),
@@ -203,7 +218,6 @@ bk_check(
 $out = do_blocks( $round_trip );
 
 bk_check( 'content survives serialise -> parse -> render', false !== strpos( $out, 'Round trip text' ) );
-bk_check( 'tag survives the round trip', false !== strpos( $out, '<h3' ) );
 bk_check( 'styleAs survives the round trip', false !== strpos( $out, 'has-style-eyebrow' ) );
 
 /*
@@ -229,53 +243,6 @@ if ( $probe_id && ! is_wp_error( $probe_id ) ) {
 } else {
 	bk_check( 'could create a probe post', false );
 }
-
-// ---------------------------------------------------------------------
-echo "\nKit Text — the tag name is an element position, so it is the attack surface\n";
-// ---------------------------------------------------------------------
-$dangerous = array( 'script', 'iframe', 'img', 'a', 'style', 'form', 'object', 'embed', 'svg', 'SCRIPT' );
-$all_safe  = true;
-
-foreach ( $dangerous as $tag ) {
-	$out = do_blocks( '<!-- wp:blockkit/text ' . wp_json_encode( array( 'tagName' => $tag, 'content' => 'X' ) ) . ' /-->' );
-
-	if ( false !== stripos( $out, '<' . $tag ) || false === strpos( $out, '<p' ) ) {
-		$all_safe = false;
-		printf( "        leaked: %s -> %s\n", $tag, trim( substr( $out, 0, 60 ) ) );
-	}
-}
-
-bk_check( 'every dangerous tag falls back to <p>', $all_safe );
-
-$out = do_blocks( '<!-- wp:blockkit/text {"tagName":"h2 onload=alert(1)","content":"X"} /-->' );
-bk_check( 'attribute injection via tag name refused', false === stripos( $out, 'onload' ) );
-
-$out = do_blocks( '<!-- wp:blockkit/text {"tagName":"h2><script>alert(1)</script><h2","content":"X"} /-->' );
-bk_check( 'element breakout via tag name refused', false === stripos( $out, '<script' ) );
-
-bk_check( 'unknown styleAs preset dropped', false === strpos( do_blocks( '<!-- wp:blockkit/text {"styleAs":"evil\" onmouseover=\"x","content":"X"} /-->' ), 'onmouseover' ) );
-
-// ---------------------------------------------------------------------
-echo "\nKit Text — enabled vs accepted tags\n";
-// ---------------------------------------------------------------------
-$enabled = BlockKit\Text_Tags::enabled();
-
-bk_check( 'defaults are offered in the editor', count( array_intersect( array( 'h1', 'h2', 'p', 'span', 'div' ), $enabled ) ) === 5 );
-bk_check( 'optional tags are NOT offered by default', ! in_array( 'blockquote', $enabled, true ) );
-bk_check(
-	'but the renderer still accepts them, so existing content survives',
-	false !== strpos( do_blocks( '<!-- wp:blockkit/text {"tagName":"blockquote","content":"Q"} /-->' ), '<blockquote' )
-);
-
-// Enabling a tag through the setting must reach the editor list.
-BlockKit\Settings::update( 'text_tags', array( 'blockquote' ) );
-bk_check( 'enabling a tag adds it to the editor list', in_array( 'blockquote', BlockKit\Text_Tags::enabled(), true ) );
-
-BlockKit\Settings::update( 'text_tags', array( 'script', 'iframe' ) );
-bk_check( 'a dangerous tag cannot be enabled via settings', ! array_intersect( array( 'script', 'iframe' ), BlockKit\Text_Tags::enabled() ) );
-
-BlockKit\Settings::delete();
-bk_check( 'settings cleaned up', array() === BlockKit\Settings::get( 'text_tags' ) );
 
 // ---------------------------------------------------------------------
 echo "\nEdge cases\n";

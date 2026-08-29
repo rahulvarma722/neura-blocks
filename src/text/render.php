@@ -20,7 +20,6 @@ defined( 'ABSPATH' ) || exit;
  * applies here.
  */
 use BlockKit\Block_Render;
-use BlockKit\Text_Tags;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
@@ -41,19 +40,15 @@ if ( '' === trim( wp_strip_all_tags( $text ) ) ) {
 }
 
 /*
- * THE TAG IS VALIDATED AGAINST all(), NOT enabled().
+ * THE ELEMENT IS ALWAYS A PARAGRAPH.
  *
- * Those are different lists on purpose. `enabled()` is what the editor OFFERS;
- * `all()` is what the renderer ACCEPTS. If a site switches `blockquote` off
- * after publishing posts that use it, those posts must keep rendering as
- * blockquote — turning a tag off stops new uses, it does not rewrite existing
- * content into something else.
- *
- * Text_Tags::all() applies its own never-permitted list, so no filter or stored
- * value can get `script` or `iframe` through here.
+ * A configurable HTML tag is deliberately out of scope for now. When it
+ * returns it belongs here, validated against an allow-list — the tag name
+ * lands in an ELEMENT POSITION, so it is an XSS boundary rather than a styling
+ * preference, and `<script>` or `<iframe>` reaching this line would be
+ * exploitable. Until then there is nothing to validate, because there is
+ * nothing to choose.
  */
-$tag_name = Block_Render::text( $attributes, 'tagName', 'p' );
-$tag_name = Text_Tags::is_valid( $tag_name ) ? strtolower( $tag_name ) : 'p';
 
 /*
  * The visual preset is emitted as a CLASS, never an inline style.
@@ -62,25 +57,22 @@ $tag_name = Text_Tags::is_valid( $tag_name ) ? strtolower( $tag_name ) : 'p';
  * with a fallback, so a theme with a real type scale drives the look and a theme
  * without one still renders sensibly. An inline font-size would beat the theme
  * forever and could not be overridden at all.
+ *
+ * Validated against the same fixed list style.scss implements. An unknown value
+ * would emit a class with no rule behind it — harmless to render, but dead
+ * markup that invites "what styles this?".
  */
 $style_as = Block_Render::one_of(
 	Block_Render::text( $attributes, 'styleAs' ),
 	array( 'display', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'lead', 'body', 'caption', 'eyebrow' )
 );
 
-$classes = array_filter(
-	array(
-		'' !== $style_as ? 'has-style-' . $style_as : '',
-	)
-);
-
 $wrapper_attributes = get_block_wrapper_attributes(
-	$classes ? array( 'class' => implode( ' ', $classes ) ) : array()
+	'' !== $style_as ? array( 'class' => 'has-style-' . $style_as ) : array()
 );
 
 printf(
-	'<%1$s %2$s>%3$s</%1$s>',
-	esc_attr( $tag_name ),
+	'<p %1$s>%2$s</p>',
 	$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); the string is attribute markup, so escaping it again would corrupt it.
-	wp_kses_post( $text )
+	wp_kses( $text, Block_Render::LABEL_HTML )
 );
