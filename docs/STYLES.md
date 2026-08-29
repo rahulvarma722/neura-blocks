@@ -75,9 +75,10 @@ back to Desktop rather than to Tablet**.
 
 ### The media queries come from core
 
-`\WP_Theme_JSON::get_viewport_media_queries()` is public and documented
-(`@since 7.1.0`), reads `settings.viewport` from theme.json, and returns
-exactly the bands core uses for its own per-viewport output:
+`Helper::media_queries()` resolves them, from
+`\WP_Theme_JSON::get_viewport_media_queries()` — public and documented
+(`@since 7.1.0`), reads `settings.viewport` from theme.json, and returns exactly
+the bands core uses for its own per-viewport output:
 
 ```css
 @mobile   @media (width <= 480px)
@@ -91,8 +92,9 @@ tablet-into-mobile cascade and disagree with every core control on the same
 block.
 
 Change your breakpoints in theme.json and BlockKit follows, because it never
-had its own. A `FALLBACK_BREAKPOINTS` constant exists for pre-7.1 only, kept
-identical to core's defaults.
+had its own. `Helper::FALLBACK_BREAKPOINTS` covers pre-7.1 only, kept identical to core's
+defaults so a site that upgrades sees no shift. `Helper::breakpoint( 'mobile' )`
+gives the raw width for anything that needs the number rather than the query.
 
 ### Styling a descendant — the CSS-variable indirection
 

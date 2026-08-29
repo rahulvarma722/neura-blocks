@@ -172,20 +172,4 @@ final class ResponsiveStylesTest extends TestCase {
 
 		$this->assertSame( '.t{--bk-button-icon-size:1.5em;}', $css );
 	}
-
-	/**
-	 * The fallback bands must stay identical to core's defaults, or a site that
-	 * upgrades past 7.1 would see its breakpoints shift.
-	 *
-	 * @return void
-	 */
-	public function test_fallback_breakpoints_match_core_defaults() {
-		$this->assertSame(
-			array(
-				'mobile' => '480px',
-				'tablet' => '782px',
-			),
-			Responsive_Styles::FALLBACK_BREAKPOINTS
-		);
-	}
 }

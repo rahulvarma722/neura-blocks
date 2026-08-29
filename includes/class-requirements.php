@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Verifies the site meets the plugin's minimum PHP and WordPress versions.
  */
-class Requirements {
+final class Requirements {
 
 	/**
 	 * Whether the current environment satisfies the minimums.

@@ -6,10 +6,12 @@
  * `style.blockkit.width` produces nothing on its own — the value round-trips
  * through save and parse untouched, and it is this class that emits it.
  *
- * The media queries are core's own. `WP_Theme_JSON::get_viewport_media_queries()`
- * is public and documented (`@since 7.1.0`), reads `settings.viewport` from
- * theme.json, and returns exactly the bands core uses for its own per-viewport
- * output:
+ * The media queries come from Helper::media_queries(), which resolves them from
+ * core — `WP_Theme_JSON::get_viewport_media_queries()` is public and documented
+ * (`@since 7.1.0`) and reads `settings.viewport` from theme.json. This class is
+ * about turning values into CSS; where the bands come from is not its business.
+ *
+ * The bands core returns:
  *
  *   @mobile   @media (width <= 480px)
  *   @tablet   @media (480px < width <= 782px)
@@ -30,62 +32,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Emits scoped CSS for namespaced per-viewport style values.
  */
-class Responsive_Styles {
-
-	/**
-	 * Breakpoints used when core cannot supply them.
-	 *
-	 * Only reachable below WordPress 7.1, where viewport style states do not
-	 * exist. Kept identical to `WP_Theme_JSON::DEFAULT_VIEWPORT_BREAKPOINTS` so
-	 * a site that later upgrades sees no shift in behaviour.
-	 *
-	 * @var array<string, string>
-	 */
-	const FALLBACK_BREAKPOINTS = array(
-		'mobile' => '480px',
-		'tablet' => '782px',
-	);
-
-	/**
-	 * Media queries keyed by viewport state, from core where possible.
-	 *
-	 * @return array<string, string> e.g. `array( '@mobile' => '@media (…)' )`.
-	 */
-	public static function get_media_queries() {
-		$viewport = null;
-
-		if ( function_exists( 'wp_get_global_settings' ) ) {
-			$settings = wp_get_global_settings( array( 'viewport' ) );
-
-			/*
-			 * `wp_get_global_settings()` returns the WHOLE settings tree when
-			 * the requested path is absent, which is the normal case since few
-			 * themes declare `settings.viewport`. Passing that tree through
-			 * happens to survive core's sanitizer, but only by accident — so
-			 * narrow it to the two keys that are actually breakpoints.
-			 */
-			$viewport = is_array( $settings )
-				? array_intersect_key( $settings, array_flip( array( 'mobile', 'tablet' ) ) )
-				: null;
-		}
-
-		if ( is_callable( array( '\WP_Theme_JSON', 'get_viewport_media_queries' ) ) ) {
-			return (array) \WP_Theme_JSON::get_viewport_media_queries( $viewport );
-		}
-
-		// Pre-7.1: no viewport states in core, so there is no core output to
-		// match and the classic form is the safer choice for old browsers.
-		return array(
-			'@mobile' => sprintf(
-				'@media (max-width: %s)',
-				self::FALLBACK_BREAKPOINTS['mobile']
-			),
-			'@tablet' => sprintf(
-				'@media (max-width: %s)',
-				self::FALLBACK_BREAKPOINTS['tablet']
-			),
-		);
-	}
+final class Responsive_Styles {
 
 	/**
 	 * Read one namespaced value out of a `style` attribute layer.
@@ -174,7 +121,7 @@ class Responsive_Styles {
 		 * them, so this order is for readability rather than correctness — but
 		 * it keeps the output diffable against core's.
 		 */
-		foreach ( self::get_media_queries() as $state_key => $media_query ) {
+		foreach ( Helper::media_queries() as $state_key => $media_query ) {
 			$value = self::get_state_value( $style, $state_key, $namespace_key, $property );
 
 			if ( '' === $value || ! self::is_safe_length( $value ) ) {

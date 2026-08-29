@@ -9,6 +9,7 @@ includes/
   interface-module.php                the contract every feature implements
   class-requirements.php              PHP / WordPress floor
   class-plugin.php                    module registry
+  class-helper.php                    shared environment getters
   class-blocks.php                    block registration + JS translations  [Module]
   class-block-render.php              shared render-template helpers
   class-responsive-styles.php         per-viewport values -> CSS
@@ -32,6 +33,7 @@ BlockKit\Autoloader          includes/class-autoloader.php
 BlockKit\Module              includes/interface-module.php      <- interface-
 BlockKit\Requirements        includes/class-requirements.php
 BlockKit\Plugin              includes/class-plugin.php
+BlockKit\Helper              includes/class-helper.php
 BlockKit\Blocks              includes/class-blocks.php
 BlockKit\Block_Render        includes/class-block-render.php
 BlockKit\Responsive_Styles   includes/class-responsive-styles.php
@@ -192,9 +194,36 @@ a directory under `src/`, with no PHP to update. Also:
   than reconstructed, because the naming is core's private business
   (`generate_block_asset_handle()`).
 
+### `Helper`
+One place to ask a question about the environment: the breakpoints in force,
+the media queries for each viewport state, the plugin's paths and slug, whether
+this request is the editor.
+
+**The rule that keeps it from becoming a junk drawer:**
+
+| | Belongs |
+|---|---|
+| A getter returning a fact about the site | `Helper` |
+| A function transforming its arguments | the class that owns that concern |
+
+So `Helper::media_queries()` lives here, while `Responsive_Styles::build_css()`
+does not — it *asks* Helper for the bands and gets on with generating CSS. A
+"helpers" class with no such rule eventually holds everything, becomes
+impossible to test in isolation, and every file depends on it.
+
+Results are memoised **per request**. `wp_get_global_settings()` is not free and
+was previously resolved once per block instance; a page can hold dozens.
+`flush()` exists for tests, which change theme.json between cases in one
+process — nothing in the plugin needs it, because theme.json does not change
+mid-request.
+
+`breakpoints()` validates what it reads. theme.json is authored by hand and can
+say anything, so a value that is not a well-formed CSS length falls back rather
+than reaching a stylesheet.
+
 ### `Responsive_Styles`
-Converts namespaced per-viewport values into CSS. Covered in
-[Styles](STYLES.md).
+Converts namespaced per-viewport values into CSS, using the bands
+`Helper::media_queries()` resolves. Covered in [Styles](STYLES.md).
 
 ## What this plugin does not do
 
