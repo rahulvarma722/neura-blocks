@@ -2,10 +2,10 @@
 /**
  * Shared getters used across the plugin.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
-namespace BlockKit;
+namespace NeuraBlocks;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -156,7 +156,7 @@ final class Helper {
 	 * @return string
 	 */
 	public static function version() {
-		return defined( 'BLOCKKIT_VERSION' ) ? BLOCKKIT_VERSION : '';
+		return defined( 'NEURA_BLOCKS_VERSION' ) ? NEURA_BLOCKS_VERSION : '';
 	}
 
 	/**
@@ -165,7 +165,7 @@ final class Helper {
 	 * @return string
 	 */
 	public static function slug() {
-		return defined( 'BLOCKKIT_SLUG' ) ? BLOCKKIT_SLUG : '';
+		return defined( 'NEURA_BLOCKS_SLUG' ) ? NEURA_BLOCKS_SLUG : '';
 	}
 
 	/**
@@ -175,7 +175,7 @@ final class Helper {
 	 * @return string
 	 */
 	public static function path( $relative = '' ) {
-		return ( defined( 'BLOCKKIT_PATH' ) ? BLOCKKIT_PATH : '' ) . ltrim( $relative, '/' );
+		return ( defined( 'NEURA_BLOCKS_PATH' ) ? NEURA_BLOCKS_PATH : '' ) . ltrim( $relative, '/' );
 	}
 
 	/**

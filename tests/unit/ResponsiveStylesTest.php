@@ -2,16 +2,16 @@
 /**
  * Unit tests for per-viewport CSS generation.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
-namespace BlockKit\Tests\Unit;
+namespace NeuraBlocks\Tests\Unit;
 
-use BlockKit\Responsive_Styles;
+use NeuraBlocks\Responsive_Styles;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \BlockKit\Responsive_Styles
+ * @covers \NeuraBlocks\Responsive_Styles
  */
 final class ResponsiveStylesTest extends TestCase {
 
@@ -22,9 +22,9 @@ final class ResponsiveStylesTest extends TestCase {
 	 */
 	private function style() {
 		return array(
-			'blockkit' => array( 'width' => '200px' ),
-			'@tablet'  => array( 'blockkit' => array( 'width' => '150px' ) ),
-			'@mobile'  => array( 'blockkit' => array( 'width' => '100%' ) ),
+			'neura-blocks' => array( 'width' => '200px' ),
+			'@tablet'  => array( 'neura-blocks' => array( 'width' => '150px' ) ),
+			'@mobile'  => array( 'neura-blocks' => array( 'width' => '100%' ) ),
 		);
 	}
 
@@ -36,9 +36,9 @@ final class ResponsiveStylesTest extends TestCase {
 	public function test_get_state_value_reads_each_layer() {
 		$style = $this->style();
 
-		$this->assertSame( '200px', Responsive_Styles::get_state_value( $style, null, 'blockkit', 'width' ) );
-		$this->assertSame( '150px', Responsive_Styles::get_state_value( $style, '@tablet', 'blockkit', 'width' ) );
-		$this->assertSame( '100%', Responsive_Styles::get_state_value( $style, '@mobile', 'blockkit', 'width' ) );
+		$this->assertSame( '200px', Responsive_Styles::get_state_value( $style, null, 'neura-blocks', 'width' ) );
+		$this->assertSame( '150px', Responsive_Styles::get_state_value( $style, '@tablet', 'neura-blocks', 'width' ) );
+		$this->assertSame( '100%', Responsive_Styles::get_state_value( $style, '@mobile', 'neura-blocks', 'width' ) );
 	}
 
 	/**
@@ -47,17 +47,17 @@ final class ResponsiveStylesTest extends TestCase {
 	 * @return void
 	 */
 	public function test_get_state_value_is_total() {
-		$this->assertSame( '', Responsive_Styles::get_state_value( array(), null, 'blockkit', 'width' ) );
-		$this->assertSame( '', Responsive_Styles::get_state_value( $this->style(), '@print', 'blockkit', 'width' ) );
+		$this->assertSame( '', Responsive_Styles::get_state_value( array(), null, 'neura-blocks', 'width' ) );
+		$this->assertSame( '', Responsive_Styles::get_state_value( $this->style(), '@print', 'neura-blocks', 'width' ) );
 		$this->assertSame( '', Responsive_Styles::get_state_value( $this->style(), null, 'other', 'width' ) );
-		$this->assertSame( '', Responsive_Styles::get_state_value( $this->style(), null, 'blockkit', 'height' ) );
-		$this->assertSame( '', Responsive_Styles::get_state_value( 'not-an-array', null, 'blockkit', 'width' ) );
+		$this->assertSame( '', Responsive_Styles::get_state_value( $this->style(), null, 'neura-blocks', 'height' ) );
+		$this->assertSame( '', Responsive_Styles::get_state_value( 'not-an-array', null, 'neura-blocks', 'width' ) );
 		$this->assertSame(
 			'',
 			Responsive_Styles::get_state_value(
-				array( 'blockkit' => array( 'width' => array( 'nested' ) ) ),
+				array( 'neura-blocks' => array( 'width' => array( 'nested' ) ) ),
 				null,
-				'blockkit',
+				'neura-blocks',
 				'width'
 			),
 			'a non-scalar value is not emitted'
@@ -113,9 +113,9 @@ final class ResponsiveStylesTest extends TestCase {
 	 */
 	public function test_build_css_emits_base_unwrapped() {
 		$css = Responsive_Styles::build_css(
-			array( 'blockkit' => array( 'width' => '200px' ) ),
+			array( 'neura-blocks' => array( 'width' => '200px' ) ),
 			'.t',
-			'blockkit',
+			'neura-blocks',
 			'width',
 			'width'
 		);
@@ -132,11 +132,11 @@ final class ResponsiveStylesTest extends TestCase {
 	public function test_build_css_drops_unsafe_values_only() {
 		$css = Responsive_Styles::build_css(
 			array(
-				'blockkit' => array( 'width' => 'expression(alert(1))' ),
-				'@mobile'  => array( 'blockkit' => array( 'width' => '100%' ) ),
+				'neura-blocks' => array( 'width' => 'expression(alert(1))' ),
+				'@mobile'  => array( 'neura-blocks' => array( 'width' => '100%' ) ),
 			),
 			'.t',
-			'blockkit',
+			'neura-blocks',
 			'width',
 			'width'
 		);
@@ -151,8 +151,8 @@ final class ResponsiveStylesTest extends TestCase {
 	 * @return void
 	 */
 	public function test_build_css_emits_nothing_when_unset() {
-		$this->assertSame( '', Responsive_Styles::build_css( array(), '.t', 'blockkit', 'width', 'width' ) );
-		$this->assertSame( '', Responsive_Styles::build_css( 'nope', '.t', 'blockkit', 'width', 'width' ) );
+		$this->assertSame( '', Responsive_Styles::build_css( array(), '.t', 'neura-blocks', 'width', 'width' ) );
+		$this->assertSame( '', Responsive_Styles::build_css( 'nope', '.t', 'neura-blocks', 'width', 'width' ) );
 	}
 
 	/**
@@ -163,13 +163,13 @@ final class ResponsiveStylesTest extends TestCase {
 	 */
 	public function test_build_css_emits_custom_properties() {
 		$css = Responsive_Styles::build_css(
-			array( 'blockkit' => array( 'iconSize' => '1.5em' ) ),
+			array( 'neura-blocks' => array( 'iconSize' => '1.5em' ) ),
 			'.t',
-			'blockkit',
+			'neura-blocks',
 			'iconSize',
-			'--blockkit-button-icon-size'
+			'--neura-blocks-button-icon-size'
 		);
 
-		$this->assertSame( '.t{--blockkit-button-icon-size:1.5em;}', $css );
+		$this->assertSame( '.t{--neura-blocks-button-icon-size:1.5em;}', $css );
 	}
 }

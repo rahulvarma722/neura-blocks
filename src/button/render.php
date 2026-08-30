@@ -1,6 +1,6 @@
 <?php
 /**
- * Front-end markup for blockkit/button.
+ * Front-end markup for neura-blocks/button.
  *
  * The anchor IS the block root: get_block_wrapper_attributes() is spread
  * onto it, so every class and inline style core generates from the
@@ -14,7 +14,7 @@
  * wrapper would be an empty div that only splits the clickable area from
  * the padded area.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  *
  * @var array    $attributes Block attributes.
  * @var string   $content    Inner block content (unused).
@@ -31,13 +31,13 @@ defined( 'ABSPATH' ) || exit;
  * file is required from. Core requires this template from inside a closure in
  * wp-includes/blocks.php, which is global scope — but the alias below still
  * applies here, so `Block_Render::` resolves without repeating
- * `\BlockKit\Block_Render` at nine call sites.
+ * `\NeuraBlocks\Block_Render` at nine call sites.
  *
  * `Responsive_Styles` is NOT aliased on purpose: it is referenced only from
  * inside Block_Render now, and importing a name this file no longer uses would
  * be a lie about its dependencies.
  */
-use BlockKit\Block\Render as Block_Render;
+use NeuraBlocks\Block\Render as Block_Render;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
@@ -60,7 +60,7 @@ use BlockKit\Block\Render as Block_Render;
  * through that closure, so it assumes global scope. Core's own block
  * templates trip the same sniff for the same reason.
  *
- * Prefixing these to `$blockkit_text`, `$blockkit_url` and so on would satisfy
+ * Prefixing these to ``$myplugin_text`, `$myplugin_url` and so on would satisfy
  * the sniff while making the file harder to read and implying a lifetime these
  * variables do not have. Disabled at file level instead, since it applies to
  * every line rather than to any one of them.
@@ -84,7 +84,7 @@ if ( '' === trim( wp_strip_all_tags( $text ) ) ) {
  * still letting nonsense through — `target="totally-arbitrary"` is harmless to
  * a parser and meaningless to a browser.
  *
- * The narrowing itself lives in BlockKit\Block_Render, so every block sanitises
+ * The narrowing itself lives in NeuraBlocks\Block_Render, so every block sanitises
  * the same way and a fix lands in one place. Escaping is then left to
  * get_block_wrapper_attributes(), which esc_attr()s every value it is given
  * (wp-includes/class-wp-block-supports.php:265).
@@ -223,13 +223,13 @@ if ( '' !== $icon_key && isset( $icon_paths[ $icon_key ] ) ) {
 	 * rather than the escaping that produced it.
 	 */
 	$icon_markup = sprintf(
-		'<svg class="wp-block-blockkit-button__icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true" focusable="false"><path d="%s"/></svg>',
+		'<svg class="wp-block-neura-blocks-button__icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true" focusable="false"><path d="%s"/></svg>',
 		esc_attr( $icon_paths[ $icon_key ] )
 	);
 }
 
 /*
- * Per-viewport width and icon size, from `style.blockkit.*` and its `@tablet` /
+ * Per-viewport width and icon size, from `style.neura-blocks.*` and its `@tablet` /
  * `@mobile` states.
  *
  * Core writes CSS only for style paths it owns, so these namespaced values
@@ -246,19 +246,19 @@ if ( '' !== $icon_key && isset( $icon_paths[ $icon_key ] ) ) {
  * writes to the root, and so does core's own per-viewport CSS unless the block
  * declares feature selectors in block.json.
  *
- * style.scss then spends the variable on `.wp-block-blockkit-button__icon`. The
+ * style.scss then spends the variable on `.wp-block-neura-blocks-button__icon`. The
  * media queries stay on the root, so the icon becomes per-viewport without a
  * single descendant selector being generated here.
  */
 $responsive = Block_Render::responsive(
 	isset( $attributes['style'] ) ? $attributes['style'] : array(),
-	'blockkit',
+	'neura-blocks',
 	array(
 		// style key => CSS property emitted.
 		'width'    => 'width',
-		'iconSize' => '--blockkit-button-icon-size',
+		'iconSize' => '--neura-blocks-button-icon-size',
 	),
-	'blockkit-btn-'
+	'neura-blocks-btn-'
 );
 
 $wrapper_classes = array_filter(
@@ -294,7 +294,7 @@ $wrapper_attributes = get_block_wrapper_attributes(
 echo Block_Render::style_tag( $responsive['css'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Block_Render::style_tag() allow-lists its inputs and guards `</`; see the note there for why escaping is the wrong tool for CSS.
 
 printf(
-	'<%1$s %2$s><span class="wp-block-blockkit-button__text">%3$s</span>%4$s</%1$s>',
+	'<%1$s %2$s><span class="wp-block-neura-blocks-button__text">%3$s</span>%4$s</%1$s>',
 	esc_attr( $tag_name ),
 	$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); the string is attribute markup, so escaping it again would corrupt it.
 	wp_kses( $text, Block_Render::LABEL_HTML ),

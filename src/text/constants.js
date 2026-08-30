@@ -20,16 +20,16 @@ import { __ } from '@wordpress/i18n';
  * are written into post content.
  */
 export const STYLE_PRESETS = [
-	{ value: '', label: __( 'Default (follow the tag)', 'blockkit' ) },
-	{ value: 'display', label: __( 'Display', 'blockkit' ) },
-	{ value: 'h1', label: __( 'Heading 1', 'blockkit' ) },
-	{ value: 'h2', label: __( 'Heading 2', 'blockkit' ) },
-	{ value: 'h3', label: __( 'Heading 3', 'blockkit' ) },
-	{ value: 'h4', label: __( 'Heading 4', 'blockkit' ) },
-	{ value: 'h5', label: __( 'Heading 5', 'blockkit' ) },
-	{ value: 'h6', label: __( 'Heading 6', 'blockkit' ) },
-	{ value: 'lead', label: __( 'Lead', 'blockkit' ) },
-	{ value: 'body', label: __( 'Body', 'blockkit' ) },
-	{ value: 'caption', label: __( 'Caption', 'blockkit' ) },
-	{ value: 'eyebrow', label: __( 'Eyebrow', 'blockkit' ) },
+	{ value: '', label: __( 'Default (follow the tag)', 'neura-blocks' ) },
+	{ value: 'display', label: __( 'Display', 'neura-blocks' ) },
+	{ value: 'h1', label: __( 'Heading 1', 'neura-blocks' ) },
+	{ value: 'h2', label: __( 'Heading 2', 'neura-blocks' ) },
+	{ value: 'h3', label: __( 'Heading 3', 'neura-blocks' ) },
+	{ value: 'h4', label: __( 'Heading 4', 'neura-blocks' ) },
+	{ value: 'h5', label: __( 'Heading 5', 'neura-blocks' ) },
+	{ value: 'h6', label: __( 'Heading 6', 'neura-blocks' ) },
+	{ value: 'lead', label: __( 'Lead', 'neura-blocks' ) },
+	{ value: 'body', label: __( 'Body', 'neura-blocks' ) },
+	{ value: 'caption', label: __( 'Caption', 'neura-blocks' ) },
+	{ value: 'eyebrow', label: __( 'Eyebrow', 'neura-blocks' ) },
 ];

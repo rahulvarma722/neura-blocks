@@ -1,6 +1,6 @@
 # Responsive Styles Experiment — the R&D bench
 
-> **What this is.** BlockKit is a scratch plugin for probing WordPress 7.1's
+> **What this is.** Neura Blocks is a scratch plugin for probing WordPress 7.1's
 > responsive-styles behaviour from the outside — as a third-party plugin, with no
 > private APIs and no core patches. The **Kit Button** block carries a custom
 > per-viewport attribute end to end so the mechanism can be watched rather than
@@ -50,7 +50,7 @@ writing to the wrong layer.
 
 ## 2. What was built
 
-`blockkit/button` ("Kit Button") gained one custom attribute — **Custom Width** —
+`neura-blocks/button` ("Kit Button") gained one custom attribute — **Custom Width** —
 with no core support behind it, so every part of the pipeline is ours to write:
 
 ```
@@ -116,9 +116,9 @@ keys:
 
 ```js
 style: {
-    blockkit: { width: '200px' },                  // base — applies everywhere
-    '@tablet': { blockkit: { width: '150px' } },   // tablet band only
-    '@mobile': { blockkit: { width: '100%'  } },   // mobile band only
+    neura-blocks: { width: '200px' },                  // base — applies everywhere
+    '@tablet': { neura-blocks: { width: '150px' } },   // tablet band only
+    '@mobile': { neura-blocks: { width: '100%'  } },   // mobile band only
 }
 ```
 
@@ -245,13 +245,13 @@ rule instead of emitting a near-duplicate each.
 ### 6.1 Verified output
 
 ```html
-<div class="wp-block-blockkit-buttons is-layout-flex …">
+<div class="wp-block-neura-blocks-buttons is-layout-flex …">
   <style>
-    .blockkit-btn-w-ccc3ba64{width:200px;}
-    @media (width <= 480px){.blockkit-btn-w-ccc3ba64{width:100%;}}
-    @media (480px < width <= 782px){.blockkit-btn-w-ccc3ba64{width:150px;}}
+    .neura-blocks-btn-w-ccc3ba64{width:200px;}
+    @media (width <= 480px){.neura-blocks-btn-w-ccc3ba64{width:100%;}}
+    @media (480px < width <= 782px){.neura-blocks-btn-w-ccc3ba64{width:150px;}}
   </style>
-  <a class="blockkit-btn-w-ccc3ba64 wp-block-blockkit-button" href="https://example.com">Click me</a>
+  <a class="neura-blocks-btn-w-ccc3ba64 wp-block-neura-blocks-button" href="https://example.com">Click me</a>
 </div>
 ```
 
@@ -302,11 +302,11 @@ Both are worth knowing because they are easy to hit again.
 
 ### 8.1 A container block with `save: () => null` destroys its children
 
-`blockkit/buttons` is a container rendered through `render.php`, so returning
+`neura-blocks/buttons` is a container rendered through `render.php`, so returning
 `null` from `save` looked correct for a "dynamic block". It is not, for a block
 with children:
 
-1. Core serializes it as `<!-- wp:blockkit/buttons /-->` — self-closing.
+1. Core serializes it as `<!-- wp:neura-blocks/buttons /-->` — self-closing.
 2. **Every inner block is discarded on save**, with its text, urls and styles.
 3. No warning, no validation error. The post reloads with an empty container.
 
@@ -341,7 +341,7 @@ for once before output.
 ## 9. Running the experiment
 
 ```bash
-cd wp-content/plugins/blockkit
+cd wp-content/plugins/neura-blocks
 npm run build          # or: npm run start   for watch mode
 ```
 

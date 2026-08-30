@@ -69,7 +69,7 @@ export default function Edit( {
 	 *
 	 * This is the whole descendant technique: the platform lets us write to the
 	 * block root, so the root carries a variable and the stylesheet spends it on
-	 * `.wp-block-blockkit-button__icon`. No selector plumbing, and it behaves
+	 * `.wp-block-neura-blocks-button__icon`. No selector plumbing, and it behaves
 	 * identically in the canvas and on the front end because both read the same
 	 * rule from style.scss.
 	 */
@@ -117,7 +117,7 @@ export default function Edit( {
 					<ToolbarButton
 						name="link"
 						icon="admin-links"
-						title={ __( 'Link', 'blockkit' ) }
+						title={ __( 'Link', 'neura-blocks' ) }
 						onClick={ () => setIsEditingLink( true ) }
 					/>
 				) }
@@ -125,7 +125,7 @@ export default function Edit( {
 					<ToolbarButton
 						name="unlink"
 						icon="editor-unlink"
-						title={ __( 'Unlink', 'blockkit' ) }
+						title={ __( 'Unlink', 'neura-blocks' ) }
 						onClick={ unlink }
 						isActive
 					/>
@@ -144,11 +144,11 @@ export default function Edit( {
 			/>
 
 			<InspectorControls>
-				<PanelBody title={ __( 'Settings', 'blockkit' ) }>
+				<PanelBody title={ __( 'Settings', 'neura-blocks' ) }>
 					<SelectControl
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize
-						label={ __( 'Icon', 'blockkit' ) }
+						label={ __( 'Icon', 'neura-blocks' ) }
 						value={ icon }
 						options={ ICON_OPTIONS }
 						onChange={ ( value ) =>
@@ -160,7 +160,7 @@ export default function Edit( {
 						<ToggleGroupControl
 							__nextHasNoMarginBottom
 							__next40pxDefaultSize
-							label={ __( 'Icon position', 'blockkit' ) }
+							label={ __( 'Icon position', 'neura-blocks' ) }
 							value={ iconPosition }
 							onChange={ ( value ) =>
 								setAttributes( { iconPosition: value } )
@@ -169,11 +169,11 @@ export default function Edit( {
 						>
 							<ToggleGroupControlOption
 								value="left"
-								label={ __( 'Left', 'blockkit' ) }
+								label={ __( 'Left', 'neura-blocks' ) }
 							/>
 							<ToggleGroupControlOption
 								value="right"
-								label={ __( 'Right', 'blockkit' ) }
+								label={ __( 'Right', 'neura-blocks' ) }
 							/>
 						</ToggleGroupControl>
 					) }
@@ -181,7 +181,7 @@ export default function Edit( {
 					<TextControl
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize
-						label={ __( 'Link rel', 'blockkit' ) }
+						label={ __( 'Link rel', 'neura-blocks' ) }
 						value={ rel }
 						onChange={ ( value ) =>
 							setAttributes( { rel: value } )
@@ -190,14 +190,14 @@ export default function Edit( {
 					<TextControl
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize
-						label={ __( 'Title attribute', 'blockkit' ) }
+						label={ __( 'Title attribute', 'neura-blocks' ) }
 						value={ title }
 						onChange={ ( value ) =>
 							setAttributes( { title: value } )
 						}
 						help={ __(
 							'Describes the link destination for assistive technology.',
-							'blockkit'
+							'neura-blocks'
 						) }
 					/>
 				</PanelBody>
@@ -218,7 +218,7 @@ export default function Edit( {
 					tagName="span"
 					value={ text }
 					onChange={ ( value ) => setAttributes( { text: value } ) }
-					placeholder={ __( 'Add text…', 'blockkit' ) }
+					placeholder={ __( 'Add text…', 'neura-blocks' ) }
 					allowedFormats={ [] }
 					identifier="text"
 				/>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       BlockKit
+ * Plugin Name:       Neura Blocks
  * Description:       A Gutenberg block collection built on the WordPress 7.1 block API.
  * Version:           0.0.1
  * Requires at least: 7.1
@@ -10,9 +10,9 @@
  * Author URI:        https://amandubey.com/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       blockkit
+ * Text Domain:       neura-blocks
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -22,31 +22,31 @@ defined( 'ABSPATH' ) || exit;
  * Identity
  * ---------------------------------------------------------------------
  * Nothing else in the codebase should contain the literal string
- * "blockkit" except each block's `block.json`, where the name has to be a
+ * "neura-blocks" except each block's `block.json`, where the name has to be a
  * static string — see bin/rename.sh and docs/RENAMING.md.
  *
- * BLOCKKIT_SLUG    Folder name, text domain, script handles, block
+ * NEURA_BLOCKS_SLUG    Folder name, text domain, script handles, block
  *                  category. Changeable before release; after release the
  *                  folder rename breaks .org updates.
  *
- * BLOCKKIT_VERSION The canonical version. Read by bin/build-zip.sh, which
+ * NEURA_BLOCKS_VERSION The canonical version. Read by bin/build-zip.sh, which
  *                  refuses to package unless this, the `Version:` header
  *                  and readme.txt's `Stable tag` all agree.
  *
- * THE BLOCK NAMESPACE is deliberately NOT a constant. `blockkit/button` is
+ * THE BLOCK NAMESPACE is deliberately NOT a constant. `neura-blocks/button` is
  * written as a literal in each block.json, because that is the only place
  * `register_block_type()` will read it from, and a constant beside it could
  * only ever duplicate that value — silently drifting from it the moment one
  * changed. The prose is the part worth keeping:
  *
  *   The namespace is written into post content as an HTML comment
- *   (`<!-- wp:blockkit/button -->`) and is effectively PERMANENT once any
+ *   (`<!-- wp:neura-blocks/button -->`) and is effectively PERMANENT once any
  *   site saves a post using one of these blocks. Changing it without
  *   shipping block `deprecated` definitions breaks existing content.
  */
-define( 'BLOCKKIT_VERSION', '0.0.1' );
-define( 'BLOCKKIT_SLUG', 'blockkit' );
-define( 'BLOCKKIT_PATH', plugin_dir_path( __FILE__ ) );
+define( 'NEURA_BLOCKS_VERSION', '0.0.1' );
+define( 'NEURA_BLOCKS_SLUG', 'neura-blocks' );
+define( 'NEURA_BLOCKS_PATH', plugin_dir_path( __FILE__ ) );
 
 /*
  * ---------------------------------------------------------------------
@@ -54,7 +54,7 @@ define( 'BLOCKKIT_PATH', plugin_dir_path( __FILE__ ) );
  * ---------------------------------------------------------------------
  * This file stays in the GLOBAL namespace, because a plugin's main file is
  * also its header block and WordPress reads that by parsing the file rather
- * than loading it. Everything else lives under the `BlockKit` namespace, so
+ * than loading it. Everything else lives under the `NeuraBlocks` namespace, so
  * the reference below is fully qualified.
  *
  * The autoloader is the only require. Adding a class means adding a file —
@@ -67,8 +67,8 @@ define( 'BLOCKKIT_PATH', plugin_dir_path( __FILE__ ) );
  * what to do instead if a future feature genuinely cannot degrade, is in
  * docs/ARCHITECTURE.md.
  */
-require_once BLOCKKIT_PATH . 'includes/class-autoloader.php';
+require_once NEURA_BLOCKS_PATH . 'includes/class-autoloader.php';
 
-BlockKit\Autoloader::register();
+NeuraBlocks\Autoloader::register();
 
-BlockKit\Plugin::init();
+NeuraBlocks\Plugin::init();

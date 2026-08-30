@@ -3,7 +3,7 @@
  * Turning per-viewport values stored in a block's `style` attribute into CSS.
  *
  * Core generates CSS only for style paths it owns, so a namespaced key such as
- * `style.blockkit.width` produces nothing on its own — the value round-trips
+ * `style.neura-blocks.width` produces nothing on its own — the value round-trips
  * through save and parse untouched, and it is this class that emits it.
  *
  * The media queries come from Helper::media_queries(), which resolves them from
@@ -22,10 +22,10 @@
  * silently reintroduce a tablet-into-mobile cascade and disagree with every
  * core control on the same block.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
-namespace BlockKit;
+namespace NeuraBlocks;
 
 defined( 'ABSPATH' ) || exit;
 

@@ -2,15 +2,15 @@
 /**
  * Unit tests for class/interface/trait resolution.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
-namespace BlockKit\Tests\Unit;
+namespace NeuraBlocks\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \BlockKit\Autoloader
+ * @covers \NeuraBlocks\Autoloader
  */
 final class AutoloaderTest extends TestCase {
 
@@ -20,12 +20,12 @@ final class AutoloaderTest extends TestCase {
 	 * @return void
 	 */
 	public function test_resolves_classes() {
-		$this->assertTrue( class_exists( 'BlockKit\\Block\\Registrar' ), 'sub-namespace resolves to includes/block/' );
-		$this->assertTrue( class_exists( 'BlockKit\\Block\\Render' ) );
-		$this->assertTrue( class_exists( 'BlockKit\\Responsive_Styles' ), 'underscores become hyphens' );
-		$this->assertTrue( class_exists( 'BlockKit\\Responsive_Styles' ) );
-		$this->assertTrue( class_exists( 'BlockKit\\Helper' ) );
-		$this->assertTrue( class_exists( 'BlockKit\\Plugin' ) );
+		$this->assertTrue( class_exists( 'NeuraBlocks\\Block\\Registrar' ), 'sub-namespace resolves to includes/block/' );
+		$this->assertTrue( class_exists( 'NeuraBlocks\\Block\\Render' ) );
+		$this->assertTrue( class_exists( 'NeuraBlocks\\Responsive_Styles' ), 'underscores become hyphens' );
+		$this->assertTrue( class_exists( 'NeuraBlocks\\Responsive_Styles' ) );
+		$this->assertTrue( class_exists( 'NeuraBlocks\\Helper' ) );
+		$this->assertTrue( class_exists( 'NeuraBlocks\\Plugin' ) );
 	}
 
 	/**
@@ -33,12 +33,12 @@ final class AutoloaderTest extends TestCase {
 	 *
 	 * PHP gives an autoloader no way to know which kind it was asked for, so
 	 * this is the test that the prefix fallback actually works — without it,
-	 * BlockKit\Module would be looked for as class-module.php and never found.
+	 * NeuraBlocks\Module would be looked for as class-module.php and never found.
 	 *
 	 * @return void
 	 */
 	public function test_resolves_interfaces() {
-		$this->assertTrue( interface_exists( 'BlockKit\\Module' ) );
+		$this->assertTrue( interface_exists( 'NeuraBlocks\\Module' ) );
 	}
 
 	/**
@@ -50,8 +50,8 @@ final class AutoloaderTest extends TestCase {
 	 * @return void
 	 */
 	public function test_unknown_names_are_declined_quietly() {
-		$this->assertFalse( class_exists( 'BlockKit\\Does_Not_Exist' ) );
-		$this->assertFalse( class_exists( 'BlockKit\\Deeply\\Nested\\Missing' ) );
+		$this->assertFalse( class_exists( 'NeuraBlocks\\Does_Not_Exist' ) );
+		$this->assertFalse( class_exists( 'NeuraBlocks\\Deeply\\Nested\\Missing' ) );
 	}
 
 	/**
@@ -61,7 +61,7 @@ final class AutoloaderTest extends TestCase {
 	 */
 	public function test_foreign_namespaces_are_ignored() {
 		$this->assertFalse( class_exists( 'SomeOther\\Plugin\\Thing' ) );
-		$this->assertFalse( class_exists( 'BlockKitchen\\Thing' ), 'prefix match must respect the separator' );
+		$this->assertFalse( class_exists( 'NeuraBlockschen\\Thing' ), 'prefix match must respect the separator' );
 	}
 
 	/**
@@ -73,7 +73,7 @@ final class AutoloaderTest extends TestCase {
 	 * @return void
 	 */
 	public function test_path_traversal_is_refused() {
-		$this->assertFalse( class_exists( 'BlockKit\\..\\..\\etc\\passwd' ) );
-		$this->assertFalse( class_exists( 'BlockKit\\Foo/Bar' ) );
+		$this->assertFalse( class_exists( 'NeuraBlocks\\..\\..\\etc\\passwd' ) );
+		$this->assertFalse( class_exists( 'NeuraBlocks\\Foo/Bar' ) );
 	}
 }

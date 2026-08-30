@@ -17,15 +17,22 @@
 # Renaming after release requires block deprecations or a content migration.
 # Before release, this script is all you need.
 #
-# The three OLD_* values below are the CURRENT names, and the script rewrites
+# The four OLD_* values below are the CURRENT names, and the script rewrites
 # them in itself on every successful run, so it stays usable after a rename.
 # Comments here use <slug> rather than the literal name for the same reason.
+#
+# DISPLAY and CLASS are tracked SEPARATELY even though they start out looking
+# alike. They are different things: DISPLAY is free text a human reads, CLASS is
+# a PHP identifier. Once the display name gained a space they stopped matching,
+# and a single baseline would have quietly skipped the `Plugin Name:` header on
+# every future rename — reporting success with a stale name still in the header.
 
 set -euo pipefail
 
-OLD_SLUG="blockkit"
-OLD_CONST="BLOCKKIT"
-OLD_CLASS="BlockKit"
+OLD_SLUG="neura-blocks"
+OLD_CONST="NEURA_BLOCKS"
+OLD_CLASS="NeuraBlocks"
+OLD_DISPLAY="Neura Blocks"
 
 NEW_SLUG="${1:-}"
 NEW_DISPLAY="${2:-}"
@@ -41,18 +48,20 @@ if [[ ! "$NEW_SLUG" =~ ^[a-z][a-z0-9-]*$ ]]; then
 	exit 1
 fi
 
-# Title-case a hyphenated slug: brick-yard -> BrickYard.
+# Title-case a hyphenated slug: brick-yard -> "Brick Yard" (the display name).
+# The class prefix is the same thing with the spaces taken out.
 #
 # Written out rather than `sed -E 's/(^|-)([a-z])/\U\2/g'`, because \U in a
 # replacement is a GNU extension. BSD sed — which is what macOS ships, and what
 # this script is most likely to be run on — emits a literal "U" instead, so the
-# old form derived "Ubrickyard" and would have rewritten every BlockKit class to
+# old form derived "Ubrickyard" and would have rewritten every class prefix to
 # that. Silent, and only visible after the fact.
 title_case() {
 	local remainder="$1" out="" part
 	while [[ -n "$remainder" ]]; do
 		part="${remainder%%-*}"
 		if [[ -n "$part" ]]; then
+			[[ -n "$out" ]] && out+=" "
 			out+="$( printf '%s' "${part:0:1}" | tr '[:lower:]' '[:upper:]' )${part:1}"
 		fi
 		[[ "$remainder" == *-* ]] || break
@@ -68,37 +77,105 @@ if [[ -z "$NEW_DISPLAY" || "$NEW_DISPLAY" == "--go" ]]; then
 fi
 
 NEW_CONST="$(echo "$NEW_SLUG" | tr '[:lower:]-' '[:upper:]_')"
-NEW_CLASS="$NEW_DISPLAY"
+# The class prefix is DERIVED from the display name rather than being the same
+# string. Stripping everything that is not identifier-legal is what lets the
+# display name stay free text: "Brick & Yard" gives the class prefix BrickYard
+# and the header "Brick & Yard", instead of the script having to refuse the name.
+NEW_CLASS="$( printf '%s' "$NEW_DISPLAY" | tr -cd '[:alnum:]_' )"
 
-# The display name doubles as the PHP CLASS PREFIX — `BlockKit` is both the
-# `Plugin Name:` header and the `BlockKit` namespace and class prefix, and sed cannot
-# tell those two roles apart from the same literal. So it has to be a valid PHP
-# identifier. Without this check, `Brick & Yard` produced `class Brick & Yard {`
-# and a plugin that no longer parses, while the rename reported success.
+# NEW_CLASS is stripped to identifier characters above, so this should not fire.
+# It is kept because the failure it guards against is silent: `Brick & Yard` used
+# directly as a class prefix produced `class Brick & Yard {` — a plugin that no
+# longer parses, while the rename reported success. A name that is all
+# punctuation, or that starts with a digit, still reaches here.
 if [[ ! "$NEW_CLASS" =~ ^[A-Za-z][A-Za-z0-9_]*$ ]]; then
-	echo "error: display name \"$NEW_CLASS\" is also used as the PHP class prefix," >&2
-	echo "       so it must be letters, digits and underscores, starting with a letter." >&2
-	echo >&2
-	echo "       Use an identifier-safe name here, then change the human-facing name" >&2
-	echo "       afterwards — it is only two places, neither an identifier:" >&2
-	echo "         - the 'Plugin Name:' header in the main plugin file" >&2
-	echo "         - the block category title in includes/class-<slug>-blocks.php" >&2
+	echo "error: display name \"$NEW_DISPLAY\" yields \"$NEW_CLASS\" as a PHP class prefix," >&2
+	echo "       which is not a valid identifier — it must start with a letter." >&2
 	exit 1
 fi
 
 # A display name is free text, and sed treats `&` in a replacement as "the whole
 # match" and `/` as the delimiter. Without escaping, `Brick & Yard` expands to
-# `Brick BlockKit Yard`. Escaped once here rather than at each call site.
+# `Brick <old class prefix> Yard`. Escaped once here rather than at each call site.
 sed_escape() {
 	printf '%s' "$1" | sed -e 's/[\/&\\]/\\&/g'
 }
 
+# ...and the PATTERN side needs a different escape from the replacement side.
+# There `&` is literal but `/` still ends the expression and `.` `*` `[` `^` `$`
+# are regex metacharacters. The old name is only free text for the display
+# variant — slug, const and class are all identifier-shaped, so this is used
+# for OLD_DISPLAY alone.
+regex_escape() {
+	# `|` as the delimiter, because `/` is inside the character set and a
+	# backslash inside a POSIX bracket expression is literal, not an escape —
+	# so `[\/...]` closed the set early at its first `]` and matched nothing.
+	# Backslashes are doubled first, then the metacharacters; `\` is absent from
+	# the second set, so the first pass's output is not re-escaped.
+	printf '%s' "$1" | sed -e 's|\\|\\\\|g' -e 's|[].*[^$/]|\\&|g'
+}
+
 NEW_CONST_ESC="$( sed_escape "$NEW_CONST" )"
 NEW_CLASS_ESC="$( sed_escape "$NEW_CLASS" )"
+NEW_DISPLAY_ESC="$( sed_escape "$NEW_DISPLAY" )"
+OLD_DISPLAY_PAT="$( regex_escape "$OLD_DISPLAY" )"
 NEW_SLUG_ESC="$( sed_escape "$NEW_SLUG" )"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+
+# ---------------------------------------------------------------------
+# A HYPHENATED SLUG CANNOT GO INSIDE AN IDENTIFIER
+# ---------------------------------------------------------------------
+# The slug is legal in STRINGS — text domain, block name, category, CSS class.
+# It is not legal wherever a language wants an identifier, and a slug that
+# happens to have no hyphen hides the difference until the day one does.
+#
+# All four cases below were found the hard way, renaming blockkit -> neura-blocks:
+#
+#   PHP variable/function   $blockkit_main, blockkit_check()   parse error
+#   JS unquoted object key  { blockkit: {...} }                parse error
+#   JS dot member access    next.blockkit.width                SILENT — parses as
+#                                                              `next.blockkit - width`
+#   PHPCS prefix list       <element value="blockkit"/>        sniff warning
+#
+# The rewrite cannot tell any of these from a string, so they are checked HERE,
+# before a single file is touched. The php -l check further down does catch the
+# first two, but only after the whole tree has been rewritten, which leaves it
+# needing manual repair. It never catches the other two at all — the dot-access
+# form is valid JavaScript that fails at runtime, and PHPCS config is not PHP.
+#
+# Patterns use `[$]` and `[.]` rather than backslash escapes: this is a
+# double-quoted bash string, so a backslash would be eaten before grep sees it.
+if [[ "$NEW_SLUG" == *-* ]]; then
+	hazard_scan() {
+		local pattern="$1"
+		shift
+		grep -rlE "$pattern" "$@" . 2>/dev/null || true
+	}
+
+	HAZARDS="$(
+		hazard_scan "[$]${OLD_SLUG}_|function[[:space:]]+${OLD_SLUG}_" --include='*.php'
+		hazard_scan "(^|[{,[:space:]])${OLD_SLUG}[[:space:]]*:" --include='*.js'
+		hazard_scan "[.]${OLD_SLUG}([^A-Za-z0-9_-]|$)" --include='*.js'
+		hazard_scan "<element value=\"${OLD_SLUG}\"" --include='*.xml' --include='*.dist'
+	)"
+	HAZARDS="$( printf '%s\n' "$HAZARDS" | grep -vE '/node_modules/|/vendor/|^$' | sort -u || true )"
+
+	if [[ -n "$HAZARDS" ]]; then
+		echo "error: the new slug contains a hyphen, but these files use the slug somewhere" >&2
+		echo "       a hyphen is not legal — a PHP identifier, an unquoted or dot-accessed" >&2
+		echo "       JS property, or the PHPCS prefix list:" >&2
+		printf '%s\n' "$HAZARDS" | sed 's/^/         /' >&2
+		echo >&2
+		echo "       Rewriting the slug into those gives files that do not parse, JS that" >&2
+		echo "       parses as arithmetic, or a lint config that no longer matches. Fix first:" >&2
+		echo "         - name PHP identifiers after the CONST prefix, or neutrally" >&2
+		echo "         - quote JS keys and read them as [ CONSTANT ], never .dot" >&2
+		echo "         - list only the identifier casings as PHPCS prefixes" >&2
+		exit 1
+	fi
+fi
 
 # The last step renames the plugin folder. Check now rather than after every
 # file has already been rewritten and the tree is half-migrated.
@@ -110,6 +187,7 @@ fi
 echo "  slug      $OLD_SLUG  ->  $NEW_SLUG"
 echo "  constants $OLD_CONST  ->  $NEW_CONST"
 echo "  classes   $OLD_CLASS  ->  $NEW_CLASS"
+echo "  display   $OLD_DISPLAY  ->  $NEW_DISPLAY"
 echo "  folder    $(basename "$ROOT")  ->  $NEW_SLUG"
 echo
 
@@ -146,8 +224,8 @@ fi
 if [[ "$APPLY" != "--go" ]]; then
 	echo "DRY RUN — files that would change:"
 	for f in "${FILES[@]}"; do
-		if grep -qE "$OLD_SLUG|$OLD_CONST|$OLD_CLASS" "$f" 2>/dev/null; then
-			printf '  %-46s %s\n' "$f" "$(grep -cE "$OLD_SLUG|$OLD_CONST|$OLD_CLASS" "$f") match(es)"
+		if grep -qE "$OLD_SLUG|$OLD_CONST|$OLD_CLASS|$OLD_DISPLAY" "$f" 2>/dev/null; then
+			printf '  %-46s %s\n' "$f" "$(grep -cE "$OLD_SLUG|$OLD_CONST|$OLD_CLASS|$OLD_DISPLAY" "$f") match(es)"
 		fi
 	done
 	echo
@@ -157,9 +235,13 @@ fi
 
 for f in "${FILES[@]}"; do
 	# Longest/most specific first, so the CONST form is not eaten by the slug
-	# form when one is a substring of the other.
+	# form when one is a substring of the other. DISPLAY must precede CLASS for
+	# the same reason: a display name that happens to have no space would be
+	# identical to the class prefix, and letting CLASS run first would leave the
+	# `Plugin Name:` header holding an identifier instead of a readable name.
 	sed_inplace \
 		-e "s/${OLD_CONST}/${NEW_CONST_ESC}/g" \
+		-e "s/${OLD_DISPLAY_PAT}/${NEW_DISPLAY_ESC}/g" \
 		-e "s/${OLD_CLASS}/${NEW_CLASS_ESC}/g" \
 		-e "s/${OLD_SLUG}/${NEW_SLUG_ESC}/g" \
 		"$f"
@@ -172,6 +254,7 @@ sed_inplace \
 	-e "s/^OLD_SLUG=\".*\"/OLD_SLUG=\"${NEW_SLUG}\"/" \
 	-e "s/^OLD_CONST=\".*\"/OLD_CONST=\"${NEW_CONST}\"/" \
 	-e "s/^OLD_CLASS=\".*\"/OLD_CLASS=\"${NEW_CLASS}\"/" \
+	-e "s/^OLD_DISPLAY=\".*\"/OLD_DISPLAY=\"${NEW_DISPLAY_ESC}\"/" \
 	"bin/rename.sh"
 
 # Rename any file whose NAME carries the slug — the main plugin file and
@@ -197,14 +280,14 @@ done
 echo "Verifying no occurrences survive..."
 LEAKS=0
 for f in "${FILES[@]}"; do
-	if grep -InE "${OLD_SLUG}|${OLD_CONST}|${OLD_CLASS}" "$f" 2>/dev/null; then
+	if grep -InE "${OLD_SLUG}|${OLD_CONST}|${OLD_CLASS}|${OLD_DISPLAY}" "$f" 2>/dev/null; then
 		LEAKS=1
 	fi
 done
 
 if [[ "$LEAKS" -ne 0 ]]; then
 	echo >&2
-	echo "error: occurrences of ${OLD_SLUG}/${OLD_CONST}/${OLD_CLASS} survive, listed above." >&2
+	echo "error: occurrences of ${OLD_SLUG}/${OLD_CONST}/${OLD_CLASS}/${OLD_DISPLAY} survive, listed above." >&2
 	echo "The tree is half-renamed. Fix those, then rename the folder by hand." >&2
 	exit 1
 fi

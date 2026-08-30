@@ -1,8 +1,8 @@
 <?php
 /**
- * Front-end markup for blockkit/icon.
+ * Front-end markup for neura-blocks/icon.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  *
  * @var array    $attributes Block attributes.
  * @var string   $content    Inner block content (unused).
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  * lexical and per-file, so the alias applies here even though core requires
  * this template from inside a closure in global scope.
  */
-use BlockKit\Block\Render as Block_Render;
+use NeuraBlocks\Block\Render as Block_Render;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

@@ -15,12 +15,15 @@ import {
 	setStateValue,
 	getResolvedValue,
 } from '../../src/button/responsive-width/style-value';
-import { ICON_SIZE_KEY } from '../../src/button/responsive-width/constants';
+import {
+	ICON_SIZE_KEY,
+	STYLE_NAMESPACE,
+} from '../../src/button/responsive-width/constants';
 
 const style = () => ( {
-	blockkit: { width: '200px' },
-	'@tablet': { blockkit: { width: '150px' } },
-	'@mobile': { blockkit: { width: '100%' } },
+	[ STYLE_NAMESPACE ]: { width: '200px' },
+	'@tablet': { [ STYLE_NAMESPACE ]: { width: '150px' } },
+	'@mobile': { [ STYLE_NAMESPACE ]: { width: '100%' } },
 } );
 
 describe( 'getStateValue', () => {
@@ -60,8 +63,8 @@ describe( 'getResolvedValue', () => {
 		// Falling back to Tablet would be a tablet-into-mobile cascade and
 		// would disagree with every core control on the same block.
 		const partial = {
-			blockkit: { width: '200px' },
-			'@tablet': { blockkit: { width: '150px' } },
+			[ STYLE_NAMESPACE ]: { width: '200px' },
+			'@tablet': { [ STYLE_NAMESPACE ]: { width: '150px' } },
 		};
 
 		expect( getResolvedValue( partial, 'Mobile' ) ).toBe( '200px' );
@@ -76,15 +79,15 @@ describe( 'setStateValue', () => {
 	it( 'writes to the base layer when no state is given', () => {
 		const next = setStateValue( undefined, null, '10px' );
 
-		expect( next.blockkit.width ).toBe( '10px' );
+		expect( next[ STYLE_NAMESPACE ].width ).toBe( '10px' );
 	} );
 
 	it( 'writes into the requested state layer only', () => {
 		const next = setStateValue( style(), '@mobile', '50%' );
 
-		expect( next[ '@mobile' ].blockkit.width ).toBe( '50%' );
-		expect( next.blockkit.width ).toBe( '200px' );
-		expect( next[ '@tablet' ].blockkit.width ).toBe( '150px' );
+		expect( next[ '@mobile' ][ STYLE_NAMESPACE ].width ).toBe( '50%' );
+		expect( next[ STYLE_NAMESPACE ].width ).toBe( '200px' );
+		expect( next[ '@tablet' ][ STYLE_NAMESPACE ].width ).toBe( '150px' );
 	} );
 
 	it( 'does not mutate the input', () => {
@@ -101,7 +104,7 @@ describe( 'setStateValue', () => {
 		// layer itself must go, or `style` accumulates `{"@mobile":{}}` forever
 		// and every save writes a slightly larger post.
 		const next = setStateValue(
-			{ '@mobile': { blockkit: { width: '50px' } } },
+			{ '@mobile': { [ STYLE_NAMESPACE ]: { width: '50px' } } },
 			'@mobile',
 			undefined
 		);
@@ -111,19 +114,19 @@ describe( 'setStateValue', () => {
 
 	it( 'keeps sibling properties when clearing one', () => {
 		const next = setStateValue(
-			{ blockkit: { width: '10px', iconSize: '1em' } },
+			{ [ STYLE_NAMESPACE ]: { width: '10px', iconSize: '1em' } },
 			null,
 			undefined
 		);
 
-		expect( next.blockkit.iconSize ).toBe( '1em' );
-		expect( next.blockkit.width ).toBeUndefined();
+		expect( next[ STYLE_NAMESPACE ].iconSize ).toBe( '1em' );
+		expect( next[ STYLE_NAMESPACE ].width ).toBeUndefined();
 	} );
 
 	it( 'writes a second property alongside the first', () => {
 		const next = setStateValue( style(), null, '2em', ICON_SIZE_KEY );
 
-		expect( next.blockkit.iconSize ).toBe( '2em' );
-		expect( next.blockkit.width ).toBe( '200px' );
+		expect( next[ STYLE_NAMESPACE ].iconSize ).toBe( '2em' );
+		expect( next[ STYLE_NAMESPACE ].width ).toBe( '200px' );
 	} );
 } );

@@ -2,16 +2,16 @@
 /**
  * Unit tests for the shared environment getters.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
-namespace BlockKit\Tests\Unit;
+namespace NeuraBlocks\Tests\Unit;
 
-use BlockKit\Helper;
+use NeuraBlocks\Helper;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \BlockKit\Helper
+ * @covers \NeuraBlocks\Helper
  */
 final class HelperTest extends TestCase {
 
@@ -134,8 +134,8 @@ final class HelperTest extends TestCase {
 	 * @return void
 	 */
 	public function test_identity_getters() {
-		$this->assertSame( BLOCKKIT_SLUG, Helper::slug() );
-		$this->assertSame( BLOCKKIT_VERSION, Helper::version() );
+		$this->assertSame( NEURA_BLOCKS_SLUG, Helper::slug() );
+		$this->assertSame( NEURA_BLOCKS_VERSION, Helper::version() );
 	}
 
 	/**
@@ -144,10 +144,10 @@ final class HelperTest extends TestCase {
 	 * @return void
 	 */
 	public function test_path_joins_cleanly() {
-		$this->assertSame( BLOCKKIT_PATH, Helper::path() );
-		$this->assertSame( BLOCKKIT_PATH . 'includes/', Helper::path( 'includes/' ) );
+		$this->assertSame( NEURA_BLOCKS_PATH, Helper::path() );
+		$this->assertSame( NEURA_BLOCKS_PATH . 'includes/', Helper::path( 'includes/' ) );
 		$this->assertSame(
-			BLOCKKIT_PATH . 'includes/class-helper.php',
+			NEURA_BLOCKS_PATH . 'includes/class-helper.php',
 			Helper::path( '/includes/class-helper.php' ),
 			'a leading slash must not produce a double separator'
 		);

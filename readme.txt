@@ -1,4 +1,5 @@
-=== BlockKit ===
+=== Neura Blocks ===
+Contributors:      amandubey
 Tags:              blocks, button, responsive, icons, breakpoints
 Requires at least: 7.1
 Tested up to:      7.1
@@ -11,10 +12,10 @@ Blocks that extend WordPress 7.1 rather than reinvent it — a typographic scale
 
 == Description ==
 
-BlockKit adds blocks that build on WordPress 7.1's block API instead of
+Neura Blocks adds blocks that build on WordPress 7.1's block API instead of
 duplicating it. Core's typography, colour, spacing and border controls — and
 core's per-viewport style states — are declared as supports and inherited, not
-reimplemented. What BlockKit adds is the part core leaves out.
+reimplemented. What Neura Blocks adds is the part core leaves out.
 
 = Blocks =
 
@@ -48,18 +49,18 @@ no equivalent in core, and is the one most often faked with an undersized H6.
 
 = On responsive values =
 
-WordPress 7.1 emits per-viewport CSS for its own style paths, so BlockKit does
-not need to reinvent that and does not try to. Where BlockKit adds a property
+WordPress 7.1 emits per-viewport CSS for its own style paths, so Neura Blocks does
+not need to reinvent that and does not try to. Where Neura Blocks adds a property
 core has no support for, it stores the value inside core's own `style` attribute
 under a namespaced key, in core's viewport-state shape, and generates the CSS
 using core's media queries:
 
-`style.blockkit.textWrap` for the base layer, `style.@tablet.blockkit.textWrap`
-and `style.@mobile.blockkit.textWrap` for the overrides.
+`style.neura-blocks.textWrap` for the base layer, `style.@tablet.neura-blocks.textWrap`
+and `style.@mobile.neura-blocks.textWrap` for the overrides.
 
 The breakpoints come from `WP_Theme_JSON::get_viewport_media_queries()`, which
 reads `settings.viewport` from theme.json. Change your breakpoints there and
-BlockKit follows, because it never had its own.
+Neura Blocks follows, because it never had its own.
 
 Desktop is the base layer rather than a third band, matching core: it carries no
 media query and applies at every width, so Mobile falls back to the base value
@@ -75,23 +76,25 @@ decorative, and the button text is the accessible name.
 
 = Privacy =
 
-BlockKit does not collect, store or transmit any data. It makes no external
+Neura Blocks does not collect, store or transmit any data. It makes no external
 network requests, sets no cookies, creates no database tables, and registers no
 REST endpoints or AJAX handlers.
 
 = Source code =
 
 The JavaScript in `build/` is compiled and minified by `@wordpress/scripts`.
-The unminified sources are included in this plugin under `src/`, together with
-the `package.json` that builds them.
+The unminified sources, the build configuration and the full development
+history are public at:
+
+https://github.com/rahulvarma722/neura-blocks
 
 To build from source: `npm install && npm run build`.
 
 == Installation ==
 
 1. Upload the plugin through **Plugins > Add New**, or extract the ZIP into `wp-content/plugins/`.
-2. Activate **BlockKit** through the **Plugins** menu.
-3. In the editor, insert **Kit Buttons** from the **BlockKit** category in the block inserter.
+2. Activate **Neura Blocks** through the **Plugins** menu.
+3. In the editor, insert **Kit Buttons** from the **Neura Blocks** category in the block inserter.
 4. Select a button and open the **Styles** tab to find **Custom Width** and **Icon Size**.
 
 To set a per-viewport value, switch the editor preview to Tablet or Mobile with
@@ -111,7 +114,7 @@ work while writing values the editor could not show back to you.
 
 `WP_Theme_JSON::get_viewport_media_queries()`, which reads `settings.viewport`
 from your theme.json. The defaults are 480px for mobile and 782px for tablet,
-identical to core's. BlockKit has no breakpoints of its own to configure.
+identical to core's. Neura Blocks has no breakpoints of its own to configure.
 
 = Why is Desktop not listed alongside Tablet and Mobile? =
 
@@ -122,7 +125,7 @@ Mobile fall back to your Desktop value rather than to your Tablet value.
 
 = Can I use these buttons inside core's Buttons block? =
 
-No. Kit Button declares `blockkit/buttons` as its parent, so it can only be
+No. Kit Button declares `neura-blocks/buttons` as its parent, so it can only be
 inserted into a Kit Buttons container. The container supplies the flex layout and
 block gap the button expects.
 
@@ -141,7 +144,7 @@ No. Both blocks render server-side in PHP and ship no front-end script.
 1. A Kit Buttons container with two Kit Buttons, one with an arrow icon.
 2. The Custom Width and Icon Size controls in the Styles tab.
 3. Editing a Mobile-only width with Responsive styles enabled.
-4. The BlockKit category in the block inserter.
+4. The Neura Blocks category in the block inserter.
 
 == Changelog ==
 

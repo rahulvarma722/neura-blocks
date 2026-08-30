@@ -43,13 +43,13 @@ export default function Edit( {
 		<>
 			<InspectorControls group="settings">
 				<ToolsPanel
-					label={ __( 'Style', 'blockkit' ) }
+					label={ __( 'Style', 'neura-blocks' ) }
 					resetAll={ () => setAttributes( { styleAs: '' } ) }
 					panelId={ clientId }
 				>
 					<ToolsPanelItem
 						hasValue={ () => !! styleAs }
-						label={ __( 'Style as', 'blockkit' ) }
+						label={ __( 'Style as', 'neura-blocks' ) }
 						onDeselect={ () => setAttributes( { styleAs: '' } ) }
 						isShownByDefault
 						panelId={ clientId }
@@ -57,7 +57,7 @@ export default function Edit( {
 						<SelectControl
 							__next40pxDefaultSize
 							__nextHasNoMarginBottom
-							label={ __( 'Style as', 'blockkit' ) }
+							label={ __( 'Style as', 'neura-blocks' ) }
 							value={ styleAs }
 							options={ STYLE_PRESETS }
 							onChange={ ( value ) =>
@@ -65,7 +65,7 @@ export default function Edit( {
 							}
 							help={ __(
 								'Sizing and weight, independent of the theme’s default for a paragraph.',
-								'blockkit'
+								'neura-blocks'
 							) }
 						/>
 					</ToolsPanelItem>
@@ -85,7 +85,7 @@ export default function Edit( {
 				onChange={ ( value ) => setAttributes( { content: value } ) }
 				onMerge={ mergeBlocks }
 				onReplace={ onReplace }
-				placeholder={ placeholder || __( 'Text…', 'blockkit' ) }
+				placeholder={ placeholder || __( 'Text…', 'neura-blocks' ) }
 			/>
 		</>
 	);

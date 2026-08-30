@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="BlockKit">
-	<description>WordPress coding standards for BlockKit, tuned to what this plugin actually is.</description>
+<ruleset name="NeuraBlocks">
+	<description>WordPress coding standards for NeuraBlocks, tuned to what this plugin actually is.</description>
 
 	<!--
 		WHAT IS SCANNED.
@@ -9,7 +9,7 @@
 		render.php and block.json across verbatim at build time, so scanning it
 		reports every finding twice and the second copy is not editable.
 	-->
-	<file>blockkit.php</file>
+	<file>neura-blocks.php</file>
 	<file>includes</file>
 	<file>src</file>
 
@@ -44,9 +44,8 @@
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
-				<element value="blockkit"/>
-				<element value="BLOCKKIT"/>
-				<element value="BlockKit"/>
+				<element value="NEURA_BLOCKS"/>
+				<element value="NeuraBlocks"/>
 			</property>
 		</properties>
 	</rule>
@@ -55,7 +54,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="blockkit"/>
+				<element value="neura-blocks"/>
 			</property>
 		</properties>
 	</rule>

@@ -17,19 +17,19 @@
  *
  * Exits non-zero on the first failure, so it is usable as a gate.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
 // Every notice, warning and deprecation counts as a failure — but only ours.
 // A third-party plugin's deprecations are not this suite's business.
 error_reporting( E_ALL );
 
-$GLOBALS['blockkit_notices'] = array();
+$GLOBALS['plugin_notices'] = array();
 
 set_error_handler(
 	static function ( $errno, $message, $file, $line ) {
-		if ( false !== strpos( $file, 'plugins/blockkit' ) ) {
-			$GLOBALS['blockkit_notices'][] = sprintf( '%s in %s:%d', $message, basename( $file ), $line );
+		if ( false !== strpos( $file, 'plugins/neura-blocks' ) ) {
+			$GLOBALS['plugin_notices'][] = sprintf( '%s in %s:%d', $message, basename( $file ), $line );
 		}
 		return false;
 	},
@@ -37,129 +37,126 @@ set_error_handler(
 );
 
 /*
- * Counters live in $GLOBALS, not as `global $blockkit_pass`.
+ * A CLOSURE, not a global function, and counters captured by reference rather
+ * than parked in $GLOBALS.
  *
- * `wp eval-file` includes this file from INSIDE a function, so a top-level
- * assignment here is a LOCAL variable — and `global $blockkit_pass` in blockkit_check()
- * would then bind to a different, unset variable. The counts stayed at zero
- * while every check printed PASS, which also meant the exit code never fired
- * and this suite was useless as a gate. $GLOBALS is unambiguous either way.
+ * Both of those were workarounds for the same thing: `wp eval-file` includes
+ * this file from INSIDE a function, so a top-level assignment is a LOCAL
+ * variable. A global function plus $GLOBALS sidestepped that — but a global
+ * function in a file that runs inside WordPress is a name that can collide, and
+ * naming it after the slug broke bin/rename.sh outright once the slug contained
+ * a hyphen (`my-plugin_check` is not a valid function name).
+ *
+ * A closure defined and called in the same local scope needs neither hack.
  */
-$GLOBALS['blockkit_pass'] = 0;
-$GLOBALS['blockkit_fail'] = 0;
+$passed = 0;
+$failed = 0;
 
-/**
- * Asserts one condition.
- *
- * @param string $label     What is being checked.
- * @param bool   $condition Result.
- * @return void
- */
-function blockkit_check( $label, $condition ) {
+$check = static function ( $label, $condition ) use ( &$passed, &$failed ) {
 	if ( $condition ) {
-		++$GLOBALS['blockkit_pass'];
+		++$passed;
 		printf( "  \033[32mPASS\033[0m  %s\n", $label );
 		return;
 	}
 
-	++$GLOBALS['blockkit_fail'];
+	++$failed;
 	printf( "  \033[31mFAIL\033[0m  %s\n", $label );
-}
+};
 
 // ---------------------------------------------------------------------
 echo "\nRegistration\n";
 // ---------------------------------------------------------------------
 $registry = WP_Block_Type_Registry::get_instance();
 
-blockkit_check( 'blockkit/buttons registered', $registry->is_registered( 'blockkit/buttons' ) );
-blockkit_check( 'blockkit/button registered', $registry->is_registered( 'blockkit/button' ) );
+$check( 'neura-blocks/buttons registered', $registry->is_registered( 'neura-blocks/buttons' ) );
+$check( 'neura-blocks/button registered', $registry->is_registered( 'neura-blocks/button' ) );
 
-$button = $registry->get_registered( 'blockkit/button' );
+$button = $registry->get_registered( 'neura-blocks/button' );
 
-blockkit_check( 'button render callback is callable', $button && is_callable( $button->render_callback ) );
-blockkit_check(
+$check( 'button render callback is callable', $button && is_callable( $button->render_callback ) );
+$check(
 	'editor script handle resolved (script translations wired)',
 	$button && ! empty( $button->editor_script_handles )
 );
-blockkit_check( 'button declares buttons as parent', $button && in_array( 'blockkit/buttons', (array) $button->parent, true ) );
+$check( 'button declares buttons as parent', $button && in_array( 'neura-blocks/buttons', (array) $button->parent, true ) );
 
 // ---------------------------------------------------------------------
 echo "\nAutoloading and module registry\n";
 // ---------------------------------------------------------------------
-blockkit_check( 'interface BlockKit\\Module autoloads', interface_exists( 'BlockKit\\Module' ) );
-blockkit_check( 'BlockKit\\Block\\Registrar implements Module', in_array( 'BlockKit\\Module', (array) class_implements( 'BlockKit\\Block\\Registrar' ), true ) );
-blockkit_check( 'module reachable after boot', BlockKit\Plugin::module( BlockKit\Block\Registrar::class ) instanceof BlockKit\Block\Registrar );
-blockkit_check( 'no legacy global class names remain', ! class_exists( 'BlockKit_Blocks' ) && ! class_exists( 'BlockKit_Block_Render' ) );
-blockkit_check( 'pre-move class names are gone too', ! class_exists( 'BlockKit\\Blocks' ) && ! class_exists( 'BlockKit\\Block_Render' ) );
-blockkit_check( 'sub-namespace classes autoload from includes/block/', class_exists( 'BlockKit\\Block\\Render' ) );
+$check( 'interface NeuraBlocks\\Module autoloads', interface_exists( 'NeuraBlocks\\Module' ) );
+$check( 'NeuraBlocks\\Block\\Registrar implements Module', in_array( 'NeuraBlocks\\Module', (array) class_implements( 'NeuraBlocks\\Block\\Registrar' ), true ) );
+$check( 'module reachable after boot', NeuraBlocks\Plugin::module( NeuraBlocks\Block\Registrar::class ) instanceof NeuraBlocks\Block\Registrar );
+$check( 'no legacy global class names remain', ! class_exists( 'NeuraBlocks_Blocks' ) && ! class_exists( 'NeuraBlocks_Block_Render' ) );
+$check( 'pre-move class names are gone too', ! class_exists( 'NeuraBlocks\\Blocks' ) && ! class_exists( 'NeuraBlocks\\Block_Render' ) );
+$check( 'sub-namespace classes autoload from includes/block/', class_exists( 'NeuraBlocks\\Block\\Render' ) );
 
 // ---------------------------------------------------------------------
 echo "\nRendering — the happy path\n";
 // ---------------------------------------------------------------------
-$good = '<!-- wp:blockkit/buttons -->'
-	. '<!-- wp:blockkit/button {"text":"Click me","url":"https://example.org/?a=1&b=2","icon":"arrow",'
-	. '"iconPosition":"left","linkTarget":"_blank","style":{"blockkit":{"width":"200px","iconSize":"1.5em"},'
-	. '"@tablet":{"blockkit":{"width":"150px"}},"@mobile":{"blockkit":{"width":"100%","iconSize":"2em"}}}} /-->'
-	. '<!-- /wp:blockkit/buttons -->';
+$good = '<!-- wp:neura-blocks/buttons -->'
+	. '<!-- wp:neura-blocks/button {"text":"Click me","url":"https://example.org/?a=1&b=2","icon":"arrow",'
+	. '"iconPosition":"left","linkTarget":"_blank","style":{"neura-blocks":{"width":"200px","iconSize":"1.5em"},'
+	. '"@tablet":{"neura-blocks":{"width":"150px"}},"@mobile":{"neura-blocks":{"width":"100%","iconSize":"2em"}}}} /-->'
+	. '<!-- /wp:neura-blocks/buttons -->';
 
 $out = do_blocks( $good );
 
-blockkit_check( 'base width emitted unwrapped', false !== strpos( $out, 'width:200px' ) );
-blockkit_check( 'tablet band emitted', false !== strpos( $out, '150px' ) );
-blockkit_check( 'mobile band emitted', false !== strpos( $out, '100%' ) );
-blockkit_check( 'icon size emitted as a custom property', false !== strpos( $out, '--blockkit-button-icon-size' ) );
-blockkit_check(
+$check( 'base width emitted unwrapped', false !== strpos( $out, 'width:200px' ) );
+$check( 'tablet band emitted', false !== strpos( $out, '150px' ) );
+$check( 'mobile band emitted', false !== strpos( $out, '100%' ) );
+$check( 'icon size emitted as a custom property', false !== strpos( $out, '--neura-blocks-button-icon-size' ) );
+$check(
 	"core's mutually exclusive ranges, not stacked max-width",
 	false !== strpos( $out, 'width <= 480px' ) && false !== strpos( $out, '480px < width' )
 );
-blockkit_check( 'icon is aria-hidden', false !== strpos( $out, 'aria-hidden="true"' ) );
-blockkit_check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 20 20"' ) );
-blockkit_check( 'left icon position class applied', false !== strpos( $out, 'has-icon-left' ) );
-blockkit_check( 'noopener added for target=_blank', false !== strpos( $out, 'noopener' ) );
-blockkit_check( 'ampersand not double-encoded', false === strpos( $out, '&amp;#038;' ) );
-blockkit_check( 'inner blocks survived the container save', false !== strpos( $out, 'Click me' ) );
-blockkit_check( 'no diagnostics readout in output', false === strpos( $out, 'stylesProbe' ) );
+$check( 'icon is aria-hidden', false !== strpos( $out, 'aria-hidden="true"' ) );
+$check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 20 20"' ) );
+$check( 'left icon position class applied', false !== strpos( $out, 'has-icon-left' ) );
+$check( 'noopener added for target=_blank', false !== strpos( $out, 'noopener' ) );
+$check( 'ampersand not double-encoded', false === strpos( $out, '&amp;#038;' ) );
+$check( 'inner blocks survived the container save', false !== strpos( $out, 'Click me' ) );
+$check( 'no diagnostics readout in output', false === strpos( $out, 'stylesProbe' ) );
 
 // ---------------------------------------------------------------------
 echo "\nRendering — hostile input\n";
 // ---------------------------------------------------------------------
-$hostile = '<!-- wp:blockkit/buttons -->'
-	. '<!-- wp:blockkit/button {"text":"Hi <script>alert(1)</script><img src=x onerror=alert(1)><strong>bold</strong>",'
+$hostile = '<!-- wp:neura-blocks/buttons -->'
+	. '<!-- wp:neura-blocks/button {"text":"Hi <script>alert(1)</script><img src=x onerror=alert(1)><strong>bold</strong>",'
 	. '"url":"https://ex.org","icon":"arrow","linkTarget":"evil\" onmouseover=\"alert(1)",'
 	. '"rel":"noopener\"><script>alert(1)</script>","title":"<script>alert(1)</script>tip",'
-	. '"style":{"blockkit":{"width":"expression(alert(1))"},"@mobile":{"blockkit":{"width":"-50px"}}}} /-->'
-	. '<!-- wp:blockkit/button {"text":"T2","url":"javascript:alert(1)"} /-->'
-	. '<!-- wp:blockkit/button {"text":"T3","url":"data:text/html,<script>alert(1)</script>"} /-->'
-	. '<!-- wp:blockkit/button {"text":"T4","url":"https://ex.org","icon":"../../etc/passwd"} /-->'
-	. '<!-- /wp:blockkit/buttons -->';
+	. '"style":{"neura-blocks":{"width":"expression(alert(1))"},"@mobile":{"neura-blocks":{"width":"-50px"}}}} /-->'
+	. '<!-- wp:neura-blocks/button {"text":"T2","url":"javascript:alert(1)"} /-->'
+	. '<!-- wp:neura-blocks/button {"text":"T3","url":"data:text/html,<script>alert(1)</script>"} /-->'
+	. '<!-- wp:neura-blocks/button {"text":"T4","url":"https://ex.org","icon":"../../etc/passwd"} /-->'
+	. '<!-- /wp:neura-blocks/buttons -->';
 
 $out = do_blocks( $hostile );
 
-blockkit_check( 'no <script> anywhere', false === stripos( $out, '<script' ) );
-blockkit_check( 'no onerror handler', false === stripos( $out, 'onerror' ) );
-blockkit_check( 'no onmouseover handler', false === stripos( $out, 'onmouseover' ) );
-blockkit_check( 'no <img> smuggled through the label', false === stripos( $out, '<img' ) );
-blockkit_check( '<strong> kept — the allow-list is not a blanket strip', false !== strpos( $out, '<strong>bold</strong>' ) );
-blockkit_check( 'unrecognised target dropped', false === strpos( $out, 'evil' ) );
-blockkit_check( 'garbage rel token dropped whole', false === strpos( $out, 'noopenerscript' ) );
-blockkit_check( 'title tags stripped, text kept', false !== strpos( $out, 'title="tip"' ) );
-blockkit_check( 'expression() rejected', false === stripos( $out, 'expression(' ) );
-blockkit_check( 'negative width rejected', false === strpos( $out, '-50px' ) );
-blockkit_check( 'javascript: url -> <button>, never href=""', false === stripos( $out, 'javascript:' ) && false === strpos( $out, 'href=""' ) );
-blockkit_check( 'data: url rejected', false === stripos( $out, 'data:text/html' ) );
-blockkit_check( 'unknown icon key ignored', false === strpos( $out, 'passwd' ) );
-blockkit_check( 'no </style> breakout', 1 >= substr_count( $out, '</style>' ) );
+$check( 'no <script> anywhere', false === stripos( $out, '<script' ) );
+$check( 'no onerror handler', false === stripos( $out, 'onerror' ) );
+$check( 'no onmouseover handler', false === stripos( $out, 'onmouseover' ) );
+$check( 'no <img> smuggled through the label', false === stripos( $out, '<img' ) );
+$check( '<strong> kept — the allow-list is not a blanket strip', false !== strpos( $out, '<strong>bold</strong>' ) );
+$check( 'unrecognised target dropped', false === strpos( $out, 'evil' ) );
+$check( 'garbage rel token dropped whole', false === strpos( $out, 'noopenerscript' ) );
+$check( 'title tags stripped, text kept', false !== strpos( $out, 'title="tip"' ) );
+$check( 'expression() rejected', false === stripos( $out, 'expression(' ) );
+$check( 'negative width rejected', false === strpos( $out, '-50px' ) );
+$check( 'javascript: url -> <button>, never href=""', false === stripos( $out, 'javascript:' ) && false === strpos( $out, 'href=""' ) );
+$check( 'data: url rejected', false === stripos( $out, 'data:text/html' ) );
+$check( 'unknown icon key ignored', false === strpos( $out, 'passwd' ) );
+$check( 'no </style> breakout', 1 >= substr_count( $out, '</style>' ) );
 
 // ---------------------------------------------------------------------
 echo "\nKit Icon — core's icon registry\n";
 // ---------------------------------------------------------------------
-blockkit_check( 'blockkit/icon registered', $registry->is_registered( 'blockkit/icon' ) );
-blockkit_check( "core's wp_get_icon() is available", function_exists( 'wp_get_icon' ) );
+$check( 'neura-blocks/icon registered', $registry->is_registered( 'neura-blocks/icon' ) );
+$check( "core's wp_get_icon() is available", function_exists( 'wp_get_icon' ) );
 
-$out = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled"} /-->' );
+$out = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled"} /-->' );
 
-blockkit_check( 'renders an SVG from the registry', false !== strpos( $out, '<svg' ) );
-blockkit_check( 'wrapped for block supports', false !== strpos( $out, 'wp-block-blockkit-icon' ) );
+$check( 'renders an SVG from the registry', false !== strpos( $out, '<svg' ) );
+$check( 'wrapped for block supports', false !== strpos( $out, 'wp-block-neura-blocks-icon' ) );
 
 /*
  * The accessibility branch is core's, and it is the reason for using
@@ -167,33 +164,33 @@ blockkit_check( 'wrapped for block supports', false !== strpos( $out, 'wp-block-
  * decoration and must be hidden from assistive technology, a labelled one is
  * content and must be announced.
  */
-blockkit_check(
+$check(
     'no label -> aria-hidden + focusable=false',
     false !== strpos( $out, 'aria-hidden="true"' ) && false !== strpos( $out, 'focusable="false"' )
 );
 
-$labelled = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","label":"Rating"} /-->' );
+$labelled = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","label":"Rating"} /-->' );
 
-blockkit_check(
+$check(
     'label -> role=img + aria-label',
     false !== strpos( $labelled, 'role="img"' ) && false !== strpos( $labelled, 'aria-label="Rating"' )
 );
-blockkit_check( 'a labelled icon is NOT aria-hidden', false === strpos( $labelled, 'aria-hidden' ) );
+$check( 'a labelled icon is NOT aria-hidden', false === strpos( $labelled, 'aria-hidden' ) );
 
 // Flip and rotation belong on the SVG, not the wrapper: a transform on the
 // wrapper would rotate any background, border and padding with it.
-$flipped = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","flipHorizontal":true,"flipVertical":true} /-->' );
+$flipped = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/arrow-right","flipHorizontal":true,"flipVertical":true} /-->' );
 
-blockkit_check( 'flip classes land on the svg', 1 === preg_match( '/<svg[^>]*is-flip-horizontal is-flip-vertical/', $flipped ) );
-blockkit_check( 'flip classes are NOT on the wrapper', 1 !== preg_match( '/<div[^>]*is-flip-horizontal/', $flipped ) );
+$check( 'flip classes land on the svg', 1 === preg_match( '/<svg[^>]*is-flip-horizontal is-flip-vertical/', $flipped ) );
+$check( 'flip classes are NOT on the wrapper', 1 !== preg_match( '/<div[^>]*is-flip-horizontal/', $flipped ) );
 
-$rotated = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":90} /-->' );
-blockkit_check( 'rotation emitted on the svg', 1 === preg_match( '/<svg[^>]*rotate:90deg/', $rotated ) );
+$rotated = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/arrow-right","rotation":90} /-->' );
+$check( 'rotation emitted on the svg', 1 === preg_match( '/<svg[^>]*rotate:90deg/', $rotated ) );
 
 // Normalisation: a stored value outside 0-359 must not emit a meaningless
 // declaration, and a negative must resolve to its positive equivalent.
-blockkit_check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":720} /-->' ), 'rotate:' ) );
-blockkit_check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
+$check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/arrow-right","rotation":720} /-->' ), 'rotate:' ) );
+$check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
 
 // ---------------------------------------------------------------------
 echo "\nKit Icon — block by default, inline on request\n";
@@ -203,18 +200,18 @@ echo "\nKit Icon — block by default, inline on request\n";
  * is opt-in. Asserted because the class is what the CSS keys off — a silent
  * change here would alter every icon's layout on every site.
  */
-$block_level = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled"} /-->' );
-$inline      = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","isInline":true} /-->' );
+$block_level = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled"} /-->' );
+$inline      = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","isInline":true} /-->' );
 
-blockkit_check( 'default emits no is-inline class', false === strpos( $block_level, 'is-inline' ) );
-blockkit_check( 'isInline true emits is-inline', false !== strpos( $inline, 'is-inline' ) );
-blockkit_check(
+$check( 'default emits no is-inline class', false === strpos( $block_level, 'is-inline' ) );
+$check( 'isInline true emits is-inline', false !== strpos( $inline, 'is-inline' ) );
+$check(
     'isInline false is the same as omitting it',
-    ( false === strpos( do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","isInline":false} /-->' ), 'is-inline' ) )
+    ( false === strpos( do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","isInline":false} /-->' ), 'is-inline' ) )
 );
-blockkit_check(
+$check(
     'is-inline composes with rotation and a width',
-    1 === preg_match( '/<div[^>]*is-inline/', do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","isInline":true,"rotation":90,"style":{"dimensions":{"width":"32px"}}} /-->' ) )
+    1 === preg_match( '/<div[^>]*is-inline/', do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","isInline":true,"rotation":90,"style":{"dimensions":{"width":"32px"}}} /-->' ) )
 );
 
 // ---------------------------------------------------------------------
@@ -237,7 +234,7 @@ $hostile = array(
 $all_empty = true;
 
 foreach ( $hostile as $why => $name ) {
-    $result = trim( do_blocks( '<!-- wp:blockkit/icon ' . wp_json_encode( array( 'icon' => $name ) ) . ' /-->' ) );
+    $result = trim( do_blocks( '<!-- wp:neura-blocks/icon ' . wp_json_encode( array( 'icon' => $name ) ) . ' /-->' ) );
 
     if ( '' !== $result ) {
         $all_empty = false;
@@ -245,29 +242,29 @@ foreach ( $hostile as $why => $name ) {
     }
 }
 
-blockkit_check( 'every unresolvable or hostile icon name renders nothing', $all_empty );
+$check( 'every unresolvable or hostile icon name renders nothing', $all_empty );
 
-$escaped = do_blocks( '<!-- wp:blockkit/icon {"icon":"core/star-filled","label":"\"><script>alert(1)</script>"} /-->' );
-blockkit_check( 'a hostile label cannot break out of the attribute', false === stripos( $escaped, '<script' ) );
+$escaped = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","label":"\"><script>alert(1)</script>"} /-->' );
+$check( 'a hostile label cannot break out of the attribute', false === stripos( $escaped, '<script' ) );
 
 // ---------------------------------------------------------------------
 echo "\nKit Text — visual presets\n";
 // ---------------------------------------------------------------------
-blockkit_check( 'blockkit/text registered', $registry->is_registered( 'blockkit/text' ) );
+$check( 'neura-blocks/text registered', $registry->is_registered( 'neura-blocks/text' ) );
 
-$out = do_blocks( '<!-- wp:blockkit/text {"styleAs":"caption","content":"Title"} /-->' );
+$out = do_blocks( '<!-- wp:neura-blocks/text {"styleAs":"caption","content":"Title"} /-->' );
 
-blockkit_check( 'renders a paragraph', false !== strpos( $out, '<p' ) );
-blockkit_check( 'visual preset applied as a class', false !== strpos( $out, 'has-style-caption' ) );
-blockkit_check( 'preset is a CLASS, not an inline font-size', false === strpos( $out, 'font-size:' ) );
+$check( 'renders a paragraph', false !== strpos( $out, '<p' ) );
+$check( 'visual preset applied as a class', false !== strpos( $out, 'has-style-caption' ) );
+$check( 'preset is a CLASS, not an inline font-size', false === strpos( $out, 'font-size:' ) );
 
-blockkit_check(
+$check(
 	'an unknown preset is dropped rather than emitted',
-	false === strpos( do_blocks( '<!-- wp:blockkit/text {"styleAs":"evil\" onmouseover=\"x","content":"X"} /-->' ), 'onmouseover' )
+	false === strpos( do_blocks( '<!-- wp:neura-blocks/text {"styleAs":"evil\" onmouseover=\"x","content":"X"} /-->' ), 'onmouseover' )
 );
-blockkit_check(
+$check(
 	'and leaves no orphan class behind',
-	false === strpos( do_blocks( '<!-- wp:blockkit/text {"styleAs":"nonsense","content":"X"} /-->' ), 'has-style-' )
+	false === strpos( do_blocks( '<!-- wp:neura-blocks/text {"styleAs":"nonsense","content":"X"} /-->' ), 'has-style-' )
 );
 
 /*
@@ -276,9 +273,9 @@ blockkit_check(
  * lands in an ELEMENT POSITION and becomes an XSS boundary, and this check
  * failing is the reminder to validate it against an allow-list.
  */
-$out = do_blocks( '<!-- wp:blockkit/text {"tagName":"script","content":"X"} /-->' );
+$out = do_blocks( '<!-- wp:neura-blocks/text {"tagName":"script","content":"X"} /-->' );
 
-blockkit_check( 'a stray tagName attribute is ignored entirely', false === stripos( $out, '<script' ) && false !== strpos( $out, '<p' ) );
+$check( 'a stray tagName attribute is ignored entirely', false === stripos( $out, '<script' ) && false !== strpos( $out, '<p' ) );
 
 // ---------------------------------------------------------------------
 // ---------------------------------------------------------------------
@@ -300,7 +297,7 @@ echo "\nKit Text — content survives a save/load round trip\n";
 $round_trip = serialize_blocks(
 	array(
 		array(
-			'blockName'    => 'blockkit/text',
+			'blockName'    => 'neura-blocks/text',
 			'attrs'        => array(
 				'content' => 'Round trip text',
 				'styleAs' => 'eyebrow',
@@ -312,15 +309,15 @@ $round_trip = serialize_blocks(
 	)
 );
 
-blockkit_check(
+$check(
 	'content is serialised into the block delimiter',
 	false !== strpos( $round_trip, 'Round trip text' )
 );
 
 $out = do_blocks( $round_trip );
 
-blockkit_check( 'content survives serialise -> parse -> render', false !== strpos( $out, 'Round trip text' ) );
-blockkit_check( 'styleAs survives the round trip', false !== strpos( $out, 'has-style-eyebrow' ) );
+$check( 'content survives serialise -> parse -> render', false !== strpos( $out, 'Round trip text' ) );
+$check( 'styleAs survives the round trip', false !== strpos( $out, 'has-style-eyebrow' ) );
 
 /*
  * And the same thing through a real post and the_content, because that is the
@@ -328,7 +325,7 @@ blockkit_check( 'styleAs survives the round trip', false !== strpos( $out, 'has-
  */
 $probe_id = wp_insert_post(
 	array(
-		'post_title'   => 'BlockKit integration probe',
+		'post_title'   => 'NeuraBlocks integration probe',
 		'post_status'  => 'publish',
 		'post_type'    => 'post',
 		'post_content' => $round_trip,
@@ -339,43 +336,43 @@ if ( $probe_id && ! is_wp_error( $probe_id ) ) {
 	$probe_post = get_post( $probe_id );
 	$front_end  = apply_filters( 'the_content', $probe_post->post_content );
 
-	blockkit_check( 'content is visible through the_content on a real post', false !== strpos( $front_end, 'Round trip text' ) );
+	$check( 'content is visible through the_content on a real post', false !== strpos( $front_end, 'Round trip text' ) );
 
 	wp_delete_post( $probe_id, true );
 } else {
-	blockkit_check( 'could create a probe post', false );
+	$check( 'could create a probe post', false );
 }
 
 // ---------------------------------------------------------------------
 echo "\nEdge cases\n";
 // ---------------------------------------------------------------------
-blockkit_check(
+$check(
 	'empty label renders nothing at all',
-	'' === trim( do_blocks( '<!-- wp:blockkit/button {"text":"  "} /-->' ) )
+	'' === trim( do_blocks( '<!-- wp:neura-blocks/button {"text":"  "} /-->' ) )
 );
-blockkit_check(
+$check(
 	'empty container renders nothing at all',
-	'' === trim( do_blocks( '<!-- wp:blockkit/buttons --><!-- /wp:blockkit/buttons -->' ) )
+	'' === trim( do_blocks( '<!-- wp:neura-blocks/buttons --><!-- /wp:neura-blocks/buttons -->' ) )
 );
-blockkit_check(
+$check(
 	'empty text renders nothing at all',
-	'' === trim( do_blocks( '<!-- wp:blockkit/text {"content":"  "} /-->' ) )
+	'' === trim( do_blocks( '<!-- wp:neura-blocks/text {"content":"  "} /-->' ) )
 );
 
 // ---------------------------------------------------------------------
 echo "\nPHP notices from plugin files\n";
 // ---------------------------------------------------------------------
-$notices = array_unique( $GLOBALS['blockkit_notices'] );
+$notices = array_unique( $GLOBALS['plugin_notices'] );
 
-blockkit_check( 'no notices, warnings or deprecations', empty( $notices ) );
+$check( 'no notices, warnings or deprecations', empty( $notices ) );
 
 foreach ( $notices as $notice ) {
 	printf( "        %s\n", $notice );
 }
 
 // ---------------------------------------------------------------------
-printf( "\n%d passed, %d failed\n\n", $GLOBALS['blockkit_pass'], $GLOBALS['blockkit_fail'] );
+printf( "\n%d passed, %d failed\n\n", $passed, $failed );
 
-if ( $GLOBALS['blockkit_fail'] > 0 ) {
+if ( $failed > 0 ) {
 	exit( 1 );
 }

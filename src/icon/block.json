@@ -1,10 +1,10 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "blockkit/icon",
+	"name": "neura-blocks/icon",
 	"version": "0.0.1",
 	"title": "Kit Icon",
-	"category": "blockkit",
+	"category": "neura-blocks",
 	"icon": "star-filled",
 	"description": "An SVG icon from the WordPress icon library, with flip and rotation controls.",
 	"keywords": [
@@ -12,7 +12,7 @@
 		"symbol",
 		"graphic"
 	],
-	"textdomain": "blockkit",
+	"textdomain": "neura-blocks",
 	"attributes": {
 		"icon": {
 			"type": "string",

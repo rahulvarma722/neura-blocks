@@ -2,16 +2,16 @@
 /**
  * Unit tests for the shared render helpers.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
-namespace BlockKit\Tests\Unit;
+namespace NeuraBlocks\Tests\Unit;
 
-use BlockKit\Block\Render as Block_Render;
+use NeuraBlocks\Block\Render as Block_Render;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \BlockKit\Block\Render
+ * @covers \NeuraBlocks\Block\Render
  */
 final class BlockRenderTest extends TestCase {
 
@@ -94,16 +94,16 @@ final class BlockRenderTest extends TestCase {
 	public function test_responsive_pairs_class_with_css() {
 		$result = Block_Render::responsive(
 			array(
-				'blockkit' => array( 'width' => '200px' ),
-				'@mobile'  => array( 'blockkit' => array( 'width' => '100%' ) ),
+				'neura-blocks' => array( 'width' => '200px' ),
+				'@mobile'  => array( 'neura-blocks' => array( 'width' => '100%' ) ),
 			),
-			'blockkit',
+			'neura-blocks',
 			array( 'width' => 'width' ),
-			'blockkit-btn-'
+			'neura-blocks-btn-'
 		);
 
-		$this->assertStringStartsWith( 'blockkit-btn-', $result['class'] );
-		$this->assertSame( 8, strlen( $result['class'] ) - strlen( 'blockkit-btn-' ), 'class carries an 8-char hash' );
+		$this->assertStringStartsWith( 'neura-blocks-btn-', $result['class'] );
+		$this->assertSame( 8, strlen( $result['class'] ) - strlen( 'neura-blocks-btn-' ), 'class carries an 8-char hash' );
 		$this->assertStringContainsString( '.' . $result['class'], $result['css'], 'CSS is scoped to the class' );
 		$this->assertStringContainsString( '200px', $result['css'] );
 		$this->assertStringContainsString( '100%', $result['css'] );
@@ -116,12 +116,12 @@ final class BlockRenderTest extends TestCase {
 	 * @return void
 	 */
 	public function test_responsive_hash_is_value_derived() {
-		$style = array( 'blockkit' => array( 'width' => '200px' ) );
+		$style = array( 'neura-blocks' => array( 'width' => '200px' ) );
 		$props = array( 'width' => 'width' );
 
-		$a = Block_Render::responsive( $style, 'blockkit', $props, 'blockkit-' );
-		$b = Block_Render::responsive( $style, 'blockkit', $props, 'blockkit-' );
-		$c = Block_Render::responsive( array( 'blockkit' => array( 'width' => '201px' ) ), 'blockkit', $props, 'blockkit-' );
+		$a = Block_Render::responsive( $style, 'neura-blocks', $props, 'neura-blocks-' );
+		$b = Block_Render::responsive( $style, 'neura-blocks', $props, 'neura-blocks-' );
+		$c = Block_Render::responsive( array( 'neura-blocks' => array( 'width' => '201px' ) ), 'neura-blocks', $props, 'neura-blocks-' );
 
 		$this->assertSame( $a['class'], $b['class'], 'same values, same class' );
 		$this->assertNotSame( $a['class'], $c['class'], 'different values, different class' );
@@ -137,10 +137,10 @@ final class BlockRenderTest extends TestCase {
 	 */
 	public function test_responsive_drops_class_when_no_css_survives() {
 		$result = Block_Render::responsive(
-			array( 'blockkit' => array( 'width' => 'expression(alert(1))' ) ),
-			'blockkit',
+			array( 'neura-blocks' => array( 'width' => 'expression(alert(1))' ) ),
+			'neura-blocks',
 			array( 'width' => 'width' ),
-			'blockkit-'
+			'neura-blocks-'
 		);
 
 		$this->assertSame( '', $result['class'] );
@@ -154,7 +154,7 @@ final class BlockRenderTest extends TestCase {
 	 */
 	public function test_responsive_is_empty_when_unset() {
 		foreach ( array( array(), 'nope', null ) as $style ) {
-			$result = Block_Render::responsive( $style, 'blockkit', array( 'width' => 'width' ), 'blockkit-' );
+			$result = Block_Render::responsive( $style, 'neura-blocks', array( 'width' => 'width' ), 'neura-blocks-' );
 			$this->assertSame( array( 'class' => '', 'css' => '' ), $result );
 		}
 	}

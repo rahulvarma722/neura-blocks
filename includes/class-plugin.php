@@ -2,12 +2,12 @@
 /**
  * Plugin bootstrap and module registry.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
-namespace BlockKit;
+namespace NeuraBlocks;
 
-use BlockKit\Block\Registrar;
+use NeuraBlocks\Block\Registrar;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -83,7 +83,7 @@ final class Plugin {
 		 *
 		 * @param string[] $modules Fully-qualified class names implementing Module.
 		 */
-		$modules = apply_filters( BLOCKKIT_SLUG . '_modules', self::MODULES );
+		$modules = apply_filters( NEURA_BLOCKS_SLUG . '_modules', self::MODULES );
 
 		return is_array( $modules ) ? $modules : self::MODULES;
 	}
@@ -129,8 +129,8 @@ final class Plugin {
 	 * just-in-time, keyed on the plugin slug, the first time a translation
 	 * function runs. Calling it by hand is redundant and Plugin Check flags it
 	 * (`DiscouragedFunctions.load_plugin_textdomainFound`). The text domain
-	 * still has to match the folder slug for that to work — see BLOCKKIT_SLUG
-	 * in blockkit.php.
+	 * still has to match the folder slug for that to work — see NEURA_BLOCKS_SLUG
+	 * in neura-blocks.php.
 	 *
 	 * JavaScript strings are a separate mechanism and DO need wiring up:
 	 * see Blocks::set_script_translations().

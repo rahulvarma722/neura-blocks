@@ -2,12 +2,12 @@
 /**
  * Block registration.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
-namespace BlockKit\Block;
+namespace NeuraBlocks\Block;
 
-use BlockKit\Module;
+use NeuraBlocks\Module;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -43,7 +43,7 @@ final class Registrar implements Module {
 	 * @return void
 	 */
 	public function register_blocks() {
-		$build_dir = BLOCKKIT_PATH . 'build';
+		$build_dir = NEURA_BLOCKS_PATH . 'build';
 
 		if ( ! is_dir( $build_dir ) ) {
 			return;
@@ -73,7 +73,7 @@ final class Registrar implements Module {
 	 * what translation set is installed.
 	 *
 	 * The handle is read back off the registered type rather than rebuilt as
-	 * `blockkit-button-editor-script`, because that naming is core's private
+	 * `neura-blocks-button-editor-script`, because that naming is core's private
 	 * business (`generate_block_asset_handle()`) and blocks are discovered by
 	 * scanning, so nothing here knows the block names up front anyway.
 	 *
@@ -94,7 +94,7 @@ final class Registrar implements Module {
 			 * bundled languages/ directory instead would mean shipping an empty
 			 * folder and missing the translations that actually exist.
 			 */
-			wp_set_script_translations( $handle, BLOCKKIT_SLUG );
+			wp_set_script_translations( $handle, NEURA_BLOCKS_SLUG );
 		}
 	}
 
@@ -109,7 +109,7 @@ final class Registrar implements Module {
 	 */
 	public function register_category( $categories ) {
 		foreach ( $categories as $category ) {
-			if ( isset( $category['slug'] ) && BLOCKKIT_SLUG === $category['slug'] ) {
+			if ( isset( $category['slug'] ) && NEURA_BLOCKS_SLUG === $category['slug'] ) {
 				return $categories;
 			}
 		}
@@ -117,8 +117,8 @@ final class Registrar implements Module {
 		return array_merge(
 			array(
 				array(
-					'slug'  => BLOCKKIT_SLUG,
-					'title' => __( 'BlockKit', 'blockkit' ),
+					'slug'  => NEURA_BLOCKS_SLUG,
+					'title' => __( 'Neura Blocks', 'neura-blocks' ),
 					'icon'  => null,
 				),
 			),

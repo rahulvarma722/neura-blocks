@@ -19,28 +19,33 @@
  * `get_block_wrapper_attributes()` merging classes — those are verified in
  * tests/integration/ against a real WordPress.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
 define( 'ABSPATH', __DIR__ . '/' );
-define( 'BLOCKKIT_PATH', dirname( __DIR__, 2 ) . '/' );
+define( 'NEURA_BLOCKS_PATH', dirname( __DIR__, 2 ) . '/' );
 
 /*
  * Slug and version are READ FROM THE SOURCE, not restated here.
+ *
+ * NOTE the variable names below are deliberately slug-independent. Naming a PHP
+ * variable after the lowercase slug breaks bin/rename.sh the moment a new slug
+ * contains a hyphen — `$my-plugin_main` is not a valid variable. Identifiers use
+ * the CONST-style prefix or a neutral name; only strings use the slug.
  *
  * They were hardcoded, which made this file a third place the version lives —
  * and the one nobody would remember to update, since the release gate only
  * compares the plugin header, the constant and readme.txt. A stale value here
  * would have made BlockContractTest assert the wrong version and pass.
  */
-$blockkit_main = glob( BLOCKKIT_PATH . '*.php' );
-$blockkit_main = $blockkit_main ? (string) file_get_contents( $blockkit_main[0] ) : '';
+$main_file = glob( NEURA_BLOCKS_PATH . '*.php' );
+$main_file = $main_file ? (string) file_get_contents( $main_file[0] ) : '';
 
-preg_match( "/define\\(\\s*'([A-Z_]+)_SLUG',\\s*'([a-z0-9-]+)'/", $blockkit_main, $blockkit_slug );
-preg_match( '/^\\s*\\*\\s*Version:\\s*(.+)$/m', $blockkit_main, $blockkit_version );
+preg_match( "/define\\(\\s*'([A-Z_]+)_SLUG',\\s*'([a-z0-9-]+)'/", $main_file, $slug_match );
+preg_match( '/^\\s*\\*\\s*Version:\\s*(.+)$/m', $main_file, $version_match );
 
-define( 'BLOCKKIT_SLUG', isset( $blockkit_slug[2] ) ? $blockkit_slug[2] : 'blockkit' );
-define( 'BLOCKKIT_VERSION', isset( $blockkit_version[1] ) ? trim( $blockkit_version[1] ) : '0.0.0' );
+define( 'NEURA_BLOCKS_SLUG', isset( $slug_match[2] ) ? $slug_match[2] : 'neura-blocks' );
+define( 'NEURA_BLOCKS_VERSION', isset( $version_match[1] ) ? trim( $version_match[1] ) : '0.0.0' );
 
 if ( ! function_exists( 'wp_json_encode' ) ) {
 	/**
@@ -79,6 +84,6 @@ if ( ! function_exists( 'wp_get_global_settings' ) ) {
 	}
 }
 
-require_once BLOCKKIT_PATH . 'includes/class-autoloader.php';
+require_once NEURA_BLOCKS_PATH . 'includes/class-autoloader.php';
 
-BlockKit\Autoloader::register();
+NeuraBlocks\Autoloader::register();

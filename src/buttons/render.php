@@ -1,6 +1,6 @@
 <?php
 /**
- * Front-end markup for blockkit/buttons.
+ * Front-end markup for neura-blocks/buttons.
  *
  * A container: the only job is to emit the wrapper and print whatever
  * the inner blocks rendered. Layout classes (the flex container and its
@@ -8,7 +8,7 @@
  * render_block filter, after this file runs — there is nothing to do
  * here for them.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  *
  * @var array    $attributes Block attributes.
  * @var string   $content    Rendered inner blocks.
@@ -38,7 +38,7 @@ defined( 'ABSPATH' ) || exit;
  * through that closure, so it assumes global scope. Core's own block
  * templates trip the same sniff for the same reason.
  *
- * Prefixing these to `$blockkit_text`, `$blockkit_url` and so on would satisfy
+ * Prefixing these to ``$myplugin_text`, `$myplugin_url` and so on would satisfy
  * the sniff while making the file harder to read and implying a lifetime these
  * variables do not have. Disabled at file level instead, since it applies to
  * every line rather than to any one of them.

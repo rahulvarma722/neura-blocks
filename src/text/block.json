@@ -1,10 +1,10 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "blockkit/text",
+	"name": "neura-blocks/text",
 	"version": "0.0.1",
 	"title": "Kit Text",
-	"category": "blockkit",
+	"category": "neura-blocks",
 	"icon": "editor-textcolor",
 	"description": "Text with a visual style chosen independently of the theme\u2019s default sizing.",
 	"keywords": [
@@ -13,7 +13,7 @@
 		"typography",
 		"style"
 	],
-	"textdomain": "blockkit",
+	"textdomain": "neura-blocks",
 	"attributes": {
 		"content": {
 			"type": "string",

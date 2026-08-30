@@ -1,16 +1,16 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "blockkit/buttons",
+	"name": "neura-blocks/buttons",
 	"version": "0.0.1",
 	"title": "Buttons",
-	"category": "blockkit",
+	"category": "neura-blocks",
 	"icon": "button",
 	"description": "Prompt visitors to take action with a group of button-style links.",
 	"keywords": [ "link", "button" ],
-	"textdomain": "blockkit",
+	"textdomain": "neura-blocks",
 
-	"allowedBlocks": [ "blockkit/button" ],
+	"allowedBlocks": [ "neura-blocks/button" ],
 
 	"supports": {
 		"html": false,

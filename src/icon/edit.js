@@ -84,10 +84,10 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	const modal = isPickerOpen && (
 		<Modal
-			title={ __( 'Icon library', 'blockkit' ) }
+			title={ __( 'Icon library', 'neura-blocks' ) }
 			onRequestClose={ () => setIsPickerOpen( false ) }
 			size="medium"
-			className="blockkit-icon-picker__modal"
+			className="neura-blocks-icon-picker__modal"
 		>
 			<IconPicker value={ icon } onSelect={ choose } />
 		</Modal>
@@ -98,7 +98,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			<ToolbarGroup>
 				<ToolbarButton
 					icon="star-filled"
-					label={ __( 'Select an icon', 'blockkit' ) }
+					label={ __( 'Select an icon', 'neura-blocks' ) }
 					onClick={ () => setIsPickerOpen( true ) }
 					aria-haspopup="dialog"
 				/>
@@ -109,7 +109,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	const controls = (
 		<InspectorControls group="settings">
 			<ToolsPanel
-				label={ __( 'Icon', 'blockkit' ) }
+				label={ __( 'Icon', 'neura-blocks' ) }
 				resetAll={ () =>
 					setAttributes( {
 						isInline: false,
@@ -123,7 +123,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			>
 				<ToolsPanelItem
 					hasValue={ () => !! icon }
-					label={ __( 'Icon', 'blockkit' ) }
+					label={ __( 'Icon', 'neura-blocks' ) }
 					onDeselect={ () => setAttributes( { icon: '' } ) }
 					isShownByDefault
 					panelId={ clientId }
@@ -138,23 +138,23 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						{ selected
 							? sprintf(
 									/* translators: %s: the selected icon's name. */
-									__( 'Change icon: %s', 'blockkit' ),
+									__( 'Change icon: %s', 'neura-blocks' ),
 									selected.label || selected.name
 							  )
-							: __( 'Select an icon', 'blockkit' ) }
+							: __( 'Select an icon', 'neura-blocks' ) }
 					</Button>
 				</ToolsPanelItem>
 
 				<ToolsPanelItem
 					hasValue={ () => !! isInline }
-					label={ __( 'Inline', 'blockkit' ) }
+					label={ __( 'Inline', 'neura-blocks' ) }
 					onDeselect={ () => setAttributes( { isInline: false } ) }
 					isShownByDefault
 					panelId={ clientId }
 				>
 					<ToggleControl
 						__nextHasNoMarginBottom
-						label={ __( 'Display inline', 'blockkit' ) }
+						label={ __( 'Display inline', 'neura-blocks' ) }
 						checked={ !! isInline }
 						onChange={ ( value ) =>
 							setAttributes( { isInline: value } )
@@ -163,11 +163,11 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 							isInline
 								? __(
 										'The icon flows with surrounding text.',
-										'blockkit'
+										'neura-blocks'
 								  )
 								: __(
 										'The icon sits on its own line.',
-										'blockkit'
+										'neura-blocks'
 								  )
 						}
 					/>
@@ -175,7 +175,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 				<ToolsPanelItem
 					hasValue={ () => flipHorizontal || flipVertical }
-					label={ __( 'Flip', 'blockkit' ) }
+					label={ __( 'Flip', 'neura-blocks' ) }
 					onDeselect={ () =>
 						setAttributes( {
 							flipHorizontal: false,
@@ -187,7 +187,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				>
 					<ToggleControl
 						__nextHasNoMarginBottom
-						label={ __( 'Flip horizontally', 'blockkit' ) }
+						label={ __( 'Flip horizontally', 'neura-blocks' ) }
 						checked={ !! flipHorizontal }
 						onChange={ ( value ) =>
 							setAttributes( { flipHorizontal: value } )
@@ -195,7 +195,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					/>
 					<ToggleControl
 						__nextHasNoMarginBottom
-						label={ __( 'Flip vertically', 'blockkit' ) }
+						label={ __( 'Flip vertically', 'neura-blocks' ) }
 						checked={ !! flipVertical }
 						onChange={ ( value ) =>
 							setAttributes( { flipVertical: value } )
@@ -205,14 +205,14 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 				<ToolsPanelItem
 					hasValue={ () => !! rotation }
-					label={ __( 'Rotation', 'blockkit' ) }
+					label={ __( 'Rotation', 'neura-blocks' ) }
 					onDeselect={ () => setAttributes( { rotation: 0 } ) }
 					panelId={ clientId }
 				>
 					<RangeControl
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
-						label={ __( 'Rotation', 'blockkit' ) }
+						label={ __( 'Rotation', 'neura-blocks' ) }
 						value={ rotation }
 						onChange={ ( value ) =>
 							setAttributes( { rotation: value ?? 0 } )
@@ -236,21 +236,21 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 				<ToolsPanelItem
 					hasValue={ () => !! label }
-					label={ __( 'Alternative text', 'blockkit' ) }
+					label={ __( 'Alternative text', 'neura-blocks' ) }
 					onDeselect={ () => setAttributes( { label: '' } ) }
 					panelId={ clientId }
 				>
 					<TextControl
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
-						label={ __( 'Alternative text', 'blockkit' ) }
+						label={ __( 'Alternative text', 'neura-blocks' ) }
 						value={ label }
 						onChange={ ( value ) =>
 							setAttributes( { label: value } )
 						}
 						help={ __(
 							'Describe the icon only if it carries meaning of its own. Leave empty for decoration, and it will be hidden from screen readers.',
-							'blockkit'
+							'neura-blocks'
 						) }
 					/>
 				</ToolsPanelItem>
@@ -267,7 +267,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				<div { ...blockProps }>
 					<Placeholder
 						icon="star-filled"
-						label={ __( 'Kit Icon', 'blockkit' ) }
+						label={ __( 'Kit Icon', 'neura-blocks' ) }
 					>
 						<Spinner />
 					</Placeholder>
@@ -285,10 +285,10 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				<div { ...blockProps }>
 					<Placeholder
 						icon="star-filled"
-						label={ __( 'Kit Icon', 'blockkit' ) }
+						label={ __( 'Kit Icon', 'neura-blocks' ) }
 						instructions={ __(
 							'Choose an icon to get started.',
-							'blockkit'
+							'neura-blocks'
 						) }
 					>
 						<Button
@@ -297,7 +297,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 							onClick={ () => setIsPickerOpen( true ) }
 							aria-haspopup="dialog"
 						>
-							{ __( 'Browse the icon library', 'blockkit' ) }
+							{ __( 'Browse the icon library', 'neura-blocks' ) }
 						</Button>
 					</Placeholder>
 				</div>
@@ -321,7 +321,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				 * something the front end does not produce.
 				 */ }
 				<span
-					className="wp-block-blockkit-icon__svg"
+					className="wp-block-neura-blocks-icon__svg"
 					style={
 						rotation
 							? { rotate: `${ rotation % 360 }deg` }

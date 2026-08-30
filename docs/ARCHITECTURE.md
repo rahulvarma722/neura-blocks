@@ -3,9 +3,9 @@
 ## File layout
 
 ```
-blockkit.php                          plugin header, constants, boot
+neura-blocks.php                          plugin header, constants, boot
 includes/
-  class-autoloader.php                BlockKit\*  ->  includes/{class,interface,trait}-*.php
+  class-autoloader.php                NeuraBlocks\*  ->  includes/{class,interface,trait}-*.php
   interface-module.php                the contract every feature implements
   class-plugin.php                    module registry
   class-helper.php                    shared environment getters
@@ -14,8 +14,8 @@ includes/
     class-registrar.php               registration + category + JS translations  [Module]
     class-render.php                  shared render-template helpers
 src/
-  button/                             authored source for blockkit/button
-  buttons/                            authored source for blockkit/buttons
+  button/                             authored source for neura-blocks/button
+  buttons/                            authored source for neura-blocks/buttons
 build/                                wp-scripts output (gitignored, but SHIPPED)
 bin/
   build-zip.sh                        release gate + packaging
@@ -40,22 +40,22 @@ block API.** Not code that merely gets used by blocks.
 | `Helper` | no | Environment queries |
 | `Plugin`, `Autoloader`, `Module` | no | Plugin infrastructure |
 
-Two levels of nesting is the cap. `BlockKit\Blocks\Text\Presets\Sizes` is a
+Two levels of nesting is the cap. `NeuraBlocks\Blocks\Text\Presets\Sizes` is a
 directory tree pretending to be a design.
 
 ## Namespace and autoloading
 
-Everything except the main file lives under the `BlockKit` namespace and is
+Everything except the main file lives under the `NeuraBlocks` namespace and is
 loaded on demand.
 
 ```php
-BlockKit\Autoloader          includes/class-autoloader.php
-BlockKit\Module              includes/interface-module.php      <- interface-
-BlockKit\Plugin              includes/class-plugin.php
-BlockKit\Helper              includes/class-helper.php
-BlockKit\Block\Registrar     includes/block/class-registrar.php
-BlockKit\Block\Render        includes/block/class-render.php
-BlockKit\Responsive_Styles   includes/class-responsive-styles.php
+NeuraBlocks\Autoloader          includes/class-autoloader.php
+NeuraBlocks\Module              includes/interface-module.php      <- interface-
+NeuraBlocks\Plugin              includes/class-plugin.php
+NeuraBlocks\Helper              includes/class-helper.php
+NeuraBlocks\Block\Registrar     includes/block/class-registrar.php
+NeuraBlocks\Block\Render        includes/block/class-render.php
+NeuraBlocks\Responsive_Styles   includes/class-responsive-styles.php
 ```
 
 Three prefixes are tried in order — `class-`, `interface-`, `trait-` — because
@@ -66,7 +66,7 @@ the kind into every type name (`Module_Interface`, `I_Module`) forever.
 
 The mapping strips the namespace, lowercases the rest, turns `_` into `-`, and
 prefixes `class-`. Sub-namespaces become sub-directories, so
-`BlockKit\Block\Registrar` resolves to
+`NeuraBlocks\Block\Registrar` resolves to
 `includes/block/class-registrar.php` with no extra registration.
 
 ### Why not Composer's autoloader
@@ -85,32 +85,32 @@ dependency.
 
 **Global classes must be fully qualified.** Inside a namespace, an unqualified
 class name resolves *within that namespace* — there is no fallback to global.
-So `$x instanceof WP_Block_Type` inside `BlockKit\Block\Registrar` would test against
-`BlockKit\WP_Block_Type`, which does not exist, and silently evaluate false.
+So `$x instanceof WP_Block_Type` inside `NeuraBlocks\Block\Registrar` would test against
+`NeuraBlocks\WP_Block_Type`, which does not exist, and silently evaluate false.
 Core classes are written `\WP_Block_Type`, `\WP_Theme_JSON`.
 
 **Functions and constants do fall back.** Unqualified `add_action()`,
-`esc_html()`, `BLOCKKIT_PATH` and `ABSPATH` resolve to global if no namespaced
+`esc_html()`, `NEURA_BLOCKS_PATH` and `ABSPATH` resolve to global if no namespaced
 version exists, which is why they are left unqualified throughout.
 
 **`render.php` is a special case.** Core requires it from inside a closure in
 `wp-includes/blocks.php`, which is *global* scope regardless of where the file
 sits on disk. Every plugin class it uses is therefore written fully qualified,
-leading separator included: `\BlockKit\Responsive_Styles::build_css()`.
+leading separator included: `\NeuraBlocks\Responsive_Styles::build_css()`.
 
 ## Boot order
 
-`blockkit.php` stays in the global namespace, because a plugin's main file is
+`neura-blocks.php` stays in the global namespace, because a plugin's main file is
 also its header block and WordPress reads that by parsing the file rather than
 loading it.
 
 ```
 1.  Guard          defined( 'ABSPATH' ) || exit
-2.  Constants      BLOCKKIT_VERSION, BLOCKKIT_SLUG, BLOCKKIT_PATH
-                   BLOCKKIT_MIN_PHP, BLOCKKIT_MIN_WP
+2.  Constants      NEURA_BLOCKS_VERSION, NEURA_BLOCKS_SLUG, NEURA_BLOCKS_PATH
+                   NEURA_BLOCKS_MIN_PHP, NEURA_BLOCKS_MIN_WP
 3.  Autoloader     require + register — the only require in the file
-4.  Boot           BlockKit\Plugin::init()
-                     ├─ filter `blockkit_modules` (the extension point)
+4.  Boot           NeuraBlocks\Plugin::init()
+                     ├─ filter `neura-blocks_modules` (the extension point)
                      └─ for each module: new, then ->register()
                           └─ Block\Registrar: add_action( 'init', … )
                                      add_filter( 'block_categories_all', … )
@@ -140,10 +140,10 @@ is the only real check that the floor holds.
 
 | Constant | Purpose |
 |---|---|
-| `BLOCKKIT_VERSION` | Canonical version. `bin/build-zip.sh` refuses to package unless this, the `Version:` header and readme's `Stable tag` agree. |
-| `BLOCKKIT_SLUG` | Folder name, text domain, script handles, block category. |
-| `BLOCKKIT_PATH` | Absolute plugin path, used by the autoloader and block scan. |
-| `BLOCKKIT_MIN_PHP` / `BLOCKKIT_MIN_WP` | The declared floor, checked at load. |
+| `NEURA_BLOCKS_VERSION` | Canonical version. `bin/build-zip.sh` refuses to package unless this, the `Version:` header and readme's `Stable tag` agree. |
+| `NEURA_BLOCKS_SLUG` | Folder name, text domain, script handles, block category. |
+| `NEURA_BLOCKS_PATH` | Absolute plugin path, used by the autoloader and block scan. |
+| `NEURA_BLOCKS_MIN_PHP` / `NEURA_BLOCKS_MIN_WP` | The declared floor, checked at load. |
 
 There is deliberately **no** namespace constant — `register_block_type()` reads
 block names only from `block.json`, so a constant could only duplicate that
@@ -156,7 +156,7 @@ A list of what is enabled, not a place where behaviour accumulates. It
 instantiates each entry in `MODULES`, checks it implements `Module`, and calls
 `register()`.
 
-The list passes through a `blockkit_modules` filter first, and that is the
+The list passes through a `neura-blocks_modules` filter first, and that is the
 extension point the plugin is built around. A growing plugin acquires features
 faster than it acquires places to put them, and the usual failure is a bootstrap
 that becomes a wall of conditionals — `if ( $pro ) … if ( get_option( … ) ) …`.

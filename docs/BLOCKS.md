@@ -3,7 +3,7 @@
 Four blocks: an icon, a text block, and a container with its only permitted
 child.
 
-## Kit Icon — `blockkit/icon`
+## Kit Icon — `neura-blocks/icon`
 
 Built on **core's icon API**, new in WordPress 7.1, rather than a bundled icon
 set:
@@ -79,9 +79,9 @@ options in a listbox, and screen readers announce the two differently.
 ### Layout: block by default, inline on request
 
 ```css
-.wp-block-blockkit-icon           { display: block; line-height: 0; width: 1.5rem }
-.wp-block-blockkit-icon.is-inline { display: inline-block; vertical-align: middle }
-.wp-block-blockkit-icon.aligncenter { margin-inline: auto }
+.wp-block-neura-blocks-icon           { display: block; line-height: 0; width: 1.5rem }
+.wp-block-neura-blocks-icon.is-inline { display: inline-block; vertical-align: middle }
+.wp-block-neura-blocks-icon.aligncenter { margin-inline: auto }
 ```
 
 An icon is usually its own element — a feature bullet, a card badge, a
@@ -147,7 +147,7 @@ modulo 360, so a stored `720` emits nothing and `-90` becomes `270deg`.
 
 
 
-## Kit Text — `blockkit/text`
+## Kit Text — `neura-blocks/text`
 
 A paragraph with a **visual style preset** chosen independently of the theme's
 default sizing.
@@ -162,7 +162,7 @@ to a `clamp()` only when the theme declares none — and a theme can override th
 whole scale in one place. An inline `font-size` would beat the theme forever.
 
 ```html
-<p class="has-style-caption wp-block-blockkit-text">Section title</p>
+<p class="has-style-caption wp-block-neura-blocks-text">Section title</p>
 ```
 
 The value is validated against the same fixed list `style.scss` implements. An
@@ -175,7 +175,7 @@ A configurable HTML tag is **future scope**, and its absence is asserted rather
 than assumed:
 
 ```php
-blockkit_check( 'a stray tagName attribute is ignored entirely', … );
+neura-blocks_check( 'a stray tagName attribute is ignored entirely', … );
 ```
 
 When it returns, the validation belongs in `render.php` against an allow-list.
@@ -184,7 +184,7 @@ rather than a styling preference — `<script>` or `<iframe>` reaching that line
 would be exploitable. That test failing is the reminder.
 
 Removed along with it: the settings-backed vocabulary (`Text_Tags`,
-`Settings`), the `blockkit_text_tags` / `blockkit_enabled_text_tags` filters,
+`Settings`), the `neura-blocks_text_tags` / `neura-blocks_enabled_text_tags` filters,
 the PHP→JS bridge that carried the enabled list, and the heading-outline
 guardrail — which had nothing left to check once the level could not be chosen.
 
@@ -202,7 +202,7 @@ is the preset scale itself.
 Core stores it inside the block comment delimiter:
 
 ```html
-<!-- wp:blockkit/text {"content":"Hello","styleAs":"caption"} /-->
+<!-- wp:neura-blocks/text {"content":"Hello","styleAs":"caption"} /-->
 ```
 
 Declaring `"source": "rich-text"` instead — which is what `core/heading` and
@@ -229,18 +229,18 @@ two decisions belong together.
 A container and its only permitted child.
 
 ```
-blockkit/buttons   Kit Buttons   flex container, wide/full align, block gap
-  └─ blockkit/button   Kit Button   link or button, optional icon, per-viewport width
+neura-blocks/buttons   Kit Buttons   flex container, wide/full align, block gap
+  └─ neura-blocks/button   Kit Button   link or button, optional icon, per-viewport width
 ```
 
-`button` declares `"parent": [ "blockkit/buttons" ]`, so it cannot be inserted
-anywhere else; `buttons` declares `"allowedBlocks": [ "blockkit/button" ]`, so
+`button` declares `"parent": [ "neura-blocks/buttons" ]`, so it cannot be inserted
+anywhere else; `buttons` declares `"allowedBlocks": [ "neura-blocks/button" ]`, so
 nothing else can go inside. The container supplies the flex layout and gap the
 child expects, which is why neither is useful alone.
 
 ## Registration
 
-`BlockKit\Block\Registrar::register_blocks()` scans `build/*/` for `block.json` and registers
+`NeuraBlocks\Block\Registrar::register_blocks()` scans `build/*/` for `block.json` and registers
 each directory it finds. There is no array of block names anywhere.
 
 **It reads `build/`, not `src/`.** `wp-scripts` copies `block.json` and
@@ -280,7 +280,7 @@ the front-end markup comes entirely from `render.php`.
 **`buttons` — `save: () => <InnerBlocks.Content />`.** Also correct, and *not*
 `null`. It is tempting to return `null` for a block that renders in PHP, but
 for a **container** that is wrong: with no save output, core serialises the
-block as a self-closing comment — `<!-- wp:blockkit/buttons /-->` — and every
+block as a self-closing comment — `<!-- wp:neura-blocks/buttons /-->` — and every
 inner block is discarded at save time. The buttons vanish along with their
 text, URLs and styles, and nothing warns the user.
 
@@ -391,7 +391,7 @@ the icon disappears on save.
 ## Adding a block
 
 1. `mkdir src/my-block` with `block.json`, `index.js`, `edit.js`, `render.php`.
-2. Set `"name": "blockkit/my-block"` and `"category": "blockkit"`.
+2. Set `"name": "neura-blocks/my-block"` and `"category": "neura-blocks"`.
 3. Import the name from metadata — never write it as a literal:
    `registerBlockType( metadata.name, … )`.
 4. `npm run build`.

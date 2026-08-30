@@ -21,19 +21,19 @@ import { __ } from '@wordpress/i18n';
  */
 export const ICONS = {
 	arrow: {
-		label: __( 'Arrow', 'blockkit' ),
+		label: __( 'Arrow', 'neura-blocks' ),
 		path: 'M4 10h9.2l-3.6-3.6L11 5l6 5-6 5-1.4-1.4L13.2 10H4z',
 	},
 	chevron: {
-		label: __( 'Chevron', 'blockkit' ),
+		label: __( 'Chevron', 'neura-blocks' ),
 		path: 'M7.5 4.5L13 10l-5.5 5.5L6 14l4-4-4-4z',
 	},
 	download: {
-		label: __( 'Download', 'blockkit' ),
+		label: __( 'Download', 'neura-blocks' ),
 		path: 'M9 3h2v7h3l-4 5-4-5h3zM4 16h12v2H4z',
 	},
 	external: {
-		label: __( 'External', 'blockkit' ),
+		label: __( 'External', 'neura-blocks' ),
 		path: 'M11 3h6v6h-2V6.4l-6.3 6.3-1.4-1.4L13.6 5H11zM4 6h4v2H6v6h6v-2h2v4H4z',
 	},
 };
@@ -44,7 +44,7 @@ export const ICONS = {
  * @type {Array<{label: string, value: string}>}
  */
 export const ICON_OPTIONS = [
-	{ label: __( 'None', 'blockkit' ), value: '' },
+	{ label: __( 'None', 'neura-blocks' ), value: '' },
 	...Object.entries( ICONS ).map( ( [ value, { label } ] ) => ( {
 		label,
 		value,
@@ -69,7 +69,7 @@ export const ButtonIcon = ( { icon } ) => {
 
 	return (
 		<svg
-			className="wp-block-blockkit-button__icon"
+			className="wp-block-neura-blocks-button__icon"
 			viewBox="0 0 20 20"
 			xmlns="http://www.w3.org/2000/svg"
 			fill="currentColor"

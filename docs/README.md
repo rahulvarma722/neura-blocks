@@ -1,4 +1,4 @@
-# BlockKit — developer documentation
+# Neura Blocks — developer documentation
 
 A Gutenberg block collection built on the WordPress 7.1 block API. Two blocks,
 a container and its child, whose distinguishing feature is genuinely
@@ -20,9 +20,9 @@ own.
 ## The 60-second version
 
 ```
-blockkit.php              header + constants + boot (GLOBAL namespace)
-  └─ includes/            everything else, namespace BlockKit
-       class-autoloader.php        BlockKit\* -> includes/class-*.php
+neura-blocks.php              header + constants + boot (GLOBAL namespace)
+  └─ includes/            everything else, namespace NeuraBlocks
+       class-autoloader.php        NeuraBlocks\* -> includes/class-*.php
        class-plugin.php            module registry: a list of what is enabled
        class-helper.php            environment getters (breakpoints, paths)
        class-responsive-styles.php turns per-viewport values into CSS
@@ -42,18 +42,18 @@ Two facts explain most of the surprising decisions in this codebase:
    plugin does anything at all.
 
 2. **Per-viewport values live inside core's `style` attribute** under a
-   namespaced key, not in attributes of our own. That is what makes a BlockKit
+   namespaced key, not in attributes of our own. That is what makes a Neura Blocks
    control behave like a core one — same breakpoints, same state model, same
    reset behaviour — and it is why `render.php` has to generate the CSS itself.
 
 ## Conventions
 
 - **PHP** — WordPress-Extra + WordPress-Docs, enforced by `composer lint`.
-  Namespaced `BlockKit\*`, autoloaded, no global functions or classes added.
+  Namespaced `NeuraBlocks\*`, autoloaded, no global functions or classes added.
 - **JS/CSS** — `@wordpress/scripts` defaults, enforced by `npm run lint:js` and
   `npm run lint:css`.
 - **No literals for identity.** Block names come from `block.json`, option keys
-  and handles from `BLOCKKIT_SLUG`. See [Renaming](RENAMING.md) for why.
+  and handles from `NEURA_BLOCKS_SLUG`. See [Renaming](RENAMING.md) for why.
 - **Comments explain *why*.** The what is readable from the code; the reason a
   non-obvious choice was made is not, and this codebase leans on core
   internals often enough that the reason matters.

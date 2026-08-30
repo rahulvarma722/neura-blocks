@@ -2,12 +2,12 @@
 /**
  * Shared helpers for block render templates.
  *
- * @package BlockKit
+ * @package NeuraBlocks
  */
 
-namespace BlockKit\Block;
+namespace NeuraBlocks\Block;
 
-use BlockKit\Responsive_Styles;
+use NeuraBlocks\Responsive_Styles;
 
 defined( 'ABSPATH' ) || exit;
 
