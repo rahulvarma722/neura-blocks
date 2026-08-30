@@ -224,12 +224,12 @@ and `the_content`.
 If this block ever gains a real `save()`, `source` should come back with it. The
 two decisions belong together.
 
-## Kit Buttons and Kit Button
+## Buttons and Kit Button
 
 A container and its only permitted child.
 
 ```
-neura-blocks/buttons   Kit Buttons   flex container, wide/full align, block gap
+neura-blocks/buttons   Buttons       flex container, wide/full align, block gap
   └─ neura-blocks/button   Kit Button   link or button, optional icon, per-viewport width
 ```
 
@@ -271,8 +271,8 @@ src/buttons/
 
 ## The save/render split — the trap worth knowing
 
-Both blocks render server-side from `render.php`. But their `save` functions
-differ, and getting it wrong is silent and destructive.
+`button` and `buttons` both render server-side from `render.php`. But their
+`save` functions differ, and getting it wrong is silent and destructive.
 
 **`button` — `save: () => null`.** Correct. Nothing is written to post content;
 the front-end markup comes entirely from `render.php`.
@@ -293,7 +293,7 @@ block needs — `render.php` supplies the wrapping `div` itself.
 
 ## `render.php`
 
-Both files carry a file-level `phpcs:disable
+All four render templates carry a file-level `phpcs:disable
 WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound`. The
 variables are *not* global: core wraps render templates in a static closure and
 requires them from inside it (`wp-includes/blocks.php:629-631`), so every

@@ -21,7 +21,7 @@ reimplemented. What Neura Blocks adds is the part core leaves out.
 
 * **Kit Icon** — an SVG icon from the WordPress icon library, with flip, free rotation and a proper decorative/meaningful accessibility choice.
 * **Kit Text** — a paragraph with a visual style preset: Display, H1–H6, Lead, Body, Caption or Eyebrow, chosen independently of the theme's default paragraph sizing.
-* **Kit Buttons** — a flex container for one or more buttons, with block gap, padding and wide/full alignment.
+* **Buttons** — a flex container for one or more buttons, with block gap, padding and wide/full alignment.
 * **Kit Button** — a button-style link with an optional icon, and per-viewport width and icon size.
 
 = Built on the WordPress icon library =
@@ -55,8 +55,9 @@ core has no support for, it stores the value inside core's own `style` attribute
 under a namespaced key, in core's viewport-state shape, and generates the CSS
 using core's media queries:
 
-`style.neura-blocks.textWrap` for the base layer, `style.@tablet.neura-blocks.textWrap`
-and `style.@mobile.neura-blocks.textWrap` for the overrides.
+`style.neura-blocks.width` for the base layer, `style.@tablet.neura-blocks.width`
+and `style.@mobile.neura-blocks.width` for the overrides. Icon size uses the
+same shape under `iconSize`.
 
 The breakpoints come from `WP_Theme_JSON::get_viewport_media_queries()`, which
 reads `settings.viewport` from theme.json. Change your breakpoints there and
@@ -94,7 +95,7 @@ To build from source: `npm install && npm run build`.
 
 1. Upload the plugin through **Plugins > Add New**, or extract the ZIP into `wp-content/plugins/`.
 2. Activate **Neura Blocks** through the **Plugins** menu.
-3. In the editor, insert **Kit Buttons** from the **Neura Blocks** category in the block inserter.
+3. In the editor, insert **Buttons** from the **Neura Blocks** category in the block inserter.
 4. Select a button and open the **Styles** tab to find **Custom Width** and **Icon Size**.
 
 To set a per-viewport value, switch the editor preview to Tablet or Mobile with
@@ -126,7 +127,7 @@ Mobile fall back to your Desktop value rather than to your Tablet value.
 = Can I use these buttons inside core's Buttons block? =
 
 No. Kit Button declares `neura-blocks/buttons` as its parent, so it can only be
-inserted into a Kit Buttons container. The container supplies the flex layout and
+inserted into a Buttons container. The container supplies the flex layout and
 block gap the button expects.
 
 = Does it work with Full Site Editing and template parts? =
@@ -137,11 +138,11 @@ late — in a widget, a template part, or a REST-rendered preview.
 
 = Does it add any front-end JavaScript? =
 
-No. Both blocks render server-side in PHP and ship no front-end script.
+No. Every block renders server-side in PHP and ships no front-end script.
 
 == Screenshots ==
 
-1. A Kit Buttons container with two Kit Buttons, one with an arrow icon.
+1. A Buttons container holding two Kit Button blocks, one with an arrow icon.
 2. The Custom Width and Icon Size controls in the Styles tab.
 3. Editing a Mobile-only width with Responsive styles enabled.
 4. The Neura Blocks category in the block inserter.
@@ -150,7 +151,7 @@ No. Both blocks render server-side in PHP and ship no front-end script.
 
 = 0.0.1 =
 * Initial release.
-* Kit Buttons container block with flex layout, block gap, padding and wide/full alignment.
+* Buttons container block with flex layout, block gap, padding and wide/full alignment.
 * Kit Button block with link controls, four icons, and left/right icon position.
 * Per-viewport Custom Width and Icon Size using WordPress 7.1 style states and core's viewport media queries.
 

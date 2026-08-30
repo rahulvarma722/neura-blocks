@@ -345,7 +345,7 @@ cd wp-content/plugins/neura-blocks
 npm run build          # or: npm run start   for watch mode
 ```
 
-Then in the editor: insert **Kit Buttons**, select the inner **Kit Button**.
+Then in the editor: insert **Buttons**, select the inner **Kit Button**.
 
 | # | Steps | Expect |
 |---|---|---|

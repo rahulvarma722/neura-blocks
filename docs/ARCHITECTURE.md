@@ -252,5 +252,5 @@ Worth stating, because their absence is deliberate and a reviewer will check:
 - No database queries, no `$wpdb`.
 - No AJAX handlers, no REST routes — so no nonces to verify.
 - No external HTTP requests, no tracking, no update checker.
-- No front-end JavaScript. Both blocks render server-side.
+- No front-end JavaScript. Every block renders server-side.
 - No bundled copies of libraries WordPress already ships.

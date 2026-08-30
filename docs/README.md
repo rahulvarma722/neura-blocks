@@ -1,9 +1,11 @@
 # Neura Blocks — developer documentation
 
-A Gutenberg block collection built on the WordPress 7.1 block API. Two blocks,
-a container and its child, whose distinguishing feature is genuinely
-per-viewport styling that uses core's own breakpoints rather than inventing its
-own.
+A Gutenberg block collection built on the WordPress 7.1 block API. Four blocks:
+a buttons container and its child, an icon, and a text block. Core 7.1 already
+emits per-viewport CSS for its own style paths, so the plugin inherits that
+rather than reimplementing it; what it adds is per-viewport support for
+properties core has no support for, stored in core's own `style` attribute
+under a namespaced key and generated with core's breakpoints.
 
 ## Where to start
 
