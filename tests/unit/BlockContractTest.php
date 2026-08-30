@@ -83,7 +83,7 @@ final class BlockContractTest extends TestCase {
 	/**
 	 * `source` on an attribute requires a save() that writes markup.
 	 *
-	 * THE BUG THIS ENCODES. Kit Text declared
+	 * THE BUG THIS ENCODES. The Text block declared
 	 * `"content": { "source": "rich-text" }` alongside `save: () => null`.
 	 * `source` tells core to parse the value back out of the SAVED MARKUP;
 	 * returning null writes none, so the text was stored nowhere, read back

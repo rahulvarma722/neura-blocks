@@ -3,7 +3,7 @@
 	"apiVersion": 3,
 	"name": "neura-blocks/button",
 	"version": "0.0.1",
-	"title": "Kit Button",
+	"title": "Button",
 	"category": "neura-blocks",
 	"icon": "button",
 	"description": "Prompt visitors to take action with a button-style link.",

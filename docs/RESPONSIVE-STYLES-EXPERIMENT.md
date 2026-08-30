@@ -2,7 +2,7 @@
 
 > **What this is.** Neura Blocks is a scratch plugin for probing WordPress 7.1's
 > responsive-styles behaviour from the outside — as a third-party plugin, with no
-> private APIs and no core patches. The **Kit Button** block carries a custom
+> private APIs and no core patches. The **Button** block carries a custom
 > per-viewport attribute end to end so the mechanism can be watched rather than
 > guessed at.
 >
@@ -50,7 +50,7 @@ writing to the wrong layer.
 
 ## 2. What was built
 
-`neura-blocks/button` ("Kit Button") gained one custom attribute — **Custom Width** —
+`neura-blocks/button` ("Button") gained one custom attribute — **Custom Width** —
 with no core support behind it, so every part of the pipeline is ours to write:
 
 ```
@@ -345,7 +345,7 @@ cd wp-content/plugins/neura-blocks
 npm run build          # or: npm run start   for watch mode
 ```
 
-Then in the editor: insert **Buttons**, select the inner **Kit Button**.
+Then in the editor: insert **Buttons**, select the inner **Button**.
 
 | # | Steps | Expect |
 |---|---|---|

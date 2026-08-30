@@ -1,5 +1,5 @@
 /**
- * Kit Text — editor.
+ * Text — editor.
  */
 
 import { __ } from '@wordpress/i18n';

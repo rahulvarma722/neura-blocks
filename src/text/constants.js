@@ -1,5 +1,5 @@
 /**
- * Kit Text — shared constants.
+ * Text — shared constants.
  */
 
 import { __ } from '@wordpress/i18n';

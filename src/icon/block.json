@@ -3,7 +3,7 @@
 	"apiVersion": 3,
 	"name": "neura-blocks/icon",
 	"version": "0.0.1",
-	"title": "Kit Icon",
+	"title": "Icon",
 	"category": "neura-blocks",
 	"icon": "star-filled",
 	"description": "An SVG icon from the WordPress icon library, with flip and rotation controls.",

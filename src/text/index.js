@@ -1,5 +1,5 @@
 /**
- * Kit Text — block registration.
+ * Text — block registration.
  */
 
 import { registerBlockType } from '@wordpress/blocks';

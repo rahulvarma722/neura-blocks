@@ -3,7 +3,7 @@
 Four blocks: an icon, a text block, and a container with its only permitted
 child.
 
-## Kit Icon — `neura-blocks/icon`
+## Icon — `neura-blocks/icon`
 
 Built on **core's icon API**, new in WordPress 7.1, rather than a bundled icon
 set:
@@ -37,7 +37,7 @@ unregistered or hostile name **cannot produce markup**. Verified for six cases
 tag, and empty — all of which render nothing.
 
 That is why `render.php` has no allow-list here, unlike the tag name in an
-earlier version of Kit Text: there, the value landed in an element position and
+earlier version of the Text block: there, the value landed in an element position and
 had to be validated; here, core resolves it or refuses.
 
 ### The picker
@@ -147,7 +147,7 @@ modulo 360, so a stored `720` emits nothing and `-90` becomes `270deg`.
 
 
 
-## Kit Text — `neura-blocks/text`
+## Text — `neura-blocks/text`
 
 A paragraph with a **visual style preset** chosen independently of the theme's
 default sizing.
@@ -224,13 +224,13 @@ and `the_content`.
 If this block ever gains a real `save()`, `source` should come back with it. The
 two decisions belong together.
 
-## Buttons and Kit Button
+## Buttons and Button
 
 A container and its only permitted child.
 
 ```
 neura-blocks/buttons   Buttons       flex container, wide/full align, block gap
-  └─ neura-blocks/button   Kit Button   link or button, optional icon, per-viewport width
+  └─ neura-blocks/button   Button       link or button, optional icon, per-viewport width
 ```
 
 `button` declares `"parent": [ "neura-blocks/buttons" ]`, so it cannot be inserted

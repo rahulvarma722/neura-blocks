@@ -19,14 +19,14 @@ reimplemented. What Neura Blocks adds is the part core leaves out.
 
 = Blocks =
 
-* **Kit Icon** — an SVG icon from the WordPress icon library, with flip, free rotation and a proper decorative/meaningful accessibility choice.
-* **Kit Text** — a paragraph with a visual style preset: Display, H1–H6, Lead, Body, Caption or Eyebrow, chosen independently of the theme's default paragraph sizing.
+* **Icon** — an SVG icon from the WordPress icon library, with flip, free rotation and a proper decorative/meaningful accessibility choice.
+* **Text** — a paragraph with a visual style preset: Display, H1–H6, Lead, Body, Caption or Eyebrow, chosen independently of the theme's default paragraph sizing.
 * **Buttons** — a flex container for one or more buttons, with block gap, padding and wide/full alignment.
-* **Kit Button** — a button-style link with an optional icon, and per-viewport width and icon size.
+* **Button** — a button-style link with an optional icon, and per-viewport width and icon size.
 
 = Built on the WordPress icon library =
 
-Kit Icon uses the icon registry WordPress 7.1 added, so it draws on the 88
+The Icon block uses the icon registry WordPress 7.1 added, so it draws on the 88
 icons that ship with core rather than bundling its own set — and any icon a
 theme or plugin registers appears in it automatically.
 
@@ -37,7 +37,7 @@ part of icon accessibility.
 
 = The typographic scale follows your theme =
 
-Kit Text's presets are emitted as classes, and each one resolves through your
+The Text block's presets are emitted as classes, and each one resolves through your
 theme's own `theme.json` font-size presets before falling back to a fluid
 `clamp()`. So a theme with a real type scale drives the look, a theme without
 one still renders sensibly, and a theme can override the whole scale in one
@@ -126,9 +126,9 @@ Mobile fall back to your Desktop value rather than to your Tablet value.
 
 = Can I use these buttons inside core's Buttons block? =
 
-No. Kit Button declares `neura-blocks/buttons` as its parent, so it can only be
-inserted into a Buttons container. The container supplies the flex layout and
-block gap the button expects.
+No. This plugin's Button declares `neura-blocks/buttons` as its parent, so it
+can only be inserted into a Buttons container. The container supplies the flex
+layout and block gap the button expects.
 
 = Does it work with Full Site Editing and template parts? =
 
@@ -142,7 +142,7 @@ No. Every block renders server-side in PHP and ships no front-end script.
 
 == Screenshots ==
 
-1. A Buttons container holding two Kit Button blocks, one with an arrow icon.
+1. A Buttons container holding two Button blocks, one with an arrow icon.
 2. The Custom Width and Icon Size controls in the Styles tab.
 3. Editing a Mobile-only width with Responsive styles enabled.
 4. The Neura Blocks category in the block inserter.
@@ -152,7 +152,7 @@ No. Every block renders server-side in PHP and ships no front-end script.
 = 0.0.1 =
 * Initial release.
 * Buttons container block with flex layout, block gap, padding and wide/full alignment.
-* Kit Button block with link controls, four icons, and left/right icon position.
+* Button block with link controls, four icons, and left/right icon position.
 * Per-viewport Custom Width and Icon Size using WordPress 7.1 style states and core's viewport media queries.
 
 == Upgrade Notice ==

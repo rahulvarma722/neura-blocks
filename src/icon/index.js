@@ -1,5 +1,5 @@
 /**
- * Kit Icon — block registration.
+ * Icon — block registration.
  */
 
 import { registerBlockType } from '@wordpress/blocks';

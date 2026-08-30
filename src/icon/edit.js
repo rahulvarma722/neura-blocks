@@ -1,5 +1,5 @@
 /**
- * Kit Icon — editor.
+ * Icon — editor.
  */
 
 import { __, sprintf } from '@wordpress/i18n';
@@ -267,7 +267,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				<div { ...blockProps }>
 					<Placeholder
 						icon="star-filled"
-						label={ __( 'Kit Icon', 'neura-blocks' ) }
+						label={ __( 'Icon', 'neura-blocks' ) }
 					>
 						<Spinner />
 					</Placeholder>
@@ -285,7 +285,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				<div { ...blockProps }>
 					<Placeholder
 						icon="star-filled"
-						label={ __( 'Kit Icon', 'neura-blocks' ) }
+						label={ __( 'Icon', 'neura-blocks' ) }
 						instructions={ __(
 							'Choose an icon to get started.',
 							'neura-blocks'

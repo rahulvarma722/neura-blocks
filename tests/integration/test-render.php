@@ -148,7 +148,7 @@ $check( 'unknown icon key ignored', false === strpos( $out, 'passwd' ) );
 $check( 'no </style> breakout', 1 >= substr_count( $out, '</style>' ) );
 
 // ---------------------------------------------------------------------
-echo "\nKit Icon — core's icon registry\n";
+echo "\nIcon — core's icon registry\n";
 // ---------------------------------------------------------------------
 $check( 'neura-blocks/icon registered', $registry->is_registered( 'neura-blocks/icon' ) );
 $check( "core's wp_get_icon() is available", function_exists( 'wp_get_icon' ) );
@@ -193,7 +193,7 @@ $check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:n
 $check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
 
 // ---------------------------------------------------------------------
-echo "\nKit Icon — block by default, inline on request\n";
+echo "\nIcon — block by default, inline on request\n";
 // ---------------------------------------------------------------------
 /*
  * An icon is usually its own element, so block-level is the default and inline
@@ -215,7 +215,7 @@ $check(
 );
 
 // ---------------------------------------------------------------------
-echo "\nKit Icon — the icon name is resolved by core, which is the validation\n";
+echo "\nIcon — the icon name is resolved by core, which is the validation\n";
 // ---------------------------------------------------------------------
 /*
  * There is no allow-list in render.php on purpose. wp_get_icon() returns ''
@@ -248,7 +248,7 @@ $escaped = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","lab
 $check( 'a hostile label cannot break out of the attribute', false === stripos( $escaped, '<script' ) );
 
 // ---------------------------------------------------------------------
-echo "\nKit Text — visual presets\n";
+echo "\nText — visual presets\n";
 // ---------------------------------------------------------------------
 $check( 'neura-blocks/text registered', $registry->is_registered( 'neura-blocks/text' ) );
 
@@ -279,7 +279,7 @@ $check( 'a stray tagName attribute is ignored entirely', false === stripos( $out
 
 // ---------------------------------------------------------------------
 // ---------------------------------------------------------------------
-echo "\nKit Text — content survives a save/load round trip\n";
+echo "\nText — content survives a save/load round trip\n";
 // ---------------------------------------------------------------------
 /*
  * THE TEST THAT WAS MISSING.
@@ -325,7 +325,7 @@ $check( 'styleAs survives the round trip', false !== strpos( $out, 'has-style-ey
  */
 $probe_id = wp_insert_post(
 	array(
-		'post_title'   => 'NeuraBlocks integration probe',
+		'post_title'   => 'Neura Blocks integration probe',
 		'post_status'  => 'publish',
 		'post_type'    => 'post',
 		'post_content' => $round_trip,
