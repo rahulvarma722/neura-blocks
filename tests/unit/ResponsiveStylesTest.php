@@ -7,6 +7,7 @@
 
 namespace NeuraBlocks\Tests\Unit;
 
+use NeuraBlocks\Helper;
 use NeuraBlocks\Responsive_Styles;
 use PHPUnit\Framework\TestCase;
 
@@ -107,12 +108,12 @@ final class ResponsiveStylesTest extends TestCase {
 	}
 
 	/**
-	 * The base layer carries no media query, so it applies at every width.
+	 * The base layer carries no media query, so its rule has no rules_group.
 	 *
 	 * @return void
 	 */
-	public function test_build_css_emits_base_unwrapped() {
-		$css = Responsive_Styles::build_css(
+	public function test_build_rules_emits_base_without_a_group() {
+		$rules = Responsive_Styles::build_rules(
 			array( 'neura-blocks' => array( 'width' => '200px' ) ),
 			'.t',
 			'neura-blocks',
@@ -120,8 +121,16 @@ final class ResponsiveStylesTest extends TestCase {
 			'width'
 		);
 
-		$this->assertSame( '.t{width:200px;}', $css );
-		$this->assertStringNotContainsString( '@media', $css );
+		$this->assertSame(
+			array(
+				array(
+					'selector'     => '.t',
+					'declarations' => array( 'width' => '200px' ),
+				),
+			),
+			$rules
+		);
+		$this->assertArrayNotHasKey( 'rules_group', $rules[0], 'the base layer applies at every width' );
 	}
 
 	/**
@@ -129,11 +138,11 @@ final class ResponsiveStylesTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function test_build_css_drops_unsafe_values_only() {
-		$css = Responsive_Styles::build_css(
+	public function test_build_rules_drops_unsafe_values_only() {
+		$rules = Responsive_Styles::build_rules(
 			array(
 				'neura-blocks' => array( 'width' => 'expression(alert(1))' ),
-				'@mobile'  => array( 'neura-blocks' => array( 'width' => '100%' ) ),
+				'@mobile'      => array( 'neura-blocks' => array( 'width' => '100%' ) ),
 			),
 			'.t',
 			'neura-blocks',
@@ -141,18 +150,19 @@ final class ResponsiveStylesTest extends TestCase {
 			'width'
 		);
 
-		$this->assertStringNotContainsString( 'expression', $css );
-		$this->assertStringContainsString( '100%', $css, 'the valid mobile value survives' );
+		$this->assertCount( 1, $rules, 'the hostile base value produced no rule' );
+		$this->assertSame( '100%', $rules[0]['declarations']['width'], 'the valid mobile value survives' );
+		$this->assertStringNotContainsString( 'expression', json_encode( $rules ) );
 	}
 
 	/**
-	 * Nothing stored means nothing emitted — not an empty rule.
+	 * Nothing stored means no rules — not an empty rule.
 	 *
 	 * @return void
 	 */
-	public function test_build_css_emits_nothing_when_unset() {
-		$this->assertSame( '', Responsive_Styles::build_css( array(), '.t', 'neura-blocks', 'width', 'width' ) );
-		$this->assertSame( '', Responsive_Styles::build_css( 'nope', '.t', 'neura-blocks', 'width', 'width' ) );
+	public function test_build_rules_emits_nothing_when_unset() {
+		$this->assertSame( array(), Responsive_Styles::build_rules( array(), '.t', 'neura-blocks', 'width', 'width' ) );
+		$this->assertSame( array(), Responsive_Styles::build_rules( 'nope', '.t', 'neura-blocks', 'width', 'width' ) );
 	}
 
 	/**
@@ -161,8 +171,8 @@ final class ResponsiveStylesTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function test_build_css_emits_custom_properties() {
-		$css = Responsive_Styles::build_css(
+	public function test_build_rules_emits_custom_properties() {
+		$rules = Responsive_Styles::build_rules(
 			array( 'neura-blocks' => array( 'iconSize' => '1.5em' ) ),
 			'.t',
 			'neura-blocks',
@@ -170,6 +180,45 @@ final class ResponsiveStylesTest extends TestCase {
 			'--neura-blocks-button-icon-size'
 		);
 
-		$this->assertSame( '.t{--neura-blocks-button-icon-size:1.5em;}', $css );
+		$this->assertSame(
+			array(
+				array(
+					'selector'     => '.t',
+					'declarations' => array( '--neura-blocks-button-icon-size' => '1.5em' ),
+				),
+			),
+			$rules
+		);
+	}
+
+	/**
+	 * The media query is passed to rules_group VERBATIM, in core's order.
+	 *
+	 * This is the invariant the old `<style>` path had to defend with a comment:
+	 * core's range syntax contains `<`, and wp_strip_all_tags() or esc_attr()
+	 * would mangle it. With the style engine the query is data, so the only
+	 * thing to assert is that it arrives untouched.
+	 *
+	 * @return void
+	 */
+	public function test_build_rules_passes_media_queries_through_verbatim() {
+		$queries = Helper::media_queries();
+
+		$rules = Responsive_Styles::build_rules(
+			array(
+				'@tablet' => array( 'neura-blocks' => array( 'width' => '150px' ) ),
+				'@mobile' => array( 'neura-blocks' => array( 'width' => '100%' ) ),
+			),
+			'.t',
+			'neura-blocks',
+			'width',
+			'width'
+		);
+
+		$this->assertCount( 2, $rules );
+		$this->assertSame( array_values( $queries ), array_column( $rules, 'rules_group' ), 'one rule per state, in the order core returns them' );
+		foreach ( $rules as $rule ) {
+			$this->assertSame( '.t', $rule['selector'], 'every state rule is scoped to the same selector' );
+		}
 	}
 }

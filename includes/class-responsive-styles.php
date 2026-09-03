@@ -1,15 +1,17 @@
 <?php
 /**
- * Turning per-viewport values stored in a block's `style` attribute into CSS.
+ * Turning per-viewport values stored in a block's `style` attribute into
+ * style-engine rules.
  *
  * Core generates CSS only for style paths it owns, so a namespaced key such as
  * `style.neura-blocks.width` produces nothing on its own — the value round-trips
- * through save and parse untouched, and it is this class that emits it.
+ * through save and parse untouched, and it is this class that builds the
+ * rules for it.
  *
  * The media queries come from Helper::media_queries(), which resolves them from
  * core — `WP_Theme_JSON::get_viewport_media_queries()` is public and documented
  * (`@since 7.1.0`) and reads `settings.viewport` from theme.json. This class is
- * about turning values into CSS; where the bands come from is not its business.
+ * about turning values into rules; where the bands come from is not its business.
  *
  * The bands core returns:
  *
@@ -30,7 +32,7 @@ namespace NeuraBlocks;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Emits scoped CSS for namespaced per-viewport style values.
+ * Builds scoped style-engine rules for namespaced per-viewport style values.
  */
 final class Responsive_Styles {
 
@@ -90,21 +92,44 @@ final class Responsive_Styles {
 	}
 
 	/**
-	 * Build scoped CSS for one property across the base and viewport states.
+	 * Build style-engine rules for one property across the base and viewport states.
+	 *
+	 * Returns RULES rather than a CSS string, in the shape
+	 * wp_style_engine_get_stylesheet_from_css_rules() accepts:
+	 *
+	 *   array( 'selector' => '.x', 'declarations' => array( 'width' => '200px' ) )
+	 *   array( 'selector' => '.x', 'declarations' => array( 'width' => '100%' ),
+	 *          'rules_group' => '@media (width <= 480px)' )
+	 *
+	 * This is the same shape core's own per-viewport support hands the style
+	 * engine (block-supports/states.php). It is what lets the CSS reach the page
+	 * through wp_add_inline_style() instead of a style element printed next to
+	 * the block: the engine keeps a store per `context`, and core flushes
+	 * every store in wp_enqueue_stored_styles() — into the head on block themes,
+	 * the footer on classic ones.
+	 *
+	 * The media query goes into `rules_group` VERBATIM. Core's range syntax —
+	 * `@media (480px < width <= 782px)` — contains `<`, and both
+	 * wp_strip_all_tags() and esc_attr() mangle it; the style engine takes it as
+	 * data, so nothing here needs to escape it and nothing may.
+	 *
+	 * Pure: no WordPress function is called, so this runs in the unit suite
+	 * without a WordPress install. The engine call belongs in the render
+	 * template, where WordPress is loaded.
 	 *
 	 * @param array  $style     The block's `style` attribute.
 	 * @param string $selector  CSS selector to scope every rule to.
 	 * @param string $namespace_key Namespace key inside each layer.
 	 * @param string $property  Key inside the namespace.
 	 * @param string $css_prop  The CSS property to emit.
-	 * @return string CSS, or '' when there is nothing to emit.
+	 * @return array<int, array{selector: string, declarations: array<string, string>, rules_group?: string}>
 	 */
-	public static function build_css( $style, $selector, $namespace_key, $property, $css_prop ) {
+	public static function build_rules( $style, $selector, $namespace_key, $property, $css_prop ) {
 		if ( ! is_array( $style ) ) {
-			return '';
+			return array();
 		}
 
-		$rules = '';
+		$rules = array();
 
 		// Base layer first: it carries no media query and therefore applies at
 		// every width, which is what makes Desktop the base rather than a
@@ -112,7 +137,10 @@ final class Responsive_Styles {
 		$base = self::get_state_value( $style, null, $namespace_key, $property );
 
 		if ( '' !== $base && self::is_safe_length( $base ) ) {
-			$rules .= sprintf( '%s{%s:%s;}', $selector, $css_prop, $base );
+			$rules[] = array(
+				'selector'     => $selector,
+				'declarations' => array( $css_prop => $base ),
+			);
 		}
 
 		/*
@@ -128,12 +156,10 @@ final class Responsive_Styles {
 				continue;
 			}
 
-			$rules .= sprintf(
-				'%s{%s{%s:%s;}}',
-				$media_query,
-				$selector,
-				$css_prop,
-				$value
+			$rules[] = array(
+				'selector'     => $selector,
+				'declarations' => array( $css_prop => $value ),
+				'rules_group'  => $media_query,
 			);
 		}
 

@@ -132,9 +132,10 @@ layout and block gap the button expects.
 
 = Does it work with Full Site Editing and template parts? =
 
-Yes. The per-viewport CSS is emitted immediately before the button rather than
-enqueued, so the rule is present before first paint even when the block renders
-late — in a widget, a template part, or a REST-rendered preview.
+Yes. The per-viewport CSS goes through the WordPress style engine — the same
+path core uses for its own per-viewport styles — and is printed once with
+`wp_add_inline_style()`: in the head on block themes, in the footer on classic
+themes. Nothing is emitted inline next to the block.
 
 = Does it add any front-end JavaScript? =
 

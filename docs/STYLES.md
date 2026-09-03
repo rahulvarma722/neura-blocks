@@ -6,7 +6,7 @@ Three layers, each with a different job.
 |---|---|---|
 | Shared | `src/*/style.scss` | Front end **and** editor canvas |
 | Editor only | `src/*/editor.scss` | Editor only — editing affordances |
-| Per-instance | generated in `render.php` | Inline `<style>`, front end |
+| Per-instance | generated in `render.php` | Style-engine store, printed via `wp_add_inline_style()` |
 
 `wp-scripts` compiles these to `build/*/style-index.css` and
 `build/*/index.css`, which `block.json` declares as `style` and `editorStyle`.
@@ -139,21 +139,32 @@ non-negative CSS, so `-50px` only ever produced a declaration the browser
 discards. An `$allow_negative` flag exists because that is a property of the
 caller — reused for `margin`, it should pass `true`.
 
-### Why the `<style>` tag is inline
+### How the per-instance CSS reaches the page
 
-It precedes the element rather than being enqueued, so the rule is present
-before first paint even when the block renders late — a widget, a template
-part, a REST-rendered preview.
+It is **not** printed inline. `render.php` hands the rules to
+`wp_style_engine_get_stylesheet_from_css_rules()` with `context => 'neura-blocks'`,
+which stores them. Core flushes every store in `wp_enqueue_stored_styles()` —
+hooked to `wp_enqueue_scripts` and to `wp_footer` — through
+`wp_register_style()`, `wp_add_inline_style()` and `wp_enqueue_style()`, as one
+`<style id="wp-style-engine-neura-blocks-inline-css">`. Block themes render the
+template before the head is printed, so it lands in `<head>`; classic themes get
+it in the footer.
 
-It is **not** run through `wp_strip_all_tags()`. Core's media queries use CSS
-range syntax — `@media (480px < width <= 782px)` — and `strip_tags()` reads
-that `<` as the start of a tag and deletes everything after it. Measured: the
-string survives only as `.bk{width:200px;}@media (480px < width`. Escaping is
-the wrong tool too: `esc_attr()` mangles the same `<`.
+This is exactly the path core's own per-viewport CSS takes
+(`block-supports/states.php` makes the same call with
+`context => 'block-supports'`), so the block is at parity with the core controls
+beside it. The Plugin Review Team asked for this in place of an inline `<style>`
+element; making the change also removed a `phpcs:ignore`.
 
-So every input is allow-listed instead — values by `is_safe_length()`, the
-selector generated from an md5, the media query from core itself — and the only
-remaining guard is a literal `</` that could close the element early.
+The media query travels as `rules_group`, verbatim. Core's range syntax —
+`@media (480px < width <= 782px)` — contains `<`, so it must never pass through
+`wp_strip_all_tags()` or `esc_attr()`, both of which mangle it; the style engine
+takes it as data. Values are still allow-listed by `is_safe_length()` before
+they get anywhere near it, and the selector is generated from an md5, so
+nothing user-controlled reaches the stylesheet.
+
+The store de-duplicates by selector: two buttons with identical values share a
+hash class and therefore a single rule.
 
 ## The editor side
 

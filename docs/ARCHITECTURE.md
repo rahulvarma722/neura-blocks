@@ -96,7 +96,7 @@ version exists, which is why they are left unqualified throughout.
 **`render.php` is a special case.** Core requires it from inside a closure in
 `wp-includes/blocks.php`, which is *global* scope regardless of where the file
 sits on disk. Every plugin class it uses is therefore written fully qualified,
-leading separator included: `\NeuraBlocks\Responsive_Styles::build_css()`.
+leading separator included: `\NeuraBlocks\Responsive_Styles::build_rules()`.
 
 ## Boot order
 
@@ -187,8 +187,7 @@ given a fake, and static state does not reset between test cases.
 
 ### `Block\Render`
 The parts every render template repeats: attribute reads, allow-lists, token
-filtering, per-instance responsive CSS, the `<style>` guard, and the
-`LABEL_HTML` allow-list. Extracted when `button/render.php` hit 408 lines with
+filtering, per-instance responsive rules, and the `LABEL_HTML` allow-list. Extracted when `button/render.php` hit 408 lines with
 23 escaping call sites, roughly half of which were not about buttons at all.
 
 All static, and correct as such: these are pure functions with no state and
@@ -225,7 +224,7 @@ this request is the editor.
 | A getter returning a fact about the site | `Helper` |
 | A function transforming its arguments | the class that owns that concern |
 
-So `Helper::media_queries()` lives here, while `Responsive_Styles::build_css()`
+So `Helper::media_queries()` lives here, while `Responsive_Styles::build_rules()`
 does not — it *asks* Helper for the bands and gets on with generating CSS. A
 "helpers" class with no such rule eventually holds everything, becomes
 impossible to test in isolation, and every file depends on it.

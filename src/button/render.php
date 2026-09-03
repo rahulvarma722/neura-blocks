@@ -291,7 +291,34 @@ $wrapper_attributes = get_block_wrapper_attributes(
 	)
 );
 
-echo Block_Render::style_tag( $responsive['css'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Block_Render::style_tag() allow-lists its inputs and guards `</`; see the note there for why escaping is the wrong tool for CSS.
+/*
+ * The rules are handed to core's style engine, not printed here.
+ *
+ * `context` names a store. Core flushes every store in
+ * wp_enqueue_stored_styles() — hooked to wp_enqueue_scripts and wp_footer —
+ * through wp_register_style(), wp_add_inline_style() and wp_enqueue_style(),
+ * as a single style element, `wp-style-engine-neura-blocks-inline-css`. Block
+ * themes render the template before the head is printed, so the rules land in
+ * the document head;
+ * classic themes get them in the footer. That is exactly how core's own
+ * per-viewport CSS travels — block-supports/states.php makes this same call
+ * with `context => 'block-supports'` — so this block is at parity with every
+ * core control beside it, and nothing is echoed from PHP that a reviewer has to
+ * take on trust. The Plugin Review Team asked for this in place of an inline
+ * style element.
+ *
+ * The store de-duplicates by selector: two buttons with identical values, which
+ * already share a hash class, share one rule.
+ */
+if ( $responsive['rules'] ) {
+	wp_style_engine_get_stylesheet_from_css_rules(
+		$responsive['rules'],
+		array(
+			'context'  => 'neura-blocks',
+			'prettify' => false,
+		)
+	);
+}
 
 printf(
 	'<%1$s %2$s><span class="wp-block-neura-blocks-button__text">%3$s</span>%4$s</%1$s>',
