@@ -73,25 +73,14 @@ final class BlockRenderTest extends TestCase {
 	}
 
 	/**
-	 * style_tag() emits nothing for empty input and refuses a `</` breakout.
-	 *
-	 * @return void
-	 */
-	public function test_style_tag_guards_element_breakout() {
-		$this->assertSame( '<style>.a{width:1px;}</style>', Block_Render::style_tag( '.a{width:1px;}' ) );
-		$this->assertSame( '', Block_Render::style_tag( '' ) );
-		$this->assertSame( '', Block_Render::style_tag( '.a{}</style><script>alert(1)</script>' ) );
-	}
-
-	/**
-	 * responsive() returns a class and CSS together, or neither.
+	 * responsive() returns a class and rules together, or neither.
 	 *
 	 * Deriving them separately is how they drift: a class emitted with no
 	 * matching rule, or a rule scoped to a class the block does not carry.
 	 *
 	 * @return void
 	 */
-	public function test_responsive_pairs_class_with_css() {
+	public function test_responsive_pairs_class_with_rules() {
 		$result = Block_Render::responsive(
 			array(
 				'neura-blocks' => array( 'width' => '200px' ),
@@ -104,9 +93,11 @@ final class BlockRenderTest extends TestCase {
 
 		$this->assertStringStartsWith( 'neura-blocks-btn-', $result['class'] );
 		$this->assertSame( 8, strlen( $result['class'] ) - strlen( 'neura-blocks-btn-' ), 'class carries an 8-char hash' );
-		$this->assertStringContainsString( '.' . $result['class'], $result['css'], 'CSS is scoped to the class' );
-		$this->assertStringContainsString( '200px', $result['css'] );
-		$this->assertStringContainsString( '100%', $result['css'] );
+		$this->assertNotEmpty( $result['rules'] );
+		foreach ( $result['rules'] as $rule ) {
+			$this->assertSame( '.' . $result['class'], $rule['selector'], 'every rule is scoped to the class' );
+		}
+		$this->assertSame( array( '200px', '100%' ), array_column( array_column( $result['rules'], 'declarations' ), 'width' ) );
 	}
 
 	/**
@@ -135,7 +126,7 @@ final class BlockRenderTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function test_responsive_drops_class_when_no_css_survives() {
+	public function test_responsive_drops_class_when_no_rules_survive() {
 		$result = Block_Render::responsive(
 			array( 'neura-blocks' => array( 'width' => 'expression(alert(1))' ) ),
 			'neura-blocks',
@@ -144,7 +135,7 @@ final class BlockRenderTest extends TestCase {
 		);
 
 		$this->assertSame( '', $result['class'] );
-		$this->assertSame( '', $result['css'] );
+		$this->assertSame( array(), $result['rules'] );
 	}
 
 	/**
@@ -155,20 +146,7 @@ final class BlockRenderTest extends TestCase {
 	public function test_responsive_is_empty_when_unset() {
 		foreach ( array( array(), 'nope', null ) as $style ) {
 			$result = Block_Render::responsive( $style, 'neura-blocks', array( 'width' => 'width' ), 'neura-blocks-' );
-			$this->assertSame( array( 'class' => '', 'css' => '' ), $result );
+			$this->assertSame( array( 'class' => '', 'rules' => array() ), $result );
 		}
-	}
-
-	/**
-	 * CSS range syntax must survive — this is the bug that motivated the
-	 * comment in style_tag(). `wp_strip_all_tags()` would truncate at the `<`.
-	 *
-	 * @return void
-	 */
-	public function test_style_tag_preserves_css_range_syntax() {
-		$css = '@media (480px < width <= 782px){.a{width:2px;}}';
-
-		$this->assertSame( '<style>' . $css . '</style>', Block_Render::style_tag( $css ) );
-		$this->assertStringContainsString( '480px < width <= 782px', Block_Render::style_tag( $css ) );
 	}
 }

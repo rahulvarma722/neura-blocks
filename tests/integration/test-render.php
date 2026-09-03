@@ -101,14 +101,36 @@ $good = '<!-- wp:neura-blocks/buttons -->'
 
 $out = do_blocks( $good );
 
-$check( 'base width emitted unwrapped', false !== strpos( $out, 'width:200px' ) );
-$check( 'tablet band emitted', false !== strpos( $out, '150px' ) );
-$check( 'mobile band emitted', false !== strpos( $out, '100%' ) );
-$check( 'icon size emitted as a custom property', false !== strpos( $out, '--neura-blocks-button-icon-size' ) );
+/*
+ * The per-viewport CSS is no longer in the block's own output. render.php hands
+ * the rules to the style engine under the 'neura-blocks' context, and core
+ * prints that store through wp_add_inline_style(). So the block markup is
+ * checked for the ABSENCE of a <style> element, and the CSS is read back from
+ * the store — which is where a reviewer running Plugin Check will expect it.
+ */
+$css = wp_style_engine_get_stylesheet_from_context( 'neura-blocks' );
+
+$check( 'no <style> element in the block output (Plugin Review: use enqueue APIs)', false === stripos( $out, '<style' ) );
+$check( 'block carries the scoping class the rules target', 1 === preg_match( '/class="[^"]*\bneura-blocks-btn-[0-9a-f]{8}\b/', $out ) );
+$check( 'rules reached the style-engine store', '' !== $css );
+$check( 'base width emitted unwrapped', false !== strpos( $css, 'width:200px' ) );
+$check( 'tablet band emitted', false !== strpos( $css, '150px' ) );
+$check( 'mobile band emitted', false !== strpos( $css, '100%' ) );
+$check( 'icon size emitted as a custom property', false !== strpos( $css, '--neura-blocks-button-icon-size' ) );
 $check(
 	"core's mutually exclusive ranges, not stacked max-width",
-	false !== strpos( $out, 'width <= 480px' ) && false !== strpos( $out, '480px < width' )
+	false !== strpos( $css, 'width <= 480px' ) && false !== strpos( $css, '480px < width' )
 );
+
+// The whole path, end to end: the store is flushed by core into a real
+// enqueued style handle, exactly as wp_enqueue_stored_styles() does on a page.
+wp_enqueue_stored_styles();
+ob_start();
+wp_print_styles();
+$printed = (string) ob_get_clean();
+
+$check( 'store flushed through wp_add_inline_style() as one tag', false !== strpos( $printed, 'id="wp-style-engine-neura-blocks-inline-css"' ) );
+$check( 'flushed tag carries the base width', false !== strpos( $printed, 'width:200px' ) );
 $check( 'icon is aria-hidden', false !== strpos( $out, 'aria-hidden="true"' ) );
 $check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 20 20"' ) );
 $check( 'left icon position class applied', false !== strpos( $out, 'has-icon-left' ) );
@@ -140,12 +162,15 @@ $check( '<strong> kept — the allow-list is not a blanket strip', false !== str
 $check( 'unrecognised target dropped', false === strpos( $out, 'evil' ) );
 $check( 'garbage rel token dropped whole', false === strpos( $out, 'noopenerscript' ) );
 $check( 'title tags stripped, text kept', false !== strpos( $out, 'title="tip"' ) );
-$check( 'expression() rejected', false === stripos( $out, 'expression(' ) );
-$check( 'negative width rejected', false === strpos( $out, '-50px' ) );
+$css = wp_style_engine_get_stylesheet_from_context( 'neura-blocks' );
+
+$check( 'expression() rejected — not in markup', false === stripos( $out, 'expression(' ) );
+$check( 'expression() rejected — not in the store either', false === stripos( $css, 'expression(' ) );
+$check( 'negative width rejected — not in the store', false === strpos( $css, '-50px' ) );
 $check( 'javascript: url -> <button>, never href=""', false === stripos( $out, 'javascript:' ) && false === strpos( $out, 'href=""' ) );
 $check( 'data: url rejected', false === stripos( $out, 'data:text/html' ) );
 $check( 'unknown icon key ignored', false === strpos( $out, 'passwd' ) );
-$check( 'no </style> breakout', 1 >= substr_count( $out, '</style>' ) );
+$check( 'hostile block emitted no <style> element at all', false === stripos( $out, '<style' ) );
 
 // ---------------------------------------------------------------------
 echo "\nIcon — core's icon registry\n";

@@ -245,14 +245,17 @@ rule instead of emitting a near-duplicate each.
 ### 6.1 Verified output
 
 ```html
+<!-- block output: only the scoping class -->
 <div class="wp-block-neura-blocks-buttons is-layout-flex …">
-  <style>
-    .neura-blocks-btn-w-ccc3ba64{width:200px;}
-    @media (width <= 480px){.neura-blocks-btn-w-ccc3ba64{width:100%;}}
-    @media (480px < width <= 782px){.neura-blocks-btn-w-ccc3ba64{width:150px;}}
-  </style>
-  <a class="neura-blocks-btn-w-ccc3ba64 wp-block-neura-blocks-button" href="https://example.com">Click me</a>
+  <a class="neura-blocks-btn-ccc3ba64 wp-block-neura-blocks-button" href="https://example.com">Click me</a>
 </div>
+
+<!-- printed once by core via wp_add_inline_style(): <head> on block themes, footer on classic -->
+<style id="wp-style-engine-neura-blocks-inline-css">
+.neura-blocks-btn-ccc3ba64{width:200px;}
+@media (width <= 480px){.neura-blocks-btn-ccc3ba64{width:100%;}}
+@media (480px < width <= 782px){.neura-blocks-btn-ccc3ba64{width:150px;}}
+</style>
 ```
 
 Note the band shapes: `width <= 480px` and `(480px < width <= 782px)` are
@@ -373,8 +376,8 @@ Step 4→5 is the alignment behaviour; step 7 is the a production block plugin b
 | `src/button/responsive-width/style-value.js` | `getStateValue`, `getResolvedValue`, `setStateValue`, `prune` |
 | `src/button/responsive-width/index.js` | the control, reset scoping, diagnostics readout |
 | `src/button/edit.js` | hook wiring, canvas preview, probe rendering |
-| `src/button/render.php` | scoped `<style>` + wrapper class |
-| `includes/class-responsive-styles.php` | media queries from core, value allow-list, CSS builder |
+| `src/button/render.php` | style-engine rules + wrapper class |
+| `includes/class-responsive-styles.php` | media queries from core, value allow-list, rule builder |
 | `src/buttons/index.js` | `save: () => <InnerBlocks.Content />` — see §8.1 |
 
 **WordPress core — what this plugin depends on**

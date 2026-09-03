@@ -44,7 +44,7 @@ Plain PHPUnit 10, no WordPress, no Docker, 23 tests in about 7ms.
 |---|---|
 | `BlockContractTest.php` | **invariants that span files** — see below |
 | `AutoloaderTest.php` | class / interface resolution, declined names, path traversal |
-| `BlockRenderTest.php` | attribute reads, allow-lists, token filtering, `responsive()`, `style_tag()` |
+| `BlockRenderTest.php` | attribute reads, allow-lists, token filtering, `responsive()` |
 | `ResponsiveStylesTest.php` | layer reads, the length allow-list, negatives, CSS output |
 
 Fast enough to run on every save. If a test needs a WordPress function that is

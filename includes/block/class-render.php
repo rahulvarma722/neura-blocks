@@ -17,8 +17,8 @@ defined( 'ABSPATH' ) || exit;
  * Why this exists: `button/render.php` reached 408 lines with 23 escaping call
  * sites, and roughly half of that was not about buttons at all: reading an
  * attribute with a default, narrowing a value to an allow-list, deriving a
- * per-instance class from stored values, deciding whether a `<style>` block is
- * safe to print. At two blocks that is tolerable duplication. At twenty it is
+ * per-instance class from stored values, building the per-viewport rules the
+ * style engine takes. At two blocks that is tolerable duplication. At twenty it is
  * twenty places for the same sanitising bug to hide, and twenty places to fix
  * it.
  *
@@ -117,9 +117,9 @@ final class Render {
 	}
 
 	/**
-	 * Builds per-instance CSS for namespaced per-viewport style values.
+	 * Builds per-instance style-engine rules for namespaced per-viewport values.
 	 *
-	 * Returns the scoping class and the CSS together, because neither is
+	 * Returns the scoping class and the rules together, because neither is
 	 * useful alone and deriving them separately is how they drift: a class
 	 * emitted with no matching rule, or a rule scoped to a class the block
 	 * does not carry.
@@ -133,12 +133,16 @@ final class Render {
 	 * @param string $namespace_key   Namespace key inside each layer.
 	 * @param array  $properties  Map of style key => CSS property to emit.
 	 * @param string $class_prefix Prefix for the generated class name.
-	 * @return array{class: string, css: string}
+	 * The rules are in the shape wp_style_engine_get_stylesheet_from_css_rules()
+	 * accepts; the caller hands them to the engine, which is what routes them
+	 * through wp_add_inline_style() rather than an inline style element.
+	 *
+	 * @return array{class: string, rules: array}
 	 */
 	public static function responsive( $style, $namespace_key, $properties, $class_prefix ) {
 		$empty = array(
 			'class' => '',
-			'css'   => '',
+			'rules' => array(),
 		);
 
 		if ( ! is_array( $style ) || empty( $properties ) ) {
@@ -160,21 +164,24 @@ final class Render {
 		}
 
 		$class = $class_prefix . substr( md5( (string) wp_json_encode( $stored ) ), 0, 8 );
-		$css   = '';
+		$rules = array();
 
 		foreach ( $properties as $property_key => $css_property ) {
-			$css .= Responsive_Styles::build_css( $style, '.' . $class, $namespace_key, $property_key, $css_property );
+			$rules = array_merge(
+				$rules,
+				Responsive_Styles::build_rules( $style, '.' . $class, $namespace_key, $property_key, $css_property )
+			);
 		}
 
-		// Values that failed is_safe_length() produce no CSS. Without this the
+		// Values that failed is_safe_length() produce no rules. Without this the
 		// block would carry a scoping class with no rule anywhere to match it.
-		if ( '' === $css ) {
+		if ( ! $rules ) {
 			return $empty;
 		}
 
 		return array(
 			'class' => $class,
-			'css'   => $css,
+			'rules' => $rules,
 		);
 	}
 
@@ -214,39 +221,4 @@ final class Render {
 		'code'   => array(),
 		'br'     => array(),
 	);
-
-	/**
-	 * Wraps generated CSS in a `<style>` element, or returns ''.
-	 *
-	 * Inline rather than enqueued so the rule is present before first paint
-	 * even when the block renders late — a widget, a template part, a
-	 * REST-rendered preview.
-	 *
-	 * NOT escaped, and not passed through wp_strip_all_tags(). Core's media
-	 * queries use CSS range syntax — `@media (480px < width <= 782px)` — and
-	 * strip_tags() reads that `<` as the start of a tag and deletes everything
-	 * after it; measured, the string survives only as
-	 * `.bk{width:200px;}@media (480px < width`. esc_attr() mangles the same
-	 * `<`, and no escaping makes `expression(…)` safe inside a declaration
-	 * anyway.
-	 *
-	 * So the inputs are allow-listed at source instead — values by
-	 * Responsive_Styles::is_safe_length(), the selector from an md5, the media
-	 * query from core — and the only thing left to guard is a literal `</`
-	 * that could close the element early. That cannot arise from any of those
-	 * three sources; the check is here so it stays true if a future caller
-	 * passes something else.
-	 *
-	 * @param string $css Generated CSS.
-	 * @return string A `<style>` element, or '' when there is nothing safe to emit.
-	 */
-	public static function style_tag( $css ) {
-		$css = (string) $css;
-
-		if ( '' === $css || false !== strpos( $css, '</' ) ) {
-			return '';
-		}
-
-		return '<style>' . $css . '</style>';
-	}
 }
