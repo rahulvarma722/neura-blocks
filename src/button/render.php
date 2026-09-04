@@ -164,9 +164,28 @@ if ( 'a' === $tag_name ) {
 		 * target="_blank" without noopener lets the opened page reach
 		 * back through window.opener. Modern browsers imply it, but the
 		 * attribute is still the portable guarantee.
+		 *
+		 * A UNION, not a fallback. This used to read `&& '' === $rel`, so an
+		 * author who typed anything at all into "Link rel" — `nofollow` is the
+		 * obvious one — silently lost the opener guard and got
+		 * `<a target="_blank" rel="nofollow">`: exactly the reverse-tabnabbing
+		 * case the paragraph above says it prevents. The author's tokens are
+		 * kept and these two are added alongside.
+		 *
+		 * $rel has already been through Block_Render::tokens(), so it is
+		 * lowercased, allow-listed, de-duplicated whole tokens joined by single
+		 * spaces — safe to split and re-join without re-validating.
 		 */
-		if ( '_blank' === $link_target && '' === $rel ) {
-			$rel = 'noreferrer noopener';
+		if ( '_blank' === $link_target ) {
+			$rel_tokens = '' === $rel ? array() : explode( ' ', $rel );
+
+			foreach ( array( 'noreferrer', 'noopener' ) as $required_token ) {
+				if ( ! in_array( $required_token, $rel_tokens, true ) ) {
+					$rel_tokens[] = $required_token;
+				}
+			}
+
+			$rel = implode( ' ', $rel_tokens );
 		}
 	}
 

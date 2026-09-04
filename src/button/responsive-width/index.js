@@ -27,6 +27,7 @@ import {
 import {
 	EXPERIMENT_GROUP,
 	WIDTH_UNITS,
+	WIDTH_UNIT_DEFAULTS,
 	DESKTOP,
 	SHOW_DIAGNOSTICS,
 	ICON_SIZE_KEY,
@@ -53,7 +54,10 @@ export default function ResponsiveWidthControl( {
 	stateKey,
 	diagnostics,
 } ) {
-	const units = useCustomUnits( { availableUnits: WIDTH_UNITS } );
+	const units = useCustomUnits( {
+		availableUnits: WIDTH_UNITS,
+		defaultValues: WIDTH_UNIT_DEFAULTS,
+	} );
 
 	// Only ever the value for the state being edited — never the inherited
 	// one. An empty field on Tablet means "no tablet override", which is the

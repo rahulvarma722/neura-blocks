@@ -366,6 +366,21 @@ for header in "Plugin Name" "Description" "Version" "Requires at least" "Require
 done
 ok "all required plugin headers present in the staged main file"
 
+# ...and must NOT carry readme-only headers.
+#
+# "Tested up to" is a README header, not a plugin header. Declared in both
+# files the values can disagree, and the main-file one may win — so the
+# directory page, the search index and the compatibility notice can advertise a
+# version nobody is maintaining. The Plugin Review Team flagged exactly this
+# (review P0TDX362558HGN), so it is asserted here rather than trusted to
+# reappear unnoticed on the next header edit.
+for header in "Tested up to" "Tags" "Stable tag" "Contributors"; do
+	if grep -qE "^\s*\*\s*${header}:" "$ROOT/$MAIN_FILE"; then
+		die "$MAIN_FILE declares '${header}:', which belongs only in readme.txt. WordPress.org treats it as a readme header; in both files the values can disagree and the wrong one can win."
+	fi
+done
+ok "no readme-only headers in the staged main file"
+
 # ---------------------------------------------------------------------
 # Zip
 # ---------------------------------------------------------------------

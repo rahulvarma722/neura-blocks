@@ -135,6 +135,23 @@ $check( 'icon is aria-hidden', false !== strpos( $out, 'aria-hidden="true"' ) );
 $check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 20 20"' ) );
 $check( 'left icon position class applied', false !== strpos( $out, 'has-icon-left' ) );
 $check( 'noopener added for target=_blank', false !== strpos( $out, 'noopener' ) );
+
+/*
+ * THE REGRESSION THIS PINS. The guard used to fire only when rel was EMPTY, so
+ * an author who typed `nofollow` into "Link rel" got
+ * `<a target="_blank" rel="nofollow">` with no opener guard at all — the exact
+ * reverse-tabnabbing case the code claims to prevent. Both tokens must survive.
+ */
+$union = do_blocks(
+	'<!-- wp:neura-blocks/buttons -->'
+	. '<!-- wp:neura-blocks/button {"text":"U","url":"https://ex.org",'
+	. '"linkTarget":"_blank","rel":"nofollow"} /-->'
+	. '<!-- /wp:neura-blocks/buttons -->'
+);
+
+$check( "author's own rel token survives", false !== strpos( $union, 'nofollow' ) );
+$check( 'noopener still added alongside it', false !== strpos( $union, 'noopener' ) );
+$check( 'noreferrer still added alongside it', false !== strpos( $union, 'noreferrer' ) );
 $check( 'ampersand not double-encoded', false === strpos( $out, '&amp;#038;' ) );
 $check( 'inner blocks survived the container save', false !== strpos( $out, 'Click me' ) );
 $check( 'no diagnostics readout in output', false === strpos( $out, 'stylesProbe' ) );

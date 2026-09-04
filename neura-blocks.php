@@ -4,7 +4,6 @@
  * Description:       A Gutenberg block collection built on the WordPress 7.1 block API.
  * Version:           0.0.1
  * Requires at least: 7.1
- * Tested up to:      7.1
  * Requires PHP:      8.1
  * Author:            Aman Dubey
  * Author URI:        https://amandubey.com/

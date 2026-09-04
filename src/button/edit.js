@@ -33,7 +33,33 @@ import { getResolvedValue } from './responsive-width/style-value';
 import { ICON_SIZE_KEY, CSS_VARS } from './responsive-width/constants';
 
 const NEW_TAB_TARGET = '_blank';
-const NOFOLLOW_REL = 'noreferrer noopener';
+
+/*
+ * Renamed from NOFOLLOW_REL, which was simply wrong: these are the
+ * reverse-tabnabbing guards, and neither is `nofollow`. Core calls the same
+ * pair NEW_TAB_REL.
+ */
+const NEW_TAB_REL = [ 'noreferrer', 'noopener' ];
+
+/**
+ * Adds or removes the new-tab rel tokens, leaving every other token alone.
+ *
+ * The old code ASSIGNED rel wholesale on each LinkControl change, so an author
+ * who had typed `sponsored` into "Link rel" lost it the next time they edited
+ * the URL — and unchecking "open in new tab" cleared the field entirely.
+ * Managing only the two tokens this control owns keeps the author's intent.
+ *
+ * @param {string}  rel           Current rel attribute.
+ * @param {boolean} opensInNewTab Whether the link opens in a new tab.
+ * @return {string} The updated rel attribute.
+ */
+function withNewTabRel( rel, opensInNewTab ) {
+	const kept = ( rel || '' )
+		.split( /\s+/ )
+		.filter( ( token ) => token && ! NEW_TAB_REL.includes( token ) );
+
+	return ( opensInNewTab ? [ ...kept, ...NEW_TAB_REL ] : kept ).join( ' ' );
+}
 
 export default function Edit( {
 	attributes,
@@ -245,7 +271,7 @@ export default function Edit( {
 								linkTarget: newOpensInNewTab
 									? NEW_TAB_TARGET
 									: '',
-								rel: newOpensInNewTab ? NOFOLLOW_REL : '',
+								rel: withNewTabRel( rel, newOpensInNewTab ),
 							} );
 						} }
 						onRemove={ unlink }

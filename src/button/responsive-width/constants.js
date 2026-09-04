@@ -134,14 +134,35 @@ export const VIEWPORT_STATE_BY_DEVICE = {
  * canonical responsive button requirement, and it is the case that makes a
  * per-viewport value obviously different from a single global one.
  *
- * @type {Array<Object>}
+ * STRINGS, not unit objects. `useCustomUnits( { availableUnits } )` filters
+ * core's ALL_CSS_UNITS with `availableUnits.includes( unit.value )`, so an array
+ * of objects never matches and the hook returns []. UnitControl treats an
+ * explicit [] as "no units" — its own defaults only apply to `undefined` — so
+ * the dropdown disappeared entirely and every field was locked to px. That made
+ * the `%` this comment argues for unreachable, and readme.txt advertised mobile
+ * widths of `100%` the UI could not produce.
+ *
+ * Every unit here must also pass Responsive_Styles::is_safe_length() on the PHP
+ * side, or the value would be stored and then silently dropped at render.
+ *
+ * @type {string[]}
  */
-export const WIDTH_UNITS = [
-	{ value: 'px', label: 'px', default: 200 },
-	{ value: '%', label: '%', default: 100 },
-	{ value: 'em', label: 'em', default: 10 },
-	{ value: 'rem', label: 'rem', default: 10 },
-];
+export const WIDTH_UNITS = [ 'px', '%', 'em', 'rem' ];
+
+/**
+ * Starting value when the author switches to a unit for the first time.
+ *
+ * Passed as `defaultValues`, which is the key useCustomUnits actually reads —
+ * the per-unit `default` on a unit object is not consulted.
+ *
+ * @type {Object<string, number>}
+ */
+export const WIDTH_UNIT_DEFAULTS = {
+	px: 200,
+	'%': 100,
+	em: 10,
+	rem: 10,
+};
 
 /**
  * Whether to print the live detection state into the inspector.
